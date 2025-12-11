@@ -1,0 +1,346 @@
+# LLM Generation Configuration for EduLens Tutoring System
+# This configuration file defines parameters for the educational AI tutor
+
+# Model Configuration
+model:
+  # Model name/path (edge-deployable models)
+  name: "llama-3.2-3B"
+
+  # Alternative models for different deployment scenarios
+  alternatives:
+    - "llama-3.2-1B"  # Lighter for very constrained devices
+    - "phi-3-mini"     # Microsoft's small efficient model
+    - "gemma-2b"       # Google's compact model
+
+  # Model loading parameters
+  quantization: "int8"  # int8, int4, or none
+  device: "cpu"         # cpu, cuda, mps (Metal for Apple Silicon)
+  max_memory: "4GB"     # Maximum memory allocation
+
+  # Context window
+  max_context_length: 2048
+  max_output_tokens: 200  # Limit response length
+
+# Generation Parameters
+generation:
+  # Temperature: Controls randomness (0.0 = deterministic, 1.0 = very random)
+  # For educational content, we want consistent but not robotic responses
+  temperature: 0.7
+
+  # Top-p (nucleus sampling): Consider tokens with cumulative probability p
+  top_p: 0.9
+
+  # Top-k sampling: Consider only top k tokens
+  top_k: 50
+
+  # Repetition penalty: Discourage repeating the same phrases
+  repetition_penalty: 1.1
+
+  # Length penalty: Slight preference for concise responses
+  length_penalty: 0.9
+
+  # Stop sequences: When to stop generation
+  stop_sequences:
+    - "\nStudent:"
+    - "\nUser:"
+    - "\n\n\n"
+
+  # Beam search parameters (if using beam search)
+  num_beams: 1  # 1 = greedy/sampling, >1 = beam search
+
+  # Number of responses to generate (for best-of-n selection)
+  num_return_sequences: 1
+
+# Educational Response Settings
+educational:
+  # Enable Socratic method enforcement
+  enable_socratic_method: true
+
+  # Maximum number of hint progressions before giving more direct help
+  max_hint_progression: 3
+
+  # Frequency of adding encouragement (0.0 to 1.0)
+  encouragement_frequency: 0.3
+
+  # Prefer questions over statements
+  question_preference_weight: 1.5
+
+  # Age-appropriate complexity adjustment
+  auto_adjust_complexity: true
+
+  # Enable concept prerequisite checking
+  check_prerequisites: true
+
+  # Maximum conversation turns before suggesting break/summary
+  max_conversation_turns: 10
+
+# Safety and Validation Settings
+safety:
+  # Response length constraints
+  min_response_length: 20    # Minimum words
+  max_response_length: 500   # Maximum words (overrides max_output_tokens if needed)
+
+  # Content filtering
+  enable_content_filter: true
+
+  # Validate against direct answer patterns
+  check_direct_answers: true
+
+  # Minimum validation score required (0.0 to 1.0)
+  min_validation_score: 0.7
+
+  # Maximum regeneration attempts if validation fails
+  max_regeneration_attempts: 2
+
+  # Enable age-appropriateness checking
+  check_age_appropriateness: true
+
+  # Enable toxicity/safety checking
+  enable_toxicity_check: true
+
+  # Block inappropriate content
+  block_inappropriate_content: true
+
+# Performance Optimization
+performance:
+  # Enable response caching for common patterns
+  enable_caching: true
+  cache_ttl_seconds: 3600  # 1 hour
+
+  # Batch size for inference
+  batch_size: 1
+
+  # Enable streaming responses (for real-time display)
+  enable_streaming: false
+
+  # Timeout for generation (seconds)
+  generation_timeout: 10
+
+  # Enable model warmup on initialization
+  warmup_on_init: true
+
+# Subject-Specific Overrides
+subject_overrides:
+  math:
+    # Math responses can be slightly more direct with steps
+    temperature: 0.6
+    max_output_tokens: 250
+
+  reading:
+    # Reading responses benefit from more creative exploration
+    temperature: 0.75
+    max_output_tokens: 200
+
+  science:
+    # Science responses focus on observation and prediction
+    temperature: 0.7
+    encouragement_frequency: 0.4
+
+  social_studies:
+    # Social studies benefits from perspective-taking
+    temperature: 0.75
+    max_output_tokens: 220
+
+# Age-Specific Overrides
+age_overrides:
+  "6-7":
+    max_output_tokens: 150
+    temperature: 0.6  # More consistent for younger students
+    min_response_length: 15
+    max_response_length: 300
+
+  "8-9":
+    max_output_tokens: 200
+    temperature: 0.7
+    min_response_length: 20
+    max_response_length: 400
+
+  "10-11":
+    max_output_tokens: 250
+    temperature: 0.75
+    min_response_length: 25
+    max_response_length: 500
+
+  "12+":
+    max_output_tokens: 300
+    temperature: 0.75
+    min_response_length: 30
+    max_response_length: 600
+
+# Prompt Engineering Settings
+prompting:
+  # System prompt template
+  system_prompt_template: |
+    You are a patient, encouraging educational tutor for elementary and middle school students.
+    You use the Socratic method to guide students to discover answers themselves.
+    You NEVER give direct answers - instead, you ask guiding questions and provide hints.
+    Your responses are age-appropriate, supportive, and educational.
+
+  # Include conversation history
+  include_history: true
+  max_history_turns: 5
+
+  # Include curriculum context
+  include_curriculum_context: true
+
+  # Include student profile information
+  include_student_profile: true
+
+  # Add special tokens for structure
+  use_special_tokens: false
+
+# Logging and Monitoring
+monitoring:
+  # Log all generations for quality review
+  log_generations: true
+
+  # Log validation failures
+  log_validation_failures: true
+
+  # Log performance metrics
+  log_performance_metrics: true
+
+  # Sample rate for detailed logging (0.0 to 1.0)
+  detailed_log_sample_rate: 0.1
+
+  # Alert on repeated validation failures
+  alert_on_validation_failures: true
+  validation_failure_threshold: 3
+
+# Fine-tuning Configuration (for reference)
+fine_tuning:
+  # Base model for fine-tuning
+  base_model: "llama-3.2-3B"
+
+  # Training data path
+  training_data_path: "/data/training/socratic_examples.json"
+
+  # LoRA parameters for efficient fine-tuning
+  lora:
+    r: 8              # LoRA rank
+    alpha: 16         # LoRA alpha
+    dropout: 0.05     # LoRA dropout
+    target_modules:   # Which modules to apply LoRA to
+      - "q_proj"
+      - "v_proj"
+      - "k_proj"
+      - "o_proj"
+
+  # Training parameters
+  training:
+    learning_rate: 2.0e-4
+    batch_size: 4
+    gradient_accumulation_steps: 4
+    num_epochs: 3
+    warmup_steps: 100
+    weight_decay: 0.01
+    max_grad_norm: 1.0
+
+  # Optimizer
+  optimizer: "adamw"
+
+  # Learning rate scheduler
+  lr_scheduler: "cosine"
+
+  # Save strategy
+  save_strategy: "epoch"
+  save_total_limit: 3
+
+  # Evaluation
+  evaluation_strategy: "steps"
+  eval_steps: 100
+
+# Edge Deployment Settings
+edge_deployment:
+  # Optimize for edge devices
+  enable_edge_optimizations: true
+
+  # Model compression
+  enable_pruning: false
+  pruning_ratio: 0.0
+
+  # Quantization-aware training
+  enable_qat: false
+
+  # ONNX export for cross-platform deployment
+  enable_onnx_export: true
+
+  # TensorFlow Lite export for mobile
+  enable_tflite_export: true
+
+  # Core ML export for iOS
+  enable_coreml_export: true
+
+  # Target platforms
+  target_platforms:
+    - "raspberry_pi"    # Raspberry Pi 4/5
+    - "nvidia_jetson"   # NVIDIA Jetson devices
+    - "android"         # Android devices
+    - "ios"             # iOS devices
+    - "linux_x86"       # Standard Linux
+    - "macos_arm"       # Apple Silicon Macs
+
+# Fallback Configuration
+fallback:
+  # Enable fallback to template responses if model fails
+  enable_template_fallback: true
+
+  # Use simpler model if primary fails to load
+  enable_model_fallback: true
+  fallback_model: "llama-3.2-1B"
+
+  # Maximum retry attempts
+  max_retry_attempts: 2
+
+  # Timeout before fallback (seconds)
+  fallback_timeout: 5
+
+# Experimentation and A/B Testing
+experimentation:
+  # Enable A/B testing of generation parameters
+  enable_ab_testing: false
+
+  # Experiment variants
+  variants:
+    - name: "baseline"
+      temperature: 0.7
+      top_p: 0.9
+
+    - name: "more_creative"
+      temperature: 0.8
+      top_p: 0.95
+
+    - name: "more_focused"
+      temperature: 0.6
+      top_p: 0.85
+
+  # Traffic split (must sum to 1.0)
+  traffic_split:
+    baseline: 0.8
+    more_creative: 0.1
+    more_focused: 0.1
+
+# Version and Metadata
+metadata:
+  config_version: "1.0.0"
+  last_updated: "2024-01-15"
+  author: "EduLens AI Team"
+  description: "Production configuration for educational tutoring LLM"
+
+# Environment-specific overrides
+environments:
+  development:
+    log_generations: true
+    detailed_log_sample_rate: 1.0
+    generation_timeout: 30
+
+  staging:
+    log_generations: true
+    detailed_log_sample_rate: 0.5
+    enable_ab_testing: true
+
+  production:
+    log_generations: true
+    detailed_log_sample_rate: 0.1
+    enable_caching: true
+    alert_on_validation_failures: true

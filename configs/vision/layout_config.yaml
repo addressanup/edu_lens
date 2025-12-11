@@ -1,0 +1,300 @@
+# Layout Analysis Configuration for EduLens
+# Configuration for document layout analysis and problem segmentation
+# Author: Vision Processing Agent (VIS-001)
+# Task: VIS-001-T3
+
+# Layout Analyzer Settings
+layout_analyzer:
+  # Region Detection
+  region_detection:
+    min_region_size: 100  # Minimum area in pixels for a valid region
+    max_region_size: 500000  # Maximum area in pixels (prevents full-page regions)
+    merge_threshold: 0.5  # IoU threshold for merging nearby regions (0-1)
+    whitespace_threshold: 20  # Minimum whitespace pixels for region separation
+    min_confidence: 0.6  # Minimum confidence for accepting a detected region
+
+  # Morphological Operations (for region detection)
+  morphology:
+    text_detection:
+      kernel_size: [20, 5]  # [width, height] for text region dilation
+      iterations: 2  # Number of dilation iterations
+
+    image_detection:
+      kernel_size: [15, 15]  # [width, height] for image region dilation
+      iterations: 2
+      canny_low_threshold: 50
+      canny_high_threshold: 150
+
+  # Region Classification
+  classification:
+    # Header detection
+    header:
+      max_y_position: 0.15  # Maximum Y position as fraction of page height
+      max_text_length: 100  # Maximum characters for header text
+      confidence: 0.8
+
+    # Title detection
+    title:
+      max_y_position: 0.2
+      max_text_length: 80
+      confidence: 0.75
+
+    # Question detection
+    question:
+      confidence: 0.85
+      patterns:
+        - '^\d+[\.\)]\s'  # Number followed by . or )
+        - '\?'  # Contains question mark
+        - '\bwhat\b'
+        - '\bwhere\b'
+        - '\bwhen\b'
+        - '\bwho\b'
+        - '\bwhy\b'
+        - '\bhow\b'
+        - '\bsolve\b'
+        - '\bcalculate\b'
+        - '\bfind\b'
+        - '\bwrite\b'
+
+    # Answer space detection
+    answer_space:
+      confidence: 0.8
+      max_text_density: 0.1  # Maximum ratio of text pixels to total pixels
+      min_lines: 1  # Minimum number of lines to be considered answer space
+
+    # Multiple choice detection
+    multiple_choice:
+      confidence: 0.85
+      min_choices: 2  # Minimum number of options
+      patterns:
+        - '[A-D][\.\)]\s+\w+'
+        - '\([A-D]\)\s+\w+'
+
+    # Diagram/image detection
+    diagram:
+      confidence: 0.75
+      min_edge_density: 0.05  # Minimum edge pixel ratio
+      max_text_length: 50  # Maximum text in diagram region
+
+    # Instruction detection
+    instruction:
+      confidence: 0.8
+      keywords:
+        - 'directions'
+        - 'instructions'
+        - 'read carefully'
+        - 'complete'
+        - 'fill in'
+        - 'circle'
+        - 'underline'
+        - 'match'
+        - 'draw'
+
+    # Footer detection
+    footer:
+      min_y_position: 0.85  # Minimum Y position as fraction of page height
+      confidence: 0.7
+
+  # Column Detection
+  columns:
+    max_columns: 3  # Maximum number of columns to detect
+    histogram_bins: 10  # Number of bins for horizontal position histogram
+    detection_threshold: 0.1  # Minimum fraction of regions to identify a column
+
+  # Spatial Relationships
+  spatial:
+    answer_space_vertical_tolerance: 10  # Pixels below question to search for answer
+    diagram_proximity_threshold: 300  # Maximum distance (pixels) to associate diagram with question
+    section_boundary_method: 'header'  # 'header', 'whitespace', or 'both'
+
+# Problem Segmenter Settings
+problem_segmenter:
+  # Problem Detection
+  detection:
+    min_problem_size: 200  # Minimum area in pixels for a valid problem
+    max_problems_per_page: 50  # Safety limit
+
+  # Problem Numbering
+  numbering:
+    patterns:
+      - '^\s*(\d+)[\.\)]\s*'  # 1. or 1)
+      - '^\s*(\d+[a-z])[\.\)]\s*'  # 1a. or 1a)
+      - '^\s*([A-Z])[\.\)]\s*'  # A. or A)
+      - '^\s*Question\s+(\d+)'  # Question 1
+      - '^\s*Problem\s+(\d+)'  # Problem 1
+      - '^\s*Exercise\s+(\d+)'  # Exercise 1
+      - '^\s*#\s*(\d+)'  # #1
+
+  # Multiple Choice Settings
+  multiple_choice:
+    min_choices: 2
+    max_choices: 10
+    choice_patterns:
+      - '^\s*([A-D])[\.\)]\s+(.+)'  # A. text or A) text
+      - '^\s*\(([A-D])\)\s+(.+)'  # (A) text
+      - '^\s*([A-J])[\.\)]\s+(.+)'  # Extended for more options
+
+  # Problem Format Classification
+  format_classification:
+    multiple_choice:
+      min_choices: 2
+      confidence: 0.85
+
+    true_false:
+      keywords:
+        - 'true or false'
+        - 'true/false'
+        - 't/f'
+        - 't or f'
+      confidence: 0.9
+
+    fill_in_blank:
+      patterns:
+        - '____'
+        - '_____'
+      min_blanks: 1
+      confidence: 0.85
+
+    matching:
+      keywords:
+        - 'match'
+        - 'column'
+      confidence: 0.8
+
+    calculation:
+      keywords:
+        - 'solve'
+        - 'calculate'
+        - 'compute'
+        - 'add'
+        - 'subtract'
+        - 'multiply'
+        - 'divide'
+      symbols:
+        - '='
+        - '+'
+        - '-'
+        - 'x'
+        - '÷'
+      confidence: 0.85
+
+    diagram_labeling:
+      requires_diagram: true
+      keywords:
+        - 'label'
+        - 'name the'
+        - 'identify'
+      confidence: 0.8
+
+    essay:
+      min_answer_space_area: 5000  # Pixels
+      confidence: 0.75
+
+    short_answer:
+      default: true  # Use as default when no other format matches
+      confidence: 0.7
+
+  # Difficulty Estimation
+  difficulty:
+    elementary:
+      max_word_count: 15
+      formats:
+        - 'multiple_choice'
+        - 'true_false'
+        - 'fill_in_blank'
+
+    intermediate:
+      max_word_count: 40
+      # Most formats fall here by default
+
+    advanced:
+      min_word_count: 40
+      formats:
+        - 'essay'
+        - 'matching'
+
+  # Content Grouping
+  grouping:
+    diagram_association:
+      max_distance: 400  # Pixels
+      prefer_horizontal_alignment: true
+
+    answer_space_association:
+      max_vertical_distance: 100  # Pixels below question
+      require_horizontal_overlap: true
+
+# Performance Targets
+performance:
+  accuracy:
+    layout_segmentation: 0.90  # 90% accuracy target
+    problem_detection: 0.85  # 85% detection rate
+    region_classification: 0.80  # 80% correct classification
+
+  speed:
+    max_processing_time_per_page: 5.0  # Seconds
+    target_processing_time: 2.0  # Seconds (goal)
+
+  memory:
+    max_image_size: [4096, 4096]  # Maximum image dimensions [width, height]
+    downscale_threshold: 3000  # Downscale if dimension exceeds this
+    downscale_factor: 0.5  # Factor to scale down by
+
+# Document Types
+document_types:
+  worksheet:
+    typical_problems_per_page: [5, 20]  # [min, max] expected
+    common_layouts: ['single-column', 'two-column']
+
+  textbook:
+    typical_problems_per_page: [3, 10]
+    common_layouts: ['single-column', 'multi-column']
+
+  workbook:
+    typical_problems_per_page: [10, 30]
+    common_layouts: ['single-column']
+
+  test:
+    typical_problems_per_page: [10, 50]
+    common_layouts: ['single-column', 'two-column']
+
+# Output Settings
+output:
+  include_confidence_scores: true
+  include_bounding_boxes: true
+  include_hierarchy: true
+  include_reading_order: true
+  serialize_format: 'dict'  # 'dict' or 'json'
+
+# Debugging and Visualization
+debug:
+  enabled: false  # Enable debug output
+  save_intermediate_images: false
+  visualize_regions: false
+  log_level: 'INFO'  # 'DEBUG', 'INFO', 'WARNING', 'ERROR'
+  output_directory: './debug_output'
+
+# Advanced Settings
+advanced:
+  # Adaptive thresholding for region detection
+  adaptive_threshold:
+    block_size: 11
+    c_value: 2
+    method: 'gaussian'  # 'gaussian' or 'mean'
+
+  # Hough line detection for answer spaces
+  hough_lines:
+    threshold: 50
+    min_line_length: 50
+    max_line_gap: 10
+
+  # Text density calculation
+  text_density:
+    bin_size: 20  # Pixels for density calculation grid
+
+  # Region merging
+  merge_strategy: 'hierarchical'  # 'hierarchical', 'greedy', or 'none'
+
+  # Multi-column handling
+  column_separation:
+    method: 'histogram'  # 'histogram', 'whitespace', or 'projection'
+    sensitivity: 0.15  # Threshold for detecting column boundaries

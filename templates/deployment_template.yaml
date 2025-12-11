@@ -1,0 +1,460 @@
+# Deployment Template for Claude Agents Orchestration System
+# This template provides Kubernetes manifests for production deployment
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${PROJECT_NAME}
+  labels:
+    app.kubernetes.io/name: ${PROJECT_NAME}
+    app.kubernetes.io/managed-by: claude-orchestrator
+
+---
+# ConfigMap - Application Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${PROJECT_NAME}-config
+  namespace: ${PROJECT_NAME}
+data:
+  APP_ENV: "production"
+  LOG_LEVEL: "info"
+  DATABASE_POOL_SIZE: "20"
+  REDIS_DB: "0"
+  CORS_ORIGINS: "https://${DOMAIN}"
+
+---
+# Secret - Sensitive Configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${PROJECT_NAME}-secrets
+  namespace: ${PROJECT_NAME}
+type: Opaque
+stringData:
+  DATABASE_URL: "${DATABASE_URL}"
+  REDIS_URL: "${REDIS_URL}"
+  JWT_SECRET: "${JWT_SECRET}"
+  API_KEY: "${API_KEY}"
+
+---
+# Backend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${PROJECT_NAME}-backend
+  namespace: ${PROJECT_NAME}
+  labels:
+    app: ${PROJECT_NAME}
+    component: backend
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ${PROJECT_NAME}
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: ${PROJECT_NAME}
+        component: backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: ${PROJECT_NAME}-sa
+      containers:
+        - name: backend
+          image: ${REGISTRY}/${PROJECT_NAME}-backend:${VERSION}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: ${PROJECT_NAME}-config
+            - secretRef:
+                name: ${PROJECT_NAME}-secrets
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ${PROJECT_NAME}
+                    component: backend
+                topologyKey: kubernetes.io/hostname
+
+---
+# Backend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${PROJECT_NAME}-backend
+  namespace: ${PROJECT_NAME}
+  labels:
+    app: ${PROJECT_NAME}
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: ${PROJECT_NAME}
+    component: backend
+
+---
+# Frontend Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${PROJECT_NAME}-frontend
+  namespace: ${PROJECT_NAME}
+  labels:
+    app: ${PROJECT_NAME}
+    component: frontend
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ${PROJECT_NAME}
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: ${PROJECT_NAME}
+        component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ${REGISTRY}/${PROJECT_NAME}-frontend:${VERSION}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+
+---
+# Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${PROJECT_NAME}-frontend
+  namespace: ${PROJECT_NAME}
+  labels:
+    app: ${PROJECT_NAME}
+    component: frontend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  selector:
+    app: ${PROJECT_NAME}
+    component: frontend
+
+---
+# Worker Deployment (Background Jobs)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${PROJECT_NAME}-worker
+  namespace: ${PROJECT_NAME}
+  labels:
+    app: ${PROJECT_NAME}
+    component: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ${PROJECT_NAME}
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: ${PROJECT_NAME}
+        component: worker
+    spec:
+      serviceAccountName: ${PROJECT_NAME}-sa
+      containers:
+        - name: worker
+          image: ${REGISTRY}/${PROJECT_NAME}-backend:${VERSION}
+          command: ["python", "-m", "celery", "-A", "app.worker", "worker"]
+          envFrom:
+            - configMapRef:
+                name: ${PROJECT_NAME}-config
+            - secretRef:
+                name: ${PROJECT_NAME}-secrets
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${PROJECT_NAME}-ingress
+  namespace: ${PROJECT_NAME}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+    - hosts:
+        - ${DOMAIN}
+        - api.${DOMAIN}
+      secretName: ${PROJECT_NAME}-tls
+  rules:
+    - host: ${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ${PROJECT_NAME}-frontend
+                port:
+                  number: 80
+    - host: api.${DOMAIN}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ${PROJECT_NAME}-backend
+                port:
+                  number: 80
+
+---
+# Horizontal Pod Autoscaler - Backend
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ${PROJECT_NAME}-backend-hpa
+  namespace: ${PROJECT_NAME}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ${PROJECT_NAME}-backend
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+# Pod Disruption Budget - Backend
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ${PROJECT_NAME}-backend-pdb
+  namespace: ${PROJECT_NAME}
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ${PROJECT_NAME}
+      component: backend
+
+---
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ${PROJECT_NAME}-sa
+  namespace: ${PROJECT_NAME}
+
+---
+# Network Policy - Restrict Traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ${PROJECT_NAME}-network-policy
+  namespace: ${PROJECT_NAME}
+spec:
+  podSelector:
+    matchLabels:
+      app: ${PROJECT_NAME}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 8000
+    - from:
+        - podSelector:
+            matchLabels:
+              app: ${PROJECT_NAME}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ${PROJECT_NAME}
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app: postgresql
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              app: redis
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+
+---
+# Resource Quota
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ${PROJECT_NAME}-quota
+  namespace: ${PROJECT_NAME}
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: "20Gi"
+    limits.cpu: "20"
+    limits.memory: "40Gi"
+    persistentvolumeclaims: "10"
+    pods: "50"
+
+---
+# Limit Range
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ${PROJECT_NAME}-limits
+  namespace: ${PROJECT_NAME}
+spec:
+  limits:
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container

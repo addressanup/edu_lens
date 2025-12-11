@@ -1,0 +1,328 @@
+# EduLens Personalization Engine Configuration
+# Configuration for adaptive learning, student modeling, and progress tracking
+
+# Student Model Configuration
+student_model:
+  # Bayesian Knowledge Tracing parameters
+  knowledge_tracing:
+    default_probability_slip: 0.15        # P(S) - probability of making mistake when known
+    default_probability_guess: 0.25       # P(G) - probability of guessing correctly
+    default_probability_transit: 0.10     # P(T) - probability of learning from one opportunity
+    initial_probability_known: 0.0        # P(L) - initial knowledge state
+
+  # Mastery level thresholds (probability ranges)
+  mastery_thresholds:
+    beginner: [0.0, 0.2]
+    developing: [0.2, 0.4]
+    proficient: [0.4, 0.6]
+    mastered: [0.6, 0.8]
+    expert: [0.8, 1.0]
+
+  # Learning style detection
+  learning_style:
+    initial_scores:
+      visual: 0.5
+      verbal: 0.5
+      analytical: 0.5
+      practical: 0.5
+      exploratory: 0.5
+
+    # Thresholds for style detection
+    confidence_threshold: 0.6
+    min_interactions: 10  # Minimum interactions before confident style detection
+
+  # Pace estimation
+  pace:
+    base_time_by_age:  # Base expected time in seconds by age
+      6: 60
+      7: 55
+      8: 50
+      9: 45
+      10: 40
+      11: 35
+      12: 30
+
+    difficulty_multipliers:
+      1: 0.5  # Very easy
+      2: 0.75 # Easy
+      3: 1.0  # Moderate
+      4: 1.5  # Challenging
+      5: 2.0  # Advanced
+
+  # Privacy settings
+  privacy:
+    max_history_size: 100  # Maximum interaction records to retain
+    anonymize_storage: true
+    auto_delete_after_days: 90  # Auto-delete old data after N days
+
+# Adaptive Tutor Configuration
+adaptive_tutor:
+  # Hint progression
+  hints:
+    progression_threshold: 2  # Number of attempts before progressing hint level
+    max_directness: 4  # Maximum hint directness (1-4)
+
+    # Hint level selection by mastery
+    hint_by_mastery:
+      not_attempted: 3  # Moderate
+      beginner: 3       # Moderate
+      developing: 2     # Subtle
+      proficient: 1     # Socratic
+      mastered: 1       # Socratic
+      expert: 1         # Socratic
+
+  # Emotional state detection
+  emotional_state:
+    frustration_threshold: 3        # Struggles before detecting frustration
+    boredom_success_streak: 5       # Successes before detecting boredom
+    time_multiplier_threshold: 2.5  # Time over expected to indicate frustration
+
+    # Confidence thresholds for detection
+    min_confidence: 0.6
+
+  # Encouragement
+  encouragement:
+    frequency_seconds: 120  # Show encouragement every N seconds
+    on_struggle_count: 2    # Encourage after N consecutive struggles
+    on_success_streak: 3    # Celebrate after N consecutive successes
+
+  # Difficulty adaptation
+  difficulty:
+    increase_on_success_rate: 0.8  # Increase if success rate > this
+    decrease_on_success_rate: 0.4  # Decrease if success rate < this
+    max_adjustment_per_session: 2  # Maximum difficulty adjustment in one session
+
+  # Celebration triggers
+  celebration:
+    mastery_achieved: true
+    consecutive_correct: 3
+    difficult_problem_solved: true
+    improvement_detected: true
+    streak_milestone: 5
+
+# Progress Tracker Configuration
+progress_tracker:
+  # Spaced repetition (SM-2 algorithm)
+  spaced_repetition:
+    initial_easiness_factor: 2.5
+    min_easiness_factor: 1.3
+    max_easiness_factor: 3.0
+
+    # Initial intervals (days)
+    initial_intervals:
+      first_review: 1
+      second_review: 6
+
+    # Quality ratings for recall (0-5 scale)
+    quality_mappings:
+      correct_first_try_no_hints: 5
+      correct_first_try_hints: 4
+      correct_with_hints: 3
+      correct_after_retry: 2
+      incorrect_but_tried: 1
+      skipped: 0
+
+  # Mastery calculation
+  mastery_calculation:
+    components:
+      success_rate_weight: 0.4
+      recent_performance_weight: 0.3
+      consistency_weight: 0.2
+      difficulty_weight: 0.1
+
+    # Recent performance window
+    recent_window_size: 20  # Last N attempts
+
+    # Mastery threshold for completion
+    mastery_threshold: 0.8
+
+  # Gap identification
+  gap_identification:
+    min_attempts_threshold: 3  # Minimum attempts to identify gap
+    low_success_threshold: 0.6  # Success rate below this = gap
+    low_mastery_threshold: 0.5  # Mastery below this = gap
+
+  # Review suggestions
+  review_suggestions:
+    days_threshold: 3         # Days since last practice to suggest review
+    overdue_priority_boost: 2.0  # Priority boost for overdue reviews
+    max_suggestions: 5        # Maximum reviews to suggest at once
+
+  # Privacy settings
+  privacy:
+    max_attempt_history: 1000  # Maximum attempts to store
+    aggregate_only: false      # Only store aggregate statistics
+    retention_days: 90         # Days to retain detailed data
+
+# Learning Analytics Configuration
+learning_analytics:
+  # Aggregation periods
+  aggregation:
+    periods:
+      - daily
+      - weekly
+      - monthly
+
+    # Minimum data for analysis
+    min_sessions_for_analysis: 3
+    min_days_for_trends: 7
+
+  # Pattern detection
+  pattern_detection:
+    # Thresholds for pattern classification
+    steady_progress_threshold: 0.1  # Consistent improvement margin
+    rapid_improvement_threshold: 0.2  # Large improvement margin
+    plateau_threshold: 0.1          # Flat performance margin
+    regression_threshold: 0.15      # Decline margin
+    struggling_accuracy: 0.5        # Accuracy below this = struggling
+    excelling_accuracy: 0.85        # Accuracy above this = excelling
+
+    # Confidence thresholds
+    min_confidence: 0.6
+    min_weeks_for_pattern: 2
+
+  # Trend analysis
+  trend_analysis:
+    min_data_points: 3
+    trend_strength_threshold: 0.3  # R-squared threshold for strong trend
+    stable_slope_threshold: 0.01   # Slope threshold for "stable"
+
+    # Forecasting
+    enable_forecasting: true
+    forecast_periods: 1  # Periods ahead to forecast
+
+  # Engagement scoring
+  engagement:
+    # Target metrics
+    target_session_length_minutes: 20
+    target_problems_per_session: 10
+    target_days_per_week: 5
+
+    # Component weights
+    consistency_weight: 0.4
+    session_length_weight: 0.3
+    problem_volume_weight: 0.3
+
+  # Privacy settings
+  privacy:
+    anonymize_by_default: true
+    hash_algorithm: "sha256"
+    export_format: "anonymized_aggregate"
+    data_minimization: true
+
+# Global Personalization Settings
+personalization:
+  # Feature flags
+  features:
+    enable_student_modeling: true
+    enable_adaptive_hints: true
+    enable_difficulty_adaptation: true
+    enable_spaced_repetition: true
+    enable_learning_analytics: true
+    enable_emotional_detection: true
+
+  # Age-appropriate settings
+  age_groups:
+    early_elementary:  # Ages 6-8
+      age_range: [6, 8]
+      default_difficulty: 2
+      max_session_length: 900  # 15 minutes
+      encouragement_frequency: 60
+      hint_directness: "moderate"
+
+    late_elementary:   # Ages 9-12
+      age_range: [9, 12]
+      default_difficulty: 3
+      max_session_length: 1800  # 30 minutes
+      encouragement_frequency: 120
+      hint_directness: "subtle"
+
+  # Performance thresholds
+  performance:
+    excellent_accuracy: 0.9
+    good_accuracy: 0.75
+    needs_improvement: 0.6
+    struggling: 0.5
+
+  # Session limits (for child safety)
+  session_limits:
+    max_session_length_minutes: 45
+    recommended_break_interval: 20
+    daily_problem_limit: 50
+    require_breaks: true
+
+  # Adaptation speed
+  adaptation:
+    learning_rate: 0.2  # How quickly to adapt (0-1)
+    min_data_points: 5  # Minimum interactions before adapting
+    conservative_mode: true  # Be cautious with difficulty changes
+
+# Storage Configuration
+storage:
+  # Model persistence
+  persistence:
+    enabled: true
+    format: "json"
+    compression: false
+
+    # Paths (relative to project root)
+    paths:
+      student_models: "data/student_models"
+      progress_data: "data/progress"
+      analytics_data: "data/analytics"
+
+    # Auto-save settings
+    auto_save:
+      enabled: true
+      interval_seconds: 300  # Save every 5 minutes
+      on_session_end: true
+
+  # Backup settings
+  backup:
+    enabled: true
+    interval_days: 7
+    retention_count: 4  # Keep last 4 backups
+    location: "data/backups"
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+  # Component-specific logging
+  components:
+    student_model: "INFO"
+    adaptive_tutor: "INFO"
+    progress_tracker: "INFO"
+    learning_analytics: "INFO"
+
+  # Log destinations
+  handlers:
+    console: true
+    file: true
+    file_path: "logs/personalization.log"
+
+  # Privacy in logs
+  privacy:
+    mask_student_ids: true
+    exclude_personal_data: true
+
+# Development/Testing Settings
+development:
+  # Mock data generation
+  generate_mock_data: false
+  mock_student_count: 10
+
+  # Debugging
+  debug_mode: false
+  verbose_output: false
+
+  # Testing
+  test_mode: false
+  deterministic_random: false  # Use fixed seed for testing
+
+# Version and Metadata
+metadata:
+  version: "1.0.0"
+  created: "2025-12-10"
+  description: "Personalization engine configuration for EduLens adaptive learning system"
+  author: "EduLens AI Team"

@@ -1,0 +1,352 @@
+{
+  "subject": "social_studies",
+  "name": "Social Studies Concept Graph",
+  "description": "Hierarchical representation of social studies concepts K-6 aligned with NCSS standards",
+  "concept_hierarchy": {
+    "root_domains": [
+      "community_culture",
+      "geography",
+      "history",
+      "civics_government",
+      "economics"
+    ],
+    "domains": {
+      "community_culture": {
+        "name": "Community and Culture",
+        "grade_range": "K-6",
+        "root_concepts": ["ss_k2_c_001"],
+        "description": "Understanding families, communities, and cultural diversity"
+      },
+      "geography": {
+        "name": "Geography",
+        "grade_range": "K-6",
+        "root_concepts": ["ss_k2_g_001", "ss_k2_g_002"],
+        "description": "Spatial thinking, maps, places, and human-environment interaction"
+      },
+      "history": {
+        "name": "History",
+        "grade_range": "K-6",
+        "root_concepts": ["ss_k2_h_001"],
+        "description": "Understanding past, change over time, and historical thinking"
+      },
+      "civics_government": {
+        "name": "Civics and Government",
+        "grade_range": "K-6",
+        "root_concepts": ["ss_k2_c_002"],
+        "description": "Government, citizenship, rights, and responsibilities"
+      },
+      "economics": {
+        "name": "Economics",
+        "grade_range": "3-6",
+        "root_concepts": ["ss_36_e_001"],
+        "description": "Economic concepts, decision making, and resources"
+      }
+    }
+  },
+  "prerequisite_graph": {
+    "ss_k2_c_001": {
+      "concept": "Families and communities",
+      "prerequisites": [],
+      "enables": ["ss_k2_c_002", "ss_36_h_001"]
+    },
+    "ss_k2_c_002": {
+      "concept": "Rules and responsibilities",
+      "prerequisites": [],
+      "enables": ["ss_36_cv_001"]
+    },
+    "ss_k2_g_001": {
+      "concept": "Maps and globes",
+      "prerequisites": [],
+      "enables": ["ss_k2_g_002", "ss_36_g_001", "ss_36_g_002"]
+    },
+    "ss_k2_g_002": {
+      "concept": "Location and place",
+      "prerequisites": [],
+      "enables": ["ss_36_g_001", "ss_36_g_003"]
+    },
+    "ss_k2_h_001": {
+      "concept": "Time and sequence",
+      "prerequisites": [],
+      "enables": ["ss_k2_h_002", "ss_36_h_001"]
+    },
+    "ss_k2_h_002": {
+      "concept": "Personal and family history",
+      "prerequisites": ["ss_k2_h_001"],
+      "enables": ["ss_36_h_001"]
+    },
+    "ss_36_g_001": {
+      "concept": "Continents and oceans",
+      "prerequisites": ["ss_k2_g_001"],
+      "enables": ["ss_36_g_002", "ss_36_g_003"]
+    },
+    "ss_36_g_002": {
+      "concept": "Advanced map skills",
+      "prerequisites": ["ss_k2_g_001"],
+      "enables": ["ss_36_g_003"]
+    },
+    "ss_36_g_003": {
+      "concept": "Regions and landforms",
+      "prerequisites": ["ss_36_g_001"],
+      "enables": ["ss_36_h_001"]
+    },
+    "ss_36_h_001": {
+      "concept": "Native Americans",
+      "prerequisites": ["ss_k2_h_002"],
+      "enables": ["ss_36_h_002"]
+    },
+    "ss_36_h_002": {
+      "concept": "European exploration and colonization",
+      "prerequisites": ["ss_36_h_001", "ss_36_g_001"],
+      "enables": ["ss_36_h_003"]
+    },
+    "ss_36_h_003": {
+      "concept": "American Revolution",
+      "prerequisites": ["ss_36_h_002"],
+      "enables": ["ss_36_cv_001"]
+    },
+    "ss_36_cv_001": {
+      "concept": "Purpose of government",
+      "prerequisites": ["ss_k2_c_002"],
+      "enables": ["ss_36_cv_002", "ss_36_cv_003"]
+    },
+    "ss_36_cv_002": {
+      "concept": "Three branches of government",
+      "prerequisites": ["ss_36_cv_001"],
+      "enables": []
+    },
+    "ss_36_cv_003": {
+      "concept": "Rights and responsibilities of citizens",
+      "prerequisites": ["ss_36_cv_001"],
+      "enables": []
+    },
+    "ss_36_e_001": {
+      "concept": "Goods and services",
+      "prerequisites": [],
+      "enables": ["ss_36_e_002"]
+    },
+    "ss_36_e_002": {
+      "concept": "Supply and demand",
+      "prerequisites": ["ss_36_e_001"],
+      "enables": []
+    }
+  },
+  "learning_pathways": {
+    "geography_pathway": {
+      "name": "Geographic Literacy Pathway",
+      "description": "Developing spatial thinking and map skills",
+      "sequence": [
+        "ss_k2_g_001",
+        "ss_k2_g_002",
+        "ss_36_g_001",
+        "ss_36_g_002",
+        "ss_36_g_003"
+      ]
+    },
+    "history_pathway": {
+      "name": "Historical Thinking Pathway",
+      "description": "Understanding chronology and historical events",
+      "sequence": [
+        "ss_k2_h_001",
+        "ss_k2_h_002",
+        "ss_36_h_001",
+        "ss_36_h_002",
+        "ss_36_h_003"
+      ]
+    },
+    "civics_pathway": {
+      "name": "Civic Education Pathway",
+      "description": "Understanding government and citizenship",
+      "sequence": [
+        "ss_k2_c_002",
+        "ss_36_cv_001",
+        "ss_36_cv_002",
+        "ss_36_cv_003"
+      ]
+    },
+    "economics_pathway": {
+      "name": "Economic Literacy Pathway",
+      "description": "Understanding economic concepts",
+      "sequence": [
+        "ss_36_e_001",
+        "ss_36_e_002"
+      ]
+    },
+    "american_history_pathway": {
+      "name": "American History Pathway",
+      "description": "Understanding U.S. history from indigenous peoples to independence",
+      "sequence": [
+        "ss_36_h_001",
+        "ss_36_h_002",
+        "ss_36_h_003",
+        "ss_36_cv_001",
+        "ss_36_cv_002",
+        "ss_36_cv_003"
+      ]
+    }
+  },
+  "skill_progression": {
+    "K-2": {
+      "grade": "K-2",
+      "focus": "Self, family, school, community, basic geography, rules",
+      "key_concepts": [
+        "ss_k2_c_001",
+        "ss_k2_c_002",
+        "ss_k2_g_001",
+        "ss_k2_g_002",
+        "ss_k2_h_001",
+        "ss_k2_h_002"
+      ],
+      "social_studies_skills": [
+        "Identify self in relation to family and community",
+        "Understand rules and why they matter",
+        "Use simple maps",
+        "Understand past, present, future",
+        "Recognize diversity in communities"
+      ]
+    },
+    "3-6": {
+      "grade": "3-6",
+      "focus": "Expanding horizons: communities, states, nation, world, history, government",
+      "key_concepts": [
+        "ss_36_g_001",
+        "ss_36_g_002",
+        "ss_36_g_003",
+        "ss_36_h_001",
+        "ss_36_h_002",
+        "ss_36_h_003",
+        "ss_36_cv_001",
+        "ss_36_cv_002",
+        "ss_36_cv_003",
+        "ss_36_e_001",
+        "ss_36_e_002"
+      ],
+      "social_studies_skills": [
+        "Read and interpret maps with multiple features",
+        "Understand geographic regions",
+        "Analyze historical sources",
+        "Compare multiple perspectives",
+        "Understand government structure",
+        "Explain economic concepts",
+        "Make connections across time and place"
+      ]
+    }
+  },
+  "ncss_themes": {
+    "theme_1": {
+      "name": "Culture",
+      "description": "Understanding cultural similarities and differences",
+      "k2_focus": "Own culture and other cultures in community",
+      "36_focus": "Cultural diversity in U.S. and world, cultural contributions"
+    },
+    "theme_2": {
+      "name": "Time, Continuity, and Change",
+      "description": "Understanding past and how it relates to present",
+      "k2_focus": "Personal history, family traditions, change over time",
+      "36_focus": "Historical eras, cause and effect, multiple perspectives"
+    },
+    "theme_3": {
+      "name": "People, Places, and Environments",
+      "description": "Geographic and environmental understanding",
+      "k2_focus": "Local environment, basic maps, weather",
+      "36_focus": "World geography, regions, human-environment interaction"
+    },
+    "theme_4": {
+      "name": "Individual Development and Identity",
+      "description": "Understanding self and identity",
+      "k2_focus": "Personal characteristics, roles in family and school",
+      "36_focus": "How individuals develop, factors shaping identity"
+    },
+    "theme_5": {
+      "name": "Individuals, Groups, and Institutions",
+      "description": "Understanding organizations and their roles",
+      "k2_focus": "Family, school, community organizations",
+      "36_focus": "Government institutions, social institutions, their purposes"
+    },
+    "theme_6": {
+      "name": "Power, Authority, and Governance",
+      "description": "Understanding government and authority",
+      "k2_focus": "Rules, authority figures, why we need rules",
+      "36_focus": "Government structure, democracy, rights and responsibilities"
+    },
+    "theme_7": {
+      "name": "Production, Distribution, and Consumption",
+      "description": "Economic understanding",
+      "k2_focus": "Needs vs. wants, jobs people do",
+      "36_focus": "Economic systems, supply and demand, trade"
+    },
+    "theme_8": {
+      "name": "Science, Technology, and Society",
+      "description": "Impact of technology on society",
+      "k2_focus": "Technology in daily life, simple tools",
+      "36_focus": "Technological change, impacts on society and environment"
+    },
+    "theme_9": {
+      "name": "Global Connections",
+      "description": "Understanding global interdependence",
+      "k2_focus": "Awareness of world beyond community",
+      "36_focus": "Global connections, trade, cultural exchange"
+    },
+    "theme_10": {
+      "name": "Civic Ideals and Practices",
+      "description": "Understanding citizenship and civic participation",
+      "k2_focus": "Being a good citizen, helping others, following rules",
+      "36_focus": "Democratic values, civic participation, rights and responsibilities"
+    }
+  },
+  "geographic_themes": {
+    "location": {
+      "name": "Location",
+      "description": "Where things are located",
+      "absolute": "Exact position (address, coordinates)",
+      "relative": "Position relative to other places (near, far, next to)"
+    },
+    "place": {
+      "name": "Place",
+      "description": "Physical and human characteristics that make locations unique",
+      "physical": "Landforms, climate, vegetation",
+      "human": "Buildings, culture, population"
+    },
+    "human_environment_interaction": {
+      "name": "Human-Environment Interaction",
+      "description": "How people affect and are affected by environment",
+      "examples": ["Building dams", "Farming", "Adapting to climate"]
+    },
+    "movement": {
+      "name": "Movement",
+      "description": "How people, goods, and ideas move",
+      "examples": ["Migration", "Trade", "Communication"]
+    },
+    "region": {
+      "name": "Region",
+      "description": "Areas with common characteristics",
+      "examples": ["Climate regions", "Cultural regions", "Political regions"]
+    }
+  },
+  "historical_thinking_skills": {
+    "chronological_thinking": {
+      "name": "Chronological Thinking",
+      "k2": "Yesterday, today, tomorrow; days, months, years",
+      "36": "Timelines, eras, periods, BC/AD, sequence of events"
+    },
+    "historical_comprehension": {
+      "name": "Historical Comprehension",
+      "k2": "Retell stories from past, identify who, what, where, when",
+      "36": "Analyze historical narratives, identify central question, evidence"
+    },
+    "historical_analysis": {
+      "name": "Historical Analysis and Interpretation",
+      "k2": "Compare past and present, identify change",
+      "36": "Compare different stories about event, consider multiple perspectives, distinguish fact from fiction"
+    },
+    "historical_research": {
+      "name": "Historical Research",
+      "k2": "Ask questions about past, use photos and artifacts",
+      "36": "Formulate historical questions, obtain historical data from sources"
+    },
+    "historical_decision_making": {
+      "name": "Historical Issues-Analysis and Decision-Making",
+      "k2": "Identify problem in story, suggest solution",
+      "36": "Identify issues and problems in past, analyze interests and values, propose alternative solutions"
+    }
+  }
+}

@@ -1,0 +1,95 @@
+# EduLens Autonomous Observation Configuration
+# Controls continuous monitoring and proactive intervention behavior
+
+observation:
+  # Frame streaming settings
+  target_fps: 5               # Frames per second from glasses camera
+  frame_buffer_size: 30       # Keep last 30 frames (~6 seconds at 5 FPS)
+  frame_quality: 85           # JPEG compression quality (1-100)
+  max_frame_width: 640        # Maximum frame width for processing
+
+  # Scene detection
+  scene_detection:
+    enabled: true
+    homework_confidence_threshold: 0.7
+    scene_change_threshold: 0.3
+    min_stable_frames: 5      # Minimum stable frames before scene detected
+
+struggle_detection:
+  enabled: true
+
+  # Time-based detection
+  time_on_problem_threshold_seconds: 45    # Trigger after this long on same problem
+  warning_threshold_seconds: 30            # Show warning indicator after this
+
+  # Activity-based detection
+  idle_threshold_seconds: 15               # No activity for this long = idle
+  erasing_detection_enabled: true          # Detect erasing motion
+  crossing_out_detection_enabled: true     # Detect crossed out work
+
+  # Visual change detection
+  motion_threshold: 0.05                   # Minimum motion to be considered "activity"
+  erasing_motion_pattern: true             # Use pattern matching for erasing
+
+intervention:
+  enabled: true
+
+  # Cooldown settings
+  cooldown_seconds: 60                     # Minimum time between interventions
+  max_interventions_per_problem: 3         # Max interventions per problem
+
+  # Timing
+  intervention_delay_seconds: 2            # Delay before speaking after detection
+
+  # Message settings
+  use_child_name: true                     # Personalize with child's name
+  vary_messages: true                      # Use different message variants
+
+  # Intervention types (in order of preference)
+  intervention_sequence:
+    - gentle_prompt                        # "Would you like a hint?"
+    - hint_offer                           # "I have an idea that might help!"
+    - check_in                             # "How's it going?"
+    - encouragement                        # "Don't give up!"
+
+# Message templates by language
+intervention_messages:
+  en:
+    gentle_prompt:
+      - "I see you've been working on this for a while. Would you like a hint?"
+      - "This one looks tricky! Do you want me to help you think it through?"
+      - "I'm here if you need me! Want to talk about this problem?"
+    hint_offer:
+      - "I have an idea that might help! Want to hear it?"
+      - "I noticed you might be stuck. Can I give you a little hint?"
+    check_in:
+      - "How's it going? Let me know if you need anything!"
+      - "Just checking in - are you finding this okay?"
+    encouragement:
+      - "I see you working hard! That's great!"
+      - "Don't give up - you're getting closer!"
+      - "Making mistakes is part of learning. Keep trying!"
+  es:
+    gentle_prompt:
+      - "Veo que has estado trabajando en esto por un rato. Te gustaria una pista?"
+    hint_offer:
+      - "Tengo una idea que podria ayudar! Quieres escucharla?"
+    check_in:
+      - "Como va? Dime si necesitas algo!"
+    encouragement:
+      - "Te veo trabajando duro! Muy bien!"
+  # Add more languages as needed (fr, de, zh, hi, ne)
+
+# Privacy settings
+privacy:
+  store_frames: false                      # Never store raw frames
+  store_problem_text: true                 # Store extracted text for context
+  retention_minutes: 5                     # Clear observation data after session
+  anonymize_logs: true                     # Anonymize any logged data
+
+# Performance settings
+performance:
+  max_concurrent_observations: 10          # Max simultaneous observation sessions
+  frame_processing_timeout_ms: 500         # Max time to process a frame
+  ocr_skip_similar_frames: true            # Skip OCR if frame is similar to previous
+  similarity_threshold: 0.95               # Frame similarity threshold

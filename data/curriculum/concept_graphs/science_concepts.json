@@ -1,0 +1,301 @@
+{
+  "subject": "science",
+  "name": "Science Concept Graph",
+  "description": "Hierarchical representation of science concepts K-6 aligned with NGSS",
+  "concept_hierarchy": {
+    "root_domains": [
+      "life_science",
+      "physical_science",
+      "earth_space_science",
+      "engineering"
+    ],
+    "domains": {
+      "life_science": {
+        "name": "Life Science",
+        "grade_range": "K-6",
+        "root_concepts": ["sci_k2_ls_001"],
+        "description": "Living organisms, ecosystems, and biological processes"
+      },
+      "physical_science": {
+        "name": "Physical Science",
+        "grade_range": "K-6",
+        "root_concepts": ["sci_k2_ps_001", "sci_k2_ps_002"],
+        "description": "Matter, energy, forces, and motion"
+      },
+      "earth_space_science": {
+        "name": "Earth and Space Science",
+        "grade_range": "K-6",
+        "root_concepts": ["sci_k2_es_001", "sci_k2_es_002"],
+        "description": "Earth systems, space, weather, and geology"
+      },
+      "engineering": {
+        "name": "Engineering and Technology",
+        "grade_range": "K-6",
+        "root_concepts": [],
+        "description": "Design thinking and problem solving"
+      }
+    }
+  },
+  "prerequisite_graph": {
+    "sci_k2_ls_001": {
+      "concept": "Living vs. non-living things",
+      "prerequisites": [],
+      "enables": ["sci_k2_ls_002", "sci_k2_ls_003", "sci_k2_ls_004"]
+    },
+    "sci_k2_ls_002": {
+      "concept": "Animal needs",
+      "prerequisites": ["sci_k2_ls_001"],
+      "enables": ["sci_k2_ls_004", "sci_35_ls_001", "sci_35_ls_002"]
+    },
+    "sci_k2_ls_003": {
+      "concept": "Plant needs",
+      "prerequisites": ["sci_k2_ls_001"],
+      "enables": ["sci_k2_ls_004", "sci_35_ls_002"]
+    },
+    "sci_k2_ls_004": {
+      "concept": "Life cycles",
+      "prerequisites": ["sci_k2_ls_001"],
+      "enables": ["sci_35_ls_001"]
+    },
+    "sci_k2_ps_001": {
+      "concept": "Properties of matter",
+      "prerequisites": [],
+      "enables": ["sci_35_ps_001"]
+    },
+    "sci_k2_ps_002": {
+      "concept": "Pushes and pulls",
+      "prerequisites": [],
+      "enables": ["sci_35_ps_002", "sci_35_ps_003"]
+    },
+    "sci_k2_es_001": {
+      "concept": "Weather and seasons",
+      "prerequisites": [],
+      "enables": ["sci_35_es_001", "sci_35_es_002"]
+    },
+    "sci_k2_es_002": {
+      "concept": "Earth materials",
+      "prerequisites": [],
+      "enables": ["sci_35_es_001", "sci_35_es_003"]
+    },
+    "sci_35_ls_001": {
+      "concept": "Adaptations",
+      "prerequisites": ["sci_k2_ls_002"],
+      "enables": ["sci_35_ls_003"]
+    },
+    "sci_35_ls_002": {
+      "concept": "Food chains and webs",
+      "prerequisites": ["sci_k2_ls_002", "sci_k2_ls_003"],
+      "enables": ["sci_35_ls_003"]
+    },
+    "sci_35_ls_003": {
+      "concept": "Ecosystems and habitats",
+      "prerequisites": ["sci_35_ls_001", "sci_35_ls_002"],
+      "enables": []
+    },
+    "sci_35_ps_001": {
+      "concept": "States of matter",
+      "prerequisites": ["sci_k2_ps_001"],
+      "enables": ["sci_35_ps_002", "sci_35_es_002"]
+    },
+    "sci_35_ps_002": {
+      "concept": "Energy and motion",
+      "prerequisites": ["sci_k2_ps_002"],
+      "enables": ["sci_35_ps_003"]
+    },
+    "sci_35_ps_003": {
+      "concept": "Simple machines",
+      "prerequisites": ["sci_k2_ps_002"],
+      "enables": []
+    },
+    "sci_35_es_001": {
+      "concept": "Earth's systems",
+      "prerequisites": ["sci_k2_es_002"],
+      "enables": ["sci_35_es_002", "sci_35_es_003"]
+    },
+    "sci_35_es_002": {
+      "concept": "Water cycle",
+      "prerequisites": ["sci_35_ps_001", "sci_k2_es_001"],
+      "enables": []
+    },
+    "sci_35_es_003": {
+      "concept": "Rocks and soil formation",
+      "prerequisites": ["sci_k2_es_002"],
+      "enables": []
+    },
+    "sci_35_es_004": {
+      "concept": "Solar system",
+      "prerequisites": [],
+      "enables": []
+    }
+  },
+  "learning_pathways": {
+    "life_science_pathway": {
+      "name": "Life Science Progression",
+      "description": "Understanding living things from basic needs to complex ecosystems",
+      "sequence": [
+        "sci_k2_ls_001",
+        "sci_k2_ls_002",
+        "sci_k2_ls_003",
+        "sci_k2_ls_004",
+        "sci_35_ls_001",
+        "sci_35_ls_002",
+        "sci_35_ls_003"
+      ]
+    },
+    "matter_energy_pathway": {
+      "name": "Matter and Energy Progression",
+      "description": "Understanding physical properties and energy",
+      "sequence": [
+        "sci_k2_ps_001",
+        "sci_35_ps_001",
+        "sci_k2_ps_002",
+        "sci_35_ps_002",
+        "sci_35_ps_003"
+      ]
+    },
+    "earth_science_pathway": {
+      "name": "Earth Science Progression",
+      "description": "Understanding Earth's systems and processes",
+      "sequence": [
+        "sci_k2_es_002",
+        "sci_k2_es_001",
+        "sci_35_es_001",
+        "sci_35_es_002",
+        "sci_35_es_003",
+        "sci_35_es_004"
+      ]
+    }
+  },
+  "skill_progression": {
+    "K-2": {
+      "grade": "K-2",
+      "focus": "Observation, classification, basic needs, properties",
+      "key_concepts": [
+        "sci_k2_ls_001",
+        "sci_k2_ls_002",
+        "sci_k2_ls_003",
+        "sci_k2_ls_004",
+        "sci_k2_ps_001",
+        "sci_k2_ps_002",
+        "sci_k2_es_001",
+        "sci_k2_es_002"
+      ],
+      "science_practices": [
+        "Asking questions",
+        "Making observations",
+        "Describing patterns",
+        "Using simple tools"
+      ]
+    },
+    "3-5": {
+      "grade": "3-5",
+      "focus": "Systems, interactions, cause and effect, investigation",
+      "key_concepts": [
+        "sci_35_ls_001",
+        "sci_35_ls_002",
+        "sci_35_ls_003",
+        "sci_35_ps_001",
+        "sci_35_ps_002",
+        "sci_35_ps_003",
+        "sci_35_es_001",
+        "sci_35_es_002",
+        "sci_35_es_003",
+        "sci_35_es_004"
+      ],
+      "science_practices": [
+        "Developing and using models",
+        "Planning investigations",
+        "Analyzing data",
+        "Constructing explanations",
+        "Engaging in argument from evidence"
+      ]
+    }
+  },
+  "ngss_practices": {
+    "practice_1": {
+      "name": "Asking Questions and Defining Problems",
+      "description": "Scientists ask questions, engineers define problems",
+      "k2_examples": ["What do plants need to grow?", "Why does ice melt?"],
+      "35_examples": ["How do adaptations help animals survive?", "What causes day and night?"]
+    },
+    "practice_2": {
+      "name": "Developing and Using Models",
+      "description": "Models represent ideas and phenomena",
+      "k2_examples": ["Draw life cycle of butterfly", "Model of animal habitat"],
+      "35_examples": ["Food web diagram", "Water cycle model", "Solar system model"]
+    },
+    "practice_3": {
+      "name": "Planning and Carrying Out Investigations",
+      "description": "Design and conduct scientific investigations",
+      "k2_examples": ["Test which materials sink or float", "Observe plant growth"],
+      "35_examples": ["Investigate how force affects motion", "Test soil types for plant growth"]
+    },
+    "practice_4": {
+      "name": "Analyzing and Interpreting Data",
+      "description": "Make sense of data to find patterns",
+      "k2_examples": ["Count and compare animal types", "Record daily weather"],
+      "35_examples": ["Graph temperature changes", "Analyze ecosystem data"]
+    },
+    "practice_5": {
+      "name": "Using Mathematics and Computational Thinking",
+      "description": "Use math to analyze and present data",
+      "k2_examples": ["Measure and compare lengths", "Count objects in groups"],
+      "35_examples": ["Calculate force and motion", "Use measurements in investigations"]
+    },
+    "practice_6": {
+      "name": "Constructing Explanations and Designing Solutions",
+      "description": "Use evidence to explain phenomena or solve problems",
+      "k2_examples": ["Explain why animals need food", "Design shelter for animal"],
+      "35_examples": ["Explain weathering and erosion", "Design solution to reduce erosion"]
+    },
+    "practice_7": {
+      "name": "Engaging in Argument from Evidence",
+      "description": "Support claims with evidence",
+      "k2_examples": ["Argue which material is best for purpose", "Support claim with observations"],
+      "35_examples": ["Debate environmental impacts", "Support claims about adaptations"]
+    },
+    "practice_8": {
+      "name": "Obtaining, Evaluating, and Communicating Information",
+      "description": "Read, interpret, and share scientific information",
+      "k2_examples": ["Share observations", "Listen to information about animals"],
+      "35_examples": ["Research and present findings", "Evaluate sources of information"]
+    }
+  },
+  "crosscutting_concepts": {
+    "patterns": {
+      "name": "Patterns",
+      "description": "Patterns in nature can be observed and used to make predictions",
+      "examples": ["Day/night pattern", "Seasons pattern", "Life cycle patterns"]
+    },
+    "cause_effect": {
+      "name": "Cause and Effect",
+      "description": "Events have causes that can be identified",
+      "examples": ["Pushing causes motion", "Water causes erosion", "No water causes plants to wilt"]
+    },
+    "scale": {
+      "name": "Scale, Proportion, and Quantity",
+      "description": "Size, scale, and quantity matter in science",
+      "examples": ["Comparing animal sizes", "Solar system scale", "Measuring matter"]
+    },
+    "systems": {
+      "name": "Systems and System Models",
+      "description": "Systems have parts that work together",
+      "examples": ["Ecosystems", "Water cycle", "Body systems"]
+    },
+    "energy_matter": {
+      "name": "Energy and Matter",
+      "description": "Energy and matter flow through systems",
+      "examples": ["Food chains show energy flow", "Water cycle shows matter cycling"]
+    },
+    "structure_function": {
+      "name": "Structure and Function",
+      "description": "Shape and structure relate to function",
+      "examples": ["Bird beaks adapted to food", "Roots absorb water", "Wheels reduce friction"]
+    },
+    "stability_change": {
+      "name": "Stability and Change",
+      "description": "Systems can be stable or change over time",
+      "examples": ["Seasons change", "Habitats change", "Matter changes state"]
+    }
+  }
+}

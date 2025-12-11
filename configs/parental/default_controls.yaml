@@ -1,0 +1,340 @@
+# Default Parental Control Settings for EduLens
+# These settings provide sensible defaults for different age groups
+
+# Version
+version: "1.0.0"
+
+# Age-based presets
+age_presets:
+  ages_5_7:
+    description: "Elementary school (ages 5-7)"
+    usage:
+      daily_limit_minutes: 30
+      grace_period_minutes: 5
+      schedule:
+        weekday:
+          - start: "15:00"
+            end: "17:00"
+        weekend:
+          - start: "09:00"
+            end: "11:00"
+          - start: "14:00"
+            end: "16:00"
+
+    content:
+      difficulty:
+        max_level: "elementary"
+      allowed_content_types:
+        - "multiple_choice"
+        - "interactive"
+        - "video"
+      blocked_keywords:
+        - "advanced"
+        - "complex"
+
+    notifications:
+      daily_summary: true
+      milestone_alerts: true
+      concern_alerts: true
+
+  ages_8_10:
+    description: "Upper elementary (ages 8-10)"
+    usage:
+      daily_limit_minutes: 60
+      grace_period_minutes: 5
+      schedule:
+        weekday:
+          - start: "15:30"
+            end: "18:00"
+        weekend:
+          - start: "09:00"
+            end: "12:00"
+          - start: "14:00"
+            end: "17:00"
+
+    content:
+      difficulty:
+        max_level: "middle_school"
+      allowed_content_types:
+        - "multiple_choice"
+        - "free_response"
+        - "math_problem"
+        - "interactive"
+        - "video"
+        - "reading"
+      blocked_keywords: []
+
+    notifications:
+      daily_summary: true
+      milestone_alerts: true
+      concern_alerts: true
+
+  ages_11_13:
+    description: "Middle school (ages 11-13)"
+    usage:
+      daily_limit_minutes: 90
+      grace_period_minutes: 10
+      schedule:
+        weekday:
+          - start: "15:00"
+            end: "20:00"
+        weekend:
+          - start: "09:00"
+            end: "21:00"
+
+    content:
+      difficulty:
+        max_level: "high_school"
+      content_filter_mode: "unrestricted"
+      blocked_keywords: []
+
+    notifications:
+      daily_summary: true
+      weekly_summary: true
+      milestone_alerts: true
+      concern_alerts: true
+
+  ages_14_16:
+    description: "High school (ages 14-16)"
+    usage:
+      daily_limit_minutes: 120
+      grace_period_minutes: 10
+      schedule:
+        weekday:
+          - start: "14:00"
+            end: "22:00"
+        weekend:
+          - start: "08:00"
+            end: "23:00"
+
+    content:
+      difficulty:
+        max_level: "college"
+      content_filter_mode: "unrestricted"
+      blocked_keywords: []
+
+    notifications:
+      daily_summary: false
+      weekly_summary: true
+      milestone_alerts: true
+      concern_alerts: true
+
+  ages_17_plus:
+    description: "High school senior and above (17+)"
+    usage:
+      daily_limit_minutes: 0  # Unlimited
+      grace_period_minutes: 0
+      schedule: null  # No schedule restrictions
+
+    content:
+      difficulty:
+        max_level: null  # No restrictions
+      content_filter_mode: "unrestricted"
+      blocked_keywords: []
+
+    notifications:
+      daily_summary: false
+      weekly_summary: true
+      milestone_alerts: false
+      concern_alerts: true
+
+# Default notification settings
+notification_defaults:
+  # Quiet hours (no notifications during this time)
+  quiet_hours:
+    enabled: true
+    start: "22:00"
+    end: "07:00"
+
+  # Daily summary timing
+  daily_summary:
+    enabled: true
+    time: "20:00"  # 8 PM
+
+  # Weekly summary timing
+  weekly_summary:
+    enabled: true
+    day: "sunday"
+    time: "18:00"  # 6 PM
+
+  # Notification channels per type
+  channels:
+    daily_summary:
+      - "email"
+    weekly_summary:
+      - "email"
+    milestone:
+      - "push"
+      - "in_app"
+    concern:
+      - "email"
+      - "push"
+    limit_reached:
+      - "push"
+      - "in_app"
+    device_status:
+      - "push"
+    content_blocked:
+      - "in_app"
+
+  # Throttling (minimum minutes between similar notifications)
+  throttle_minutes: 60
+
+# Content filtering defaults
+content_filtering:
+  # Default mode
+  mode: "whitelist"  # Options: whitelist, blacklist, unrestricted
+
+  # Common subject categories
+  subject_categories:
+    stem:
+      - "mathematics"
+      - "science"
+      - "technology"
+      - "engineering"
+
+    language_arts:
+      - "reading"
+      - "writing"
+      - "grammar"
+      - "literature"
+
+    social_studies:
+      - "history"
+      - "geography"
+      - "civics"
+      - "economics"
+
+    arts:
+      - "music"
+      - "art"
+      - "drama"
+
+    life_skills:
+      - "health"
+      - "physical_education"
+      - "career_skills"
+
+  # Age-appropriate content guidelines
+  age_appropriate_subjects:
+    elementary:
+      - "basic_math"
+      - "reading"
+      - "science_basics"
+      - "art"
+      - "music"
+
+    middle_school:
+      - "algebra"
+      - "geometry"
+      - "biology"
+      - "chemistry"
+      - "history"
+      - "literature"
+
+    high_school:
+      - "advanced_math"
+      - "physics"
+      - "chemistry"
+      - "biology"
+      - "world_history"
+      - "economics"
+      - "programming"
+
+# Device management defaults
+device_management:
+  # Automatic lock conditions
+  auto_lock:
+    on_limit_reached: true
+    on_schedule_end: true
+    on_low_battery: false
+    battery_threshold: 10
+
+  # Sync settings
+  sync:
+    auto_sync_interval_minutes: 30
+    sync_on_startup: true
+    sync_on_shutdown: true
+
+  # Heartbeat settings
+  heartbeat:
+    interval_minutes: 5
+    timeout_minutes: 10  # Consider offline after this
+
+  # Command queue settings
+  command_queue:
+    max_pending_commands: 100
+    command_timeout_minutes: 60
+    retry_attempts: 3
+
+# Activity monitoring defaults
+activity_monitoring:
+  # Privacy settings
+  privacy:
+    store_raw_content: false
+    store_answers: false
+    aggregate_only: true
+
+  # Retention periods
+  retention:
+    session_data_days: 90
+    aggregated_stats_days: 365
+    command_history_days: 30
+
+  # Report generation
+  reports:
+    daily_summary_enabled: true
+    weekly_summary_enabled: true
+    monthly_summary_enabled: true
+
+  # Concern detection thresholds
+  concern_thresholds:
+    low_accuracy_threshold: 50  # Percent
+    low_accuracy_min_problems: 20
+    low_engagement_days: 3  # Consecutive days without activity
+    declining_trend_threshold: -10  # Percent drop in accuracy
+
+  # Milestone criteria
+  milestones:
+    practice_streak:
+      days: [7, 14, 30, 60, 100]
+    accuracy_achievement:
+      threshold: 90
+      min_problems: 50
+    time_invested:
+      hours: [10, 25, 50, 100, 200]
+    subject_mastery:
+      accuracy: 85
+      min_problems: 100
+
+# Security settings
+security:
+  # Parent authentication
+  require_parent_pin: true
+  pin_length: 4
+
+  # Settings lock
+  lock_settings: true
+  require_auth_for_changes: true
+
+  # Command encryption
+  encrypt_commands: true
+
+  # Session security
+  session_timeout_minutes: 30
+  require_reauth_for_sensitive: true
+
+# System settings
+system:
+  # Logging
+  logging:
+    level: "INFO"
+    retain_days: 30
+
+  # Performance
+  cache_enabled: true
+  cache_size_mb: 100
+
+  # Updates
+  auto_update_settings: false
+  check_for_updates: true

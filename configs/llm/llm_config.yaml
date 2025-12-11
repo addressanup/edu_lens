@@ -1,0 +1,71 @@
+# EduLens LLM Configuration
+# Supports multiple providers - set LLM_PROVIDER environment variable to switch
+
+# Default provider (can be overridden by LLM_PROVIDER env var)
+default_provider: anthropic
+
+# Provider-specific configurations
+providers:
+  anthropic:
+    model: claude-sonnet-4-20250514
+    max_tokens: 1024
+    temperature: 0.7
+    # API key via ANTHROPIC_API_KEY env var
+
+  openai:
+    model: gpt-4o
+    max_tokens: 1024
+    temperature: 0.7
+    # API key via OPENAI_API_KEY env var
+
+  google:
+    model: gemini-1.5-flash
+    max_tokens: 1024
+    temperature: 0.7
+    # API key via GOOGLE_API_KEY env var
+
+  deepseek:
+    model: deepseek-chat
+    max_tokens: 1024
+    temperature: 0.7
+    base_url: https://api.deepseek.com
+    # API key via DEEPSEEK_API_KEY env var
+    # Models: deepseek-chat, deepseek-coder
+
+  azure_openai:
+    model: gpt-4
+    max_tokens: 1024
+    temperature: 0.7
+    # endpoint via AZURE_OPENAI_ENDPOINT env var
+    # API key via AZURE_OPENAI_API_KEY env var
+
+  ollama:
+    model: llama3.2:3b
+    max_tokens: 1024
+    temperature: 0.7
+    base_url: http://localhost:11434
+
+# Safety settings (always enabled for child content)
+safety:
+  enabled: true
+  max_response_words: 500
+  content_filter: true
+  block_pii_requests: true
+
+# Tutor-specific settings
+tutor:
+  socratic_method: true
+  max_hint_progression: 3
+  encouragement_frequency: 0.3
+  age_adaptation: true
+
+# Performance settings
+performance:
+  timeout_seconds: 30
+  max_retries: 3
+  cache_responses: false  # Disable for personalized tutoring
+
+# Cost management (optional)
+cost:
+  max_tokens_per_session: 10000
+  warn_threshold: 8000

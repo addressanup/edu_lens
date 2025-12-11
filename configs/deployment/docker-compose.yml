@@ -1,0 +1,98 @@
+# EduLens Development Docker Compose
+# For local development and testing
+
+version: '3.8'
+
+services:
+  # EduLens Backend API
+  edulens-api:
+    build:
+      context: ../..
+      dockerfile: configs/deployment/Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../.env
+    environment:
+      - EDULENS_ENV=development
+      - EDULENS_LOG_LEVEL=DEBUG
+      - EDULENS_API_HOST=0.0.0.0
+      - EDULENS_API_PORT=8000
+      - DATABASE_URL=postgresql://edulens:edulens_dev@postgres:5432/edulens
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../../src:/app/src:ro
+      - ../../configs:/app/configs:ro
+      - ../../models:/app/models:ro
+      - ../../web:/app/web:ro
+      - edulens-data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # PostgreSQL for persistent storage
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=edulens
+      - POSTGRES_PASSWORD=edulens_dev
+      - POSTGRES_DB=edulens
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edulens"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Test runner service
+  test-runner:
+    build:
+      context: ../..
+      dockerfile: configs/deployment/Dockerfile.test
+    environment:
+      - EDULENS_ENV=test
+      - PYTEST_ADDOPTS=-v --tb=short
+    volumes:
+      - ../../src:/app/src:ro
+      - ../../tests:/app/tests:ro
+      - ../../configs:/app/configs:ro
+      - test-results:/app/test-results
+    depends_on:
+      - redis
+    profiles:
+      - test
+
+volumes:
+  edulens-data:
+  redis-data:
+  postgres-data:
+  test-results:
+
+networks:
+  default:
+    name: edulens-network

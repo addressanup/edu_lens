@@ -1,0 +1,103 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Models (large files)
+models/**/*.onnx
+models/**/*.tflite
+models/**/*.pt
+models/**/*.bin
+!models/**/.gitkeep
+
+# Test fixtures (large files)
+tests/fixtures/**/*.wav
+tests/fixtures/**/*.mp3
+tests/fixtures/**/*.png
+tests/fixtures/**/*.jpg
+!tests/fixtures/**/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# Local configuration
+.env.local
+config.local.yaml
+
+# macOS
+.DS_Store
+
+# Privacy - never commit user data
+data/user_profiles/
+data/learning_sessions/
+node_modules/

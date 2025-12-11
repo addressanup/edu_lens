@@ -1,0 +1,440 @@
+# EduLens Voice Persona Configuration
+# Defines voice settings, personas, and SSML templates for child-friendly TTS
+
+# Global TTS Settings
+global:
+  backend: "pyttsx3"  # pyttsx3, edge, coqui
+  sample_rate: 22050
+  use_ssml: true
+  enable_streaming: true
+  cache_enabled: true
+  cache_max_size: 100  # Maximum cached audio outputs
+
+# Default Voice Settings
+defaults:
+  pitch: 1.0        # 0.5 - 2.0
+  rate: 1.0         # 0.5 - 2.0 (speaking speed)
+  volume: 0.85      # 0.0 - 1.0
+  warmth: 0.75      # 0.0 - 1.0 (voice warmth)
+  energy: 0.70      # 0.0 - 1.0 (energy level)
+  clarity: 0.95     # 0.0 - 1.0 (articulation)
+
+# Speed Presets
+speed_presets:
+  slow_explanation:
+    rate: 0.80
+    description: "Very slow, clear pace for complex concepts"
+    use_case: "Difficult explanations, step-by-step instructions"
+
+  patient_teaching:
+    rate: 0.90
+    description: "Patient, measured pace for teaching"
+    use_case: "General instruction, new concepts"
+
+  normal:
+    rate: 1.0
+    description: "Normal conversational pace"
+    use_case: "Standard content delivery"
+
+  quick_feedback:
+    rate: 1.15
+    description: "Slightly faster for feedback and encouragement"
+    use_case: "Positive feedback, quick confirmations"
+
+  energetic:
+    rate: 1.25
+    description: "Upbeat pace for engagement"
+    use_case: "Celebrations, exciting content"
+
+# Voice Personas
+personas:
+  friendly_tutor:
+    name: "Friendly Tutor"
+    description: "Warm, encouraging voice perfect for patient instruction"
+    voice_id: null  # Auto-select based on backend
+    age_group: "6-12"
+    gender: "female"
+    characteristics:
+      pitch: 1.05
+      rate: 0.95
+      volume: 0.85
+      warmth: 0.85
+      energy: 0.70
+      clarity: 0.95
+    tags:
+      - patient
+      - warm
+      - educational
+    backend_voices:
+      pyttsx3: null  # System default female voice
+      edge: "en-US-AriaNeural"
+      coqui: "ljspeech"
+
+  patient_helper:
+    name: "Patient Helper"
+    description: "Calm, reassuring voice for struggling students"
+    voice_id: null
+    age_group: "6-12"
+    gender: "neutral"
+    characteristics:
+      pitch: 0.98
+      rate: 0.85
+      volume: 0.80
+      warmth: 0.90
+      energy: 0.60
+      clarity: 1.0
+    tags:
+      - calm
+      - reassuring
+      - slow
+    backend_voices:
+      pyttsx3: null
+      edge: "en-US-JennyNeural"
+      coqui: "ljspeech"
+
+  cheerful_guide:
+    name: "Cheerful Guide"
+    description: "Energetic, fun voice to keep students engaged"
+    voice_id: null
+    age_group: "6-8"
+    gender: "female"
+    characteristics:
+      pitch: 1.10
+      rate: 1.05
+      volume: 0.90
+      warmth: 0.80
+      energy: 0.85
+      clarity: 0.90
+    tags:
+      - energetic
+      - fun
+      - engaging
+    backend_voices:
+      pyttsx3: null
+      edge: "en-US-AriaNeural"
+      coqui: "ljspeech"
+
+  wise_mentor:
+    name: "Wise Mentor"
+    description: "Clear, authoritative voice for older students"
+    voice_id: null
+    age_group: "11-12"
+    gender: "male"
+    characteristics:
+      pitch: 0.95
+      rate: 1.0
+      volume: 0.85
+      warmth: 0.70
+      energy: 0.65
+      clarity: 0.95
+    tags:
+      - clear
+      - authoritative
+      - measured
+    backend_voices:
+      pyttsx3: null
+      edge: "en-US-GuyNeural"
+      coqui: null
+
+  science_explorer:
+    name: "Science Explorer"
+    description: "Curious, precise voice for science topics"
+    voice_id: null
+    age_group: "9-10"
+    gender: "neutral"
+    characteristics:
+      pitch: 1.02
+      rate: 0.95
+      volume: 0.85
+      warmth: 0.75
+      energy: 0.80
+      clarity: 0.98
+    tags:
+      - curious
+      - precise
+      - scientific
+    backend_voices:
+      pyttsx3: null
+      edge: "en-US-JennyNeural"
+      coqui: "ljspeech"
+
+  math_master:
+    name: "Math Master"
+    description: "Clear, methodical voice for math instruction"
+    voice_id: null
+    age_group: "6-12"
+    gender: "male"
+    characteristics:
+      pitch: 1.0
+      rate: 0.90
+      volume: 0.85
+      warmth: 0.75
+      energy: 0.70
+      clarity: 1.0
+    tags:
+      - methodical
+      - clear
+      - mathematical
+    backend_voices:
+      pyttsx3: null
+      edge: "en-US-GuyNeural"
+      coqui: null
+
+# Emotional Tone Adjustments
+emotional_tones:
+  encouraging:
+    pitch_adjust: 1.05
+    rate_adjust: 0.95
+    volume_adjust: 1.05
+    warmth_adjust: 1.10
+    energy_adjust: 1.20
+    phrases:
+      - "Great job!"
+      - "You're doing wonderful!"
+      - "Keep going!"
+      - "Excellent work!"
+      - "That's the right idea!"
+    emphasis_words:
+      - great
+      - excellent
+      - wonderful
+      - amazing
+      - perfect
+
+  explaining:
+    pitch_adjust: 0.98
+    rate_adjust: 0.85
+    volume_adjust: 1.0
+    warmth_adjust: 1.0
+    energy_adjust: 0.80
+    phrases:
+      - "Let me explain..."
+      - "Here's how it works..."
+      - "Think about it this way..."
+      - "Let's break this down..."
+      - "So what this means is..."
+    emphasis_words:
+      - important
+      - key
+      - notice
+      - remember
+      - understand
+
+  celebrating:
+    pitch_adjust: 1.10
+    rate_adjust: 1.05
+    volume_adjust: 1.10
+    warmth_adjust: 1.15
+    energy_adjust: 1.30
+    phrases:
+      - "Fantastic!"
+      - "You did it!"
+      - "Amazing achievement!"
+      - "Way to go!"
+      - "I knew you could do it!"
+    emphasis_words:
+      - fantastic
+      - amazing
+      - brilliant
+      - outstanding
+      - spectacular
+
+  patient:
+    pitch_adjust: 0.95
+    rate_adjust: 0.80
+    volume_adjust: 0.95
+    warmth_adjust: 1.20
+    energy_adjust: 0.70
+    phrases:
+      - "It's okay, let's try again..."
+      - "Take your time..."
+      - "No rush, we'll figure this out..."
+      - "Let's look at this together..."
+      - "Everyone learns at their own pace..."
+    emphasis_words:
+      - together
+      - slowly
+      - carefully
+      - step
+      - gentle
+
+  reassuring:
+    pitch_adjust: 1.0
+    rate_adjust: 0.90
+    volume_adjust: 1.0
+    warmth_adjust: 1.25
+    energy_adjust: 0.75
+    phrases:
+      - "Don't worry..."
+      - "It's perfectly normal..."
+      - "You're on the right track..."
+      - "Mistakes help us learn..."
+      - "That's a common challenge..."
+    emphasis_words:
+      - okay
+      - normal
+      - fine
+      - right
+      - good
+
+# Emphasis Patterns
+emphasis:
+  strong:
+    volume_boost: 1.2
+    pitch_boost: 1.1
+    ssml: '<emphasis level="strong">{text}</emphasis>'
+
+  moderate:
+    volume_boost: 1.1
+    pitch_boost: 1.05
+    ssml: '<emphasis level="moderate">{text}</emphasis>'
+
+  reduced:
+    volume_boost: 0.9
+    pitch_boost: 0.95
+    ssml: '<emphasis level="reduced">{text}</emphasis>'
+
+# SSML Templates
+ssml_templates:
+  basic:
+    template: '<speak>{text}</speak>'
+    use_case: "Simple text without special formatting"
+
+  with_prosody:
+    template: |
+      <speak>
+        <prosody rate="{rate}%" pitch="{pitch}%" volume="{volume}">
+          {text}
+        </prosody>
+      </speak>
+    use_case: "Text with voice characteristic adjustments"
+
+  with_pauses:
+    template: |
+      <speak>
+        <prosody rate="{rate}%">
+          {text_with_breaks}
+        </prosody>
+      </speak>
+    use_case: "Educational content with pedagogical pauses"
+
+  math_expression:
+    template: |
+      <speak>
+        <prosody rate="90%" pitch="0%">
+          <emphasis level="moderate">{expression}</emphasis>
+        </prosody>
+      </speak>
+    use_case: "Mathematical expressions"
+
+  celebration:
+    template: |
+      <speak>
+        <prosody rate="110%" pitch="+10%" volume="loud">
+          <emphasis level="strong">{text}</emphasis>
+        </prosody>
+      </speak>
+    use_case: "Celebration and positive feedback"
+
+  explanation:
+    template: |
+      <speak>
+        <prosody rate="85%" pitch="0%">
+          {text}
+          <break time="300ms"/>
+        </prosody>
+      </speak>
+    use_case: "Detailed explanations with pauses"
+
+# Pause Settings (in milliseconds)
+pauses:
+  sentence_end: 500
+  clause_end: 300
+  comma: 200
+  key_concept: 400
+  thinking_pause: 600
+  dramatic_pause: 800
+
+# Pronunciation Accuracy Settings
+pronunciation:
+  accuracy_target: 0.98  # 98% target accuracy
+  retry_mispronunciations: true
+  use_phonetic_overrides: true
+  context_aware: true
+
+  # Subject-specific pronunciation
+  subjects:
+    math:
+      slow_down: true
+      rate_multiplier: 0.90
+      emphasis_on_operators: true
+
+    science:
+      slow_down: true
+      rate_multiplier: 0.92
+      use_technical_pronunciation: true
+
+    reading:
+      slow_down: false
+      rate_multiplier: 1.0
+      natural_flow: true
+
+# Age-Appropriate Adjustments
+age_adjustments:
+  "6-7":
+    rate_multiplier: 0.85
+    pitch_boost: 1.08
+    simplify_vocabulary: true
+    extra_pauses: true
+
+  "8-9":
+    rate_multiplier: 0.92
+    pitch_boost: 1.04
+    simplify_vocabulary: false
+    extra_pauses: true
+
+  "10-11":
+    rate_multiplier: 0.98
+    pitch_boost: 1.02
+    simplify_vocabulary: false
+    extra_pauses: false
+
+  "12":
+    rate_multiplier: 1.0
+    pitch_boost: 1.0
+    simplify_vocabulary: false
+    extra_pauses: false
+
+# Content Type Settings
+content_types:
+  instruction:
+    speed: "patient_teaching"
+    tone: "explaining"
+    pauses: true
+
+  feedback:
+    speed: "quick_feedback"
+    tone: "encouraging"
+    pauses: false
+
+  explanation:
+    speed: "slow_explanation"
+    tone: "explaining"
+    pauses: true
+
+  celebration:
+    speed: "energetic"
+    tone: "celebrating"
+    pauses: false
+
+  question:
+    speed: "normal"
+    tone: "neutral"
+    pauses: false
+
+# Performance Monitoring
+monitoring:
+  track_pronunciation_errors: true
+  log_synthesis_time: true
+  measure_clarity_score: true
+  collect_user_feedback: true

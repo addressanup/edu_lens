@@ -1,0 +1,299 @@
+# OCR Engine Configuration for EduLens
+# Optimized for elementary educational materials (ages 6-12)
+#
+# Author: Vision Processing Agent (VIS-001)
+# Target: 95% accuracy on printed educational materials
+
+# OCR Backend Configuration
+backend:
+  engine: "tesseract"  # Options: tesseract, easyocr, paddleocr
+
+  # Tesseract-specific settings
+  tesseract:
+    psm: 3  # Page Segmentation Mode
+            # 0 = Orientation and script detection only
+            # 1 = Automatic page segmentation with OSD
+            # 3 = Fully automatic page segmentation (default)
+            # 4 = Assume a single column of text of variable sizes
+            # 6 = Assume a single uniform block of text
+            # 11 = Sparse text. Find as much text as possible
+
+    oem: 3  # OCR Engine Mode
+            # 0 = Legacy engine only
+            # 1 = Neural nets LSTM engine only
+            # 2 = Legacy + LSTM engines
+            # 3 = Default, based on what is available
+
+    language: "eng"  # Primary language
+
+    # Character whitelist for educational content
+    # Empty means no restriction, uncomment to enable
+    # char_whitelist: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?;:'\"-+=×÷<>()"
+
+# Document Type Specific Configurations
+document_types:
+  worksheet:
+    preprocessing:
+      deskew: true
+      denoise: true
+      enhance_contrast: true
+      sharpen: false
+      binarization_method: "adaptive"
+      adaptive_block_size: 15
+      adaptive_c: 2
+      remove_lines: true  # Remove grid lines common in worksheets
+
+    tesseract_psm: 11  # Sparse text mode for worksheet questions
+
+    confidence_threshold: 0.6
+
+  textbook:
+    preprocessing:
+      deskew: true
+      denoise: true
+      enhance_contrast: true
+      sharpen: true
+      binarization_method: "adaptive"
+      adaptive_block_size: 11
+      adaptive_c: 2
+      remove_lines: false
+
+    tesseract_psm: 3  # Fully automatic for structured pages
+
+    confidence_threshold: 0.7
+
+  handout:
+    preprocessing:
+      deskew: true
+      denoise: true
+      enhance_contrast: true
+      sharpen: false
+      binarization_method: "adaptive"
+      adaptive_block_size: 13
+      adaptive_c: 2
+      remove_lines: false
+
+    tesseract_psm: 6  # Single block of text
+
+    confidence_threshold: 0.65
+
+  workbook:
+    preprocessing:
+      deskew: true
+      denoise: true
+      enhance_contrast: true
+      sharpen: false
+      binarization_method: "adaptive"
+      adaptive_block_size: 15
+      adaptive_c: 2
+      remove_lines: true
+
+    tesseract_psm: 3
+
+    confidence_threshold: 0.6
+
+  flashcard:
+    preprocessing:
+      deskew: true
+      denoise: false  # Usually clean images
+      enhance_contrast: true
+      sharpen: false
+      binarization_method: "otsu"
+      resize_scale: 2.0  # Upscale for better recognition
+      remove_lines: false
+
+    tesseract_psm: 6  # Single block
+
+    confidence_threshold: 0.7
+
+# Image Preprocessing Configuration
+preprocessing:
+  # Deskewing (rotation correction)
+  deskew:
+    enabled: true
+    max_angle: 10.0  # Maximum rotation angle to correct (degrees)
+
+  # Noise reduction
+  denoise:
+    enabled: true
+    method: "bilateral"  # Options: bilateral, gaussian, median, nlmeans
+    strength: 10
+
+  # Contrast enhancement
+  enhance_contrast:
+    enabled: true
+    method: "clahe"  # Options: clahe, histogram, normalize
+    clahe_clip_limit: 2.0
+    clahe_tile_size: 8
+
+  # Sharpening
+  sharpen:
+    enabled: false
+    strength: 1.0
+
+  # Binarization
+  binarization:
+    method: "adaptive"  # Options: otsu, adaptive, simple
+
+    # Adaptive thresholding parameters
+    adaptive_block_size: 11  # Must be odd number
+    adaptive_c: 2
+
+    # Simple thresholding parameter
+    binary_threshold: 127
+
+  # Line removal (for worksheets)
+  remove_lines:
+    enabled: false
+    line_type: "both"  # Options: horizontal, vertical, both
+
+  # Resizing
+  resize:
+    enabled: false
+    scale: 1.0
+    interpolation: "cubic"  # Options: nearest, linear, cubic, area
+
+# Educational Content Optimization
+education_mode:
+  enabled: true
+
+  # Elementary education specific settings (ages 6-12)
+  elementary:
+    # Font size expectations (in points)
+    min_font_size: 10
+    max_font_size: 24
+    typical_font_size: 12
+
+    # Common educational fonts
+    expected_fonts:
+      - "Arial"
+      - "Times New Roman"
+      - "Comic Sans MS"
+      - "Century Gothic"
+      - "Verdana"
+
+    # Enable recognition of educational symbols
+    math_symbols: true
+
+    # Common elementary vocabulary optimization
+    vocabulary_level: "elementary"
+
+    # Layout analysis for structured content
+    layout_analysis: true
+
+# Performance Configuration
+performance:
+  # Edge deployment optimization
+  edge_optimized: true
+
+  # Maximum processing time per image (ms)
+  max_processing_time_ms: 5000
+
+  # Enable GPU acceleration if available
+  use_gpu: false
+
+  # Number of threads for parallel processing
+  num_threads: 2
+
+  # Memory constraints for edge devices (MB)
+  max_memory_mb: 512
+
+# Quality Assurance
+quality:
+  # Minimum confidence score to accept results
+  min_confidence: 0.6
+
+  # Enable confidence scoring for each text region
+  enable_confidence_scoring: true
+
+  # Target accuracy for printed text
+  target_accuracy: 0.95
+
+  # Enable quality validation
+  enable_validation: true
+
+  # Validation thresholds
+  validation:
+    min_text_length: 1
+    max_text_length: 10000
+    min_regions: 1
+    max_regions: 1000
+
+# Output Configuration
+output:
+  # Include bounding boxes in results
+  include_bounding_boxes: true
+
+  # Include confidence scores
+  include_confidence: true
+
+  # Include metadata
+  include_metadata: true
+
+  # Output format
+  format: "dict"  # Options: dict, json
+
+  # Structured output options
+  structured:
+    group_by_line: true
+    group_by_paragraph: false
+    preserve_layout: true
+
+# Logging Configuration
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+  # Enable performance logging
+  log_performance: true
+
+  # Enable accuracy metrics logging
+  log_accuracy: true
+
+  # Log file path (empty for console only)
+  log_file: ""
+
+# Advanced Settings
+advanced:
+  # Enable experimental features
+  experimental_features: false
+
+  # Custom preprocessing pipeline
+  # If specified, overrides default preprocessing
+  custom_pipeline: []
+  # Example:
+  # - "deskew"
+  # - "denoise"
+  # - "enhance_contrast"
+  # - "binarize"
+
+  # Cache preprocessed images
+  cache_preprocessing: false
+
+  # Enable multi-scale recognition
+  multi_scale: false
+  multi_scale_factors: [0.5, 1.0, 2.0]
+
+# Testing Configuration
+testing:
+  # Enable synthetic test image generation
+  enable_synthetic_tests: true
+
+  # Test accuracy benchmarks
+  accuracy_benchmarks:
+    simple_text: 0.95
+    numbers: 0.98
+    mixed_content: 0.93
+    questions: 0.92
+    punctuation: 0.90
+
+  # Performance benchmarks
+  performance_benchmarks:
+    max_processing_time_ms: 2000
+    min_throughput_images_per_sec: 0.5
+
+  # Test fixtures directory
+  fixtures_dir: "tests/vision/fixtures"
+
+  # Output test results
+  output_test_results: true
+  results_dir: "tests/vision/results"

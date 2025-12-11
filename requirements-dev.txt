@@ -1,0 +1,225 @@
+# EduLens Development Dependencies
+# Python 3.11+ Required
+#
+# Install with: pip install -r requirements-dev.txt
+# Or install all deps: pip install -r requirements.txt -r requirements-dev.txt
+
+# ============================================================================
+# Testing Framework
+# ============================================================================
+
+# Core testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0          # Async test support
+pytest-cov>=4.1.0               # Coverage reporting
+pytest-mock>=3.12.0             # Mocking utilities
+pytest-timeout>=2.2.0           # Test timeout management
+pytest-xdist>=3.5.0             # Parallel test execution
+pytest-benchmark>=4.0.0         # Performance benchmarking
+pytest-sugar>=0.9.7             # Better test output
+pytest-html>=4.1.0              # HTML test reports
+
+# Test fixtures and data
+pytest-factoryboy>=2.6.0        # Factory pattern for fixtures
+pytest-freezegun>=0.4.2         # Time mocking
+pytest-env>=1.1.0               # Environment variable management
+faker>=20.1.0                   # Fake data generation
+
+# Testing utilities
+responses>=0.24.0               # Mock HTTP requests
+pytest-httpx>=0.27.0            # Mock httpx requests
+aioresponses>=0.7.6             # Mock aiohttp requests
+
+# ============================================================================
+# Code Quality and Linting
+# ============================================================================
+
+# Primary linter (modern, fast)
+ruff>=0.1.9
+
+# Alternative/additional linters
+flake8>=6.1.0
+flake8-docstrings>=1.7.0
+flake8-bugbear>=23.12.2
+flake8-comprehensions>=3.14.0
+flake8-simplify>=0.21.0
+pep8-naming>=0.13.3
+
+# Code formatting
+black>=23.11.0
+isort>=5.12.0
+
+# Type checking
+mypy>=1.7.0
+types-requests>=2.31.0
+types-redis>=4.6.0
+types-pyyaml>=6.0.12
+types-aiofiles>=23.2.0
+
+# ============================================================================
+# Security and Safety Testing
+# ============================================================================
+
+# Security scanning
+bandit>=1.7.5                   # Security issue scanner
+safety>=2.3.5                   # Dependency vulnerability checker
+pip-audit>=2.6.1                # Audit Python packages for vulnerabilities
+
+# ============================================================================
+# Coverage and Reporting
+# ============================================================================
+
+coverage[toml]>=7.3.0           # Coverage measurement
+coverage-badge>=1.1.0           # Generate coverage badges
+pytest-cov>=4.1.0               # Pytest coverage plugin
+
+# ============================================================================
+# Documentation
+# ============================================================================
+
+# Documentation generation
+mkdocs>=1.5.3
+mkdocs-material>=9.5.0
+mkdocstrings>=0.24.0
+mkdocstrings-python>=1.7.0
+mkdocs-mermaid2-plugin>=1.1.0
+
+# API documentation
+pdoc>=14.3.0
+
+# ============================================================================
+# Development Tools
+# ============================================================================
+
+# Interactive debugging
+ipdb>=0.13.13                   # IPython debugger
+ipython>=8.18.0                 # Enhanced Python shell
+pdbpp>=0.10.3                   # Better pdb
+
+# Code analysis
+pylint>=3.0.0                   # Comprehensive code analysis
+radon>=6.0.1                    # Code complexity analysis
+vulture>=2.10                   # Find dead code
+interrogate>=1.5.0              # Check docstring coverage
+
+# Pre-commit hooks
+pre-commit>=3.6.0
+
+# ============================================================================
+# Performance Testing and Profiling
+# ============================================================================
+
+# Profiling
+py-spy>=0.3.14                  # Sampling profiler
+memory-profiler>=0.61.0         # Memory profiling
+line-profiler>=4.1.1            # Line-by-line profiling
+pytest-profiling>=1.7.0         # Pytest profiling plugin
+
+# Load testing
+locust>=2.20.0                  # Load testing framework
+
+# ============================================================================
+# AI/ML Testing Dependencies
+# ============================================================================
+
+# Image processing for vision tests
+Pillow>=10.1.0
+numpy>=1.26.0
+opencv-python>=4.8.0            # Computer vision testing
+
+# Audio processing for audio tests
+soundfile>=0.12.1               # Audio file I/O
+librosa>=0.10.0                 # Audio analysis
+pydub>=0.25.1                   # Audio manipulation
+
+# ============================================================================
+# Database Testing
+# ============================================================================
+
+# Database testing utilities
+pytest-postgresql>=5.0.0        # PostgreSQL fixtures
+fakeredis>=2.20.0               # Fake Redis for testing
+sqlalchemy-utils>=0.41.1        # SQLAlchemy testing utilities
+
+# ============================================================================
+# Utilities
+# ============================================================================
+
+# Time and date utilities
+freezegun>=1.4.0                # Time mocking
+python-dateutil>=2.8.2
+
+# JSON and data validation
+jsonschema>=4.20.0              # JSON schema validation
+pydantic>=2.5.0                 # Data validation (already in main requirements)
+
+# HTTP testing
+httpretty>=1.1.7                # HTTP request mocking
+
+# Environment management
+python-dotenv>=1.0.0            # Load .env files (already in main requirements)
+
+# Build tools
+build>=1.0.3                    # PEP 517 build frontend
+wheel>=0.42.0                   # Wheel package format
+setuptools>=69.0.0              # Setup tools
+
+# ============================================================================
+# Continuous Integration Tools
+# ============================================================================
+
+# CI reporting
+codecov>=2.1.13                 # Codecov integration
+coveralls>=3.3.1                # Coveralls integration
+
+# GitHub Actions utilities
+pytest-github-actions-annotate-failures>=0.2.0
+
+# ============================================================================
+# Optional: Advanced Testing
+# ============================================================================
+
+# Property-based testing
+hypothesis>=6.92.0              # Property-based testing
+
+# Mutation testing
+mutmut>=2.4.4                   # Mutation testing
+
+# Contract testing
+pact-python>=2.1.1              # Contract testing
+
+# Snapshot testing
+syrupy>=4.6.0                   # Snapshot testing
+
+# ============================================================================
+# Development Extras
+# ============================================================================
+
+# Notebook support (for experimentation)
+jupyter>=1.0.0
+notebook>=7.0.0
+jupyterlab>=4.0.0
+
+# Data inspection
+tabulate>=0.9.0                 # Pretty-print tables
+rich>=13.7.0                    # Rich terminal output (already in main requirements)
+
+# File watching
+watchdog>=3.0.0                 # File system monitoring
+pytest-watch>=4.2.0             # Auto-run tests on file changes
+
+# ============================================================================
+# Platform-specific dependencies
+# ============================================================================
+
+# macOS-specific
+pyobjc-framework-AVFoundation>=10.0; sys_platform == 'darwin'  # Audio/video on macOS
+
+# Linux-specific
+python-xlib>=0.33; sys_platform == 'linux'  # X11 support
+
+# ============================================================================
+# Version Control and Git
+# ============================================================================
+
+GitPython>=3.1.40               # Git repository interaction

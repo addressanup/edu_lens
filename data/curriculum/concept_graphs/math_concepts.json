@@ -1,0 +1,369 @@
+{
+  "subject": "math",
+  "name": "Mathematics Concept Graph",
+  "description": "Hierarchical representation of mathematical concepts K-6 with prerequisite relationships",
+  "concept_hierarchy": {
+    "root_domains": [
+      "counting_cardinality",
+      "operations",
+      "place_value",
+      "fractions",
+      "measurement",
+      "geometry",
+      "algebra"
+    ],
+    "domains": {
+      "counting_cardinality": {
+        "name": "Counting and Cardinality",
+        "grade_range": "K",
+        "root_concepts": ["math_k_cc_001", "math_k_cc_002"],
+        "description": "Foundational counting and number sense"
+      },
+      "operations": {
+        "name": "Operations and Algebraic Thinking",
+        "grade_range": "K-6",
+        "root_concepts": ["math_k_oa_001", "math_k_oa_002"],
+        "description": "Addition, subtraction, multiplication, division, and problem solving"
+      },
+      "place_value": {
+        "name": "Place Value and Base Ten",
+        "grade_range": "1-6",
+        "root_concepts": ["math_1_nbt_001"],
+        "description": "Understanding our number system and operations with multi-digit numbers"
+      },
+      "fractions": {
+        "name": "Fractions and Decimals",
+        "grade_range": "3-6",
+        "root_concepts": ["math_3_nf_001"],
+        "description": "Understanding parts of wholes and rational numbers"
+      },
+      "measurement": {
+        "name": "Measurement and Data",
+        "grade_range": "K-6",
+        "root_concepts": ["math_5_md_001"],
+        "description": "Measuring attributes and representing data"
+      },
+      "geometry": {
+        "name": "Geometry",
+        "grade_range": "K-6",
+        "root_concepts": [],
+        "description": "Shapes, spatial reasoning, and geometric properties"
+      },
+      "algebra": {
+        "name": "Ratios and Proportional Relationships",
+        "grade_range": "6",
+        "root_concepts": ["math_6_rp_001", "math_6_ee_001"],
+        "description": "Introduction to algebraic thinking"
+      }
+    }
+  },
+  "prerequisite_graph": {
+    "math_k_cc_001": {
+      "concept": "Count to 100 by ones and tens",
+      "prerequisites": [],
+      "enables": ["math_k_cc_003", "math_1_nbt_001"]
+    },
+    "math_k_cc_002": {
+      "concept": "One-to-one correspondence",
+      "prerequisites": [],
+      "enables": ["math_k_cc_003", "math_k_oa_001"]
+    },
+    "math_k_cc_003": {
+      "concept": "Compare numbers",
+      "prerequisites": ["math_k_cc_002"],
+      "enables": []
+    },
+    "math_k_oa_001": {
+      "concept": "Addition within 5",
+      "prerequisites": ["math_k_cc_002"],
+      "enables": ["math_k_oa_002", "math_1_oa_001"]
+    },
+    "math_k_oa_002": {
+      "concept": "Subtraction within 5",
+      "prerequisites": ["math_k_cc_002", "math_k_oa_001"],
+      "enables": ["math_1_oa_002"]
+    },
+    "math_1_oa_001": {
+      "concept": "Addition within 20",
+      "prerequisites": ["math_k_oa_001"],
+      "enables": ["math_1_oa_002", "math_1_oa_003", "math_2_oa_001"]
+    },
+    "math_1_oa_002": {
+      "concept": "Subtraction within 20",
+      "prerequisites": ["math_k_oa_002", "math_1_oa_001"],
+      "enables": ["math_1_oa_003"]
+    },
+    "math_1_oa_003": {
+      "concept": "Addition and subtraction word problems",
+      "prerequisites": ["math_1_oa_001", "math_1_oa_002"],
+      "enables": []
+    },
+    "math_1_nbt_001": {
+      "concept": "Understanding place value (tens and ones)",
+      "prerequisites": ["math_k_cc_001"],
+      "enables": ["math_2_nbt_001", "math_2_oa_001"]
+    },
+    "math_2_oa_001": {
+      "concept": "Addition within 100",
+      "prerequisites": ["math_1_oa_001", "math_1_nbt_001"],
+      "enables": ["math_3_oa_003"]
+    },
+    "math_2_oa_002": {
+      "concept": "Arrays and repeated addition",
+      "prerequisites": ["math_1_oa_001"],
+      "enables": ["math_3_oa_001"]
+    },
+    "math_2_nbt_001": {
+      "concept": "Understanding place value to 1000",
+      "prerequisites": ["math_1_nbt_001"],
+      "enables": ["math_3_nf_001", "math_4_nf_004"]
+    },
+    "math_3_oa_001": {
+      "concept": "Understanding multiplication",
+      "prerequisites": ["math_2_oa_002"],
+      "enables": ["math_3_oa_002", "math_3_oa_003", "math_4_oa_001", "math_4_nf_003"]
+    },
+    "math_3_oa_002": {
+      "concept": "Understanding division",
+      "prerequisites": ["math_3_oa_001"],
+      "enables": ["math_3_oa_003", "math_4_oa_002"]
+    },
+    "math_3_oa_003": {
+      "concept": "Multiplication and division word problems",
+      "prerequisites": ["math_3_oa_001", "math_3_oa_002"],
+      "enables": []
+    },
+    "math_3_nf_001": {
+      "concept": "Understanding unit fractions",
+      "prerequisites": ["math_2_nbt_001"],
+      "enables": ["math_3_nf_002", "math_4_nf_001", "math_4_nf_003", "math_4_nf_004"]
+    },
+    "math_3_nf_002": {
+      "concept": "Comparing fractions",
+      "prerequisites": ["math_3_nf_001"],
+      "enables": []
+    },
+    "math_4_oa_001": {
+      "concept": "Multi-digit multiplication",
+      "prerequisites": ["math_3_oa_001", "math_2_nbt_001"],
+      "enables": []
+    },
+    "math_4_oa_002": {
+      "concept": "Factors and multiples",
+      "prerequisites": ["math_3_oa_001", "math_3_oa_002"],
+      "enables": []
+    },
+    "math_4_nf_001": {
+      "concept": "Equivalent fractions",
+      "prerequisites": ["math_3_nf_001"],
+      "enables": ["math_4_nf_002", "math_5_nf_001"]
+    },
+    "math_4_nf_002": {
+      "concept": "Adding and subtracting fractions",
+      "prerequisites": ["math_3_nf_001", "math_4_nf_001"],
+      "enables": ["math_5_nf_001"]
+    },
+    "math_4_nf_003": {
+      "concept": "Multiplying fractions by whole numbers",
+      "prerequisites": ["math_3_nf_001", "math_3_oa_001"],
+      "enables": ["math_5_nf_002"]
+    },
+    "math_4_nf_004": {
+      "concept": "Decimal notation for fractions",
+      "prerequisites": ["math_3_nf_001", "math_2_nbt_001"],
+      "enables": ["math_5_nbt_001"]
+    },
+    "math_5_nbt_001": {
+      "concept": "Place value with decimals",
+      "prerequisites": ["math_4_nf_004"],
+      "enables": ["math_5_nbt_002"]
+    },
+    "math_5_nbt_002": {
+      "concept": "Operations with decimals",
+      "prerequisites": ["math_5_nbt_001"],
+      "enables": []
+    },
+    "math_5_nf_001": {
+      "concept": "Adding fractions with unlike denominators",
+      "prerequisites": ["math_4_nf_002", "math_4_nf_001"],
+      "enables": []
+    },
+    "math_5_nf_002": {
+      "concept": "Multiplying fractions by fractions",
+      "prerequisites": ["math_4_nf_003"],
+      "enables": ["math_5_nf_003"]
+    },
+    "math_5_nf_003": {
+      "concept": "Dividing with fractions",
+      "prerequisites": ["math_5_nf_002"],
+      "enables": []
+    },
+    "math_5_md_001": {
+      "concept": "Understanding volume",
+      "prerequisites": ["math_3_oa_001"],
+      "enables": []
+    },
+    "math_6_rp_001": {
+      "concept": "Understanding ratios",
+      "prerequisites": ["math_3_oa_001", "math_4_nf_001"],
+      "enables": ["math_6_rp_002", "math_6_rp_003"]
+    },
+    "math_6_rp_002": {
+      "concept": "Unit rates",
+      "prerequisites": ["math_6_rp_001"],
+      "enables": []
+    },
+    "math_6_rp_003": {
+      "concept": "Understanding percent",
+      "prerequisites": ["math_6_rp_001", "math_4_nf_004"],
+      "enables": []
+    },
+    "math_6_ns_001": {
+      "concept": "Understanding negative numbers",
+      "prerequisites": ["math_5_nbt_001"],
+      "enables": ["math_6_ns_002", "math_6_ns_003"]
+    },
+    "math_6_ns_002": {
+      "concept": "Operations with integers",
+      "prerequisites": ["math_6_ns_001"],
+      "enables": []
+    },
+    "math_6_ns_003": {
+      "concept": "Rational numbers",
+      "prerequisites": ["math_6_ns_001", "math_5_nf_001"],
+      "enables": []
+    },
+    "math_6_ee_001": {
+      "concept": "Writing and evaluating expressions",
+      "prerequisites": ["math_5_nbt_002"],
+      "enables": ["math_6_ee_002"]
+    },
+    "math_6_ee_002": {
+      "concept": "Solving one-variable equations",
+      "prerequisites": ["math_6_ee_001"],
+      "enables": []
+    }
+  },
+  "learning_pathways": {
+    "addition_pathway": {
+      "name": "Addition Mastery Pathway",
+      "description": "Progressive mastery of addition from K-6",
+      "sequence": [
+        "math_k_oa_001",
+        "math_1_oa_001",
+        "math_2_oa_001",
+        "math_4_nf_002",
+        "math_5_nf_001",
+        "math_5_nbt_002"
+      ]
+    },
+    "subtraction_pathway": {
+      "name": "Subtraction Mastery Pathway",
+      "description": "Progressive mastery of subtraction from K-6",
+      "sequence": [
+        "math_k_oa_002",
+        "math_1_oa_002",
+        "math_4_nf_002",
+        "math_5_nf_001",
+        "math_5_nbt_002"
+      ]
+    },
+    "multiplication_pathway": {
+      "name": "Multiplication Mastery Pathway",
+      "description": "Building multiplication skills",
+      "sequence": [
+        "math_2_oa_002",
+        "math_3_oa_001",
+        "math_4_oa_001",
+        "math_4_nf_003",
+        "math_5_nf_002"
+      ]
+    },
+    "division_pathway": {
+      "name": "Division Mastery Pathway",
+      "description": "Building division skills",
+      "sequence": [
+        "math_3_oa_002",
+        "math_4_oa_002",
+        "math_5_nf_003"
+      ]
+    },
+    "fractions_pathway": {
+      "name": "Fractions and Decimals Pathway",
+      "description": "Understanding rational numbers",
+      "sequence": [
+        "math_3_nf_001",
+        "math_3_nf_002",
+        "math_4_nf_001",
+        "math_4_nf_002",
+        "math_4_nf_003",
+        "math_4_nf_004",
+        "math_5_nf_001",
+        "math_5_nf_002",
+        "math_5_nf_003",
+        "math_5_nbt_001",
+        "math_5_nbt_002"
+      ]
+    },
+    "place_value_pathway": {
+      "name": "Place Value Understanding",
+      "description": "Understanding our number system",
+      "sequence": [
+        "math_1_nbt_001",
+        "math_2_nbt_001",
+        "math_4_nf_004",
+        "math_5_nbt_001"
+      ]
+    },
+    "algebra_readiness_pathway": {
+      "name": "Algebra Readiness",
+      "description": "Building foundation for algebra",
+      "sequence": [
+        "math_6_rp_001",
+        "math_6_rp_002",
+        "math_6_rp_003",
+        "math_6_ns_001",
+        "math_6_ns_002",
+        "math_6_ee_001",
+        "math_6_ee_002"
+      ]
+    }
+  },
+  "skill_progression": {
+    "K": {
+      "grade": "Kindergarten",
+      "focus": "Number sense, basic counting, introduction to addition/subtraction",
+      "key_concepts": ["math_k_cc_001", "math_k_cc_002", "math_k_cc_003", "math_k_oa_001", "math_k_oa_002"]
+    },
+    "1": {
+      "grade": "Grade 1",
+      "focus": "Addition and subtraction fluency within 20, place value",
+      "key_concepts": ["math_1_oa_001", "math_1_oa_002", "math_1_oa_003", "math_1_nbt_001"]
+    },
+    "2": {
+      "grade": "Grade 2",
+      "focus": "Addition/subtraction within 100, place value to 1000, foundations of multiplication",
+      "key_concepts": ["math_2_oa_001", "math_2_oa_002", "math_2_nbt_001"]
+    },
+    "3": {
+      "grade": "Grade 3",
+      "focus": "Multiplication and division, introduction to fractions",
+      "key_concepts": ["math_3_oa_001", "math_3_oa_002", "math_3_oa_003", "math_3_nf_001", "math_3_nf_002"]
+    },
+    "4": {
+      "grade": "Grade 4",
+      "focus": "Multi-digit operations, fraction operations, decimals",
+      "key_concepts": ["math_4_oa_001", "math_4_oa_002", "math_4_nf_001", "math_4_nf_002", "math_4_nf_003", "math_4_nf_004"]
+    },
+    "5": {
+      "grade": "Grade 5",
+      "focus": "Fraction and decimal mastery, volume, division",
+      "key_concepts": ["math_5_nbt_001", "math_5_nbt_002", "math_5_nf_001", "math_5_nf_002", "math_5_nf_003", "math_5_md_001"]
+    },
+    "6": {
+      "grade": "Grade 6",
+      "focus": "Ratios, integers, algebraic thinking, expressions and equations",
+      "key_concepts": ["math_6_rp_001", "math_6_rp_002", "math_6_rp_003", "math_6_ns_001", "math_6_ns_002", "math_6_ns_003", "math_6_ee_001", "math_6_ee_002"]
+    }
+  }
+}

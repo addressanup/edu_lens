@@ -1,0 +1,376 @@
+{
+  "subject": "reading",
+  "name": "Reading/Language Arts Concept Graph",
+  "description": "Hierarchical representation of reading and language arts concepts K-6 with prerequisite relationships",
+  "concept_hierarchy": {
+    "root_domains": [
+      "foundational_skills",
+      "reading_literature",
+      "reading_informational",
+      "writing",
+      "language",
+      "vocabulary"
+    ],
+    "domains": {
+      "foundational_skills": {
+        "name": "Foundational Skills",
+        "grade_range": "K-2",
+        "root_concepts": ["read_k_rf_001", "read_k_rf_002"],
+        "description": "Phonics, phonemic awareness, fluency - building blocks of reading"
+      },
+      "reading_literature": {
+        "name": "Reading Literature",
+        "grade_range": "K-6",
+        "root_concepts": ["read_k_rl_001"],
+        "description": "Understanding and analyzing stories, poems, and drama"
+      },
+      "reading_informational": {
+        "name": "Reading Informational Text",
+        "grade_range": "3-6",
+        "root_concepts": ["read_3_ri_001"],
+        "description": "Comprehending and analyzing nonfiction texts"
+      },
+      "writing": {
+        "name": "Writing",
+        "grade_range": "3-6",
+        "root_concepts": ["read_3_w_001", "read_3_w_002"],
+        "description": "Expressing ideas through various writing forms"
+      },
+      "language": {
+        "name": "Language and Conventions",
+        "grade_range": "K-6",
+        "root_concepts": [],
+        "description": "Grammar, mechanics, and language conventions"
+      },
+      "vocabulary": {
+        "name": "Vocabulary Acquisition",
+        "grade_range": "4-6",
+        "root_concepts": ["read_4_l_001"],
+        "description": "Building and using academic vocabulary"
+      }
+    }
+  },
+  "prerequisite_graph": {
+    "read_k_rf_001": {
+      "concept": "Print concepts",
+      "prerequisites": [],
+      "enables": ["read_k_rf_002", "read_k_rl_001"]
+    },
+    "read_k_rf_002": {
+      "concept": "Letter recognition",
+      "prerequisites": [],
+      "enables": ["read_k_rf_003", "read_k_rf_004"]
+    },
+    "read_k_rf_003": {
+      "concept": "Phonemic awareness",
+      "prerequisites": [],
+      "enables": ["read_k_rf_004"]
+    },
+    "read_k_rf_004": {
+      "concept": "Letter-sound correspondence",
+      "prerequisites": ["read_k_rf_002", "read_k_rf_003"],
+      "enables": ["read_k_rf_005", "read_1_rf_001"]
+    },
+    "read_k_rf_005": {
+      "concept": "Reading simple words",
+      "prerequisites": ["read_k_rf_004"],
+      "enables": ["read_1_rf_001", "read_1_rf_002"]
+    },
+    "read_k_rl_001": {
+      "concept": "Story elements",
+      "prerequisites": ["read_k_rf_001"],
+      "enables": ["read_1_rl_001"]
+    },
+    "read_1_rf_001": {
+      "concept": "Phonics and word patterns",
+      "prerequisites": ["read_k_rf_004"],
+      "enables": ["read_1_rf_002", "read_2_rf_001"]
+    },
+    "read_1_rf_002": {
+      "concept": "Reading fluency",
+      "prerequisites": ["read_k_rf_005", "read_1_rf_001"],
+      "enables": ["read_2_rf_001"]
+    },
+    "read_1_rl_001": {
+      "concept": "Identifying key details",
+      "prerequisites": ["read_k_rl_001"],
+      "enables": ["read_1_rl_002", "read_2_rl_001"]
+    },
+    "read_1_rl_002": {
+      "concept": "Characters and lessons",
+      "prerequisites": ["read_1_rl_001"],
+      "enables": ["read_2_rl_002"]
+    },
+    "read_2_rf_001": {
+      "concept": "Advanced phonics patterns",
+      "prerequisites": ["read_1_rf_001"],
+      "enables": []
+    },
+    "read_2_rl_001": {
+      "concept": "Story structure",
+      "prerequisites": ["read_1_rl_001"],
+      "enables": ["read_2_rl_002", "read_3_rl_001"]
+    },
+    "read_2_rl_002": {
+      "concept": "Comparing characters",
+      "prerequisites": ["read_1_rl_002"],
+      "enables": ["read_3_rl_002"]
+    },
+    "read_3_rl_001": {
+      "concept": "Theme and central message",
+      "prerequisites": ["read_2_rl_001"],
+      "enables": ["read_4_rl_002"]
+    },
+    "read_3_rl_002": {
+      "concept": "Character traits and motivations",
+      "prerequisites": ["read_2_rl_002"],
+      "enables": ["read_4_rl_001"]
+    },
+    "read_3_rl_003": {
+      "concept": "Figurative language",
+      "prerequisites": ["read_2_rl_001"],
+      "enables": []
+    },
+    "read_3_ri_001": {
+      "concept": "Main idea and supporting details",
+      "prerequisites": ["read_2_rl_001"],
+      "enables": ["read_4_ri_001", "read_4_ri_002"]
+    },
+    "read_3_w_001": {
+      "concept": "Opinion writing",
+      "prerequisites": ["read_2_rl_001"],
+      "enables": ["read_5_w_001"]
+    },
+    "read_3_w_002": {
+      "concept": "Narrative writing",
+      "prerequisites": ["read_2_rl_001"],
+      "enables": []
+    },
+    "read_4_rl_001": {
+      "concept": "Making inferences",
+      "prerequisites": ["read_3_rl_002"],
+      "enables": ["read_5_rl_001"]
+    },
+    "read_4_rl_002": {
+      "concept": "Theme and summary",
+      "prerequisites": ["read_3_rl_001"],
+      "enables": ["read_5_rl_002"]
+    },
+    "read_4_ri_001": {
+      "concept": "Text structure",
+      "prerequisites": ["read_3_ri_001"],
+      "enables": ["read_5_ri_001"]
+    },
+    "read_4_ri_002": {
+      "concept": "Using text features",
+      "prerequisites": ["read_3_ri_001"],
+      "enables": ["read_5_w_002"]
+    },
+    "read_4_l_001": {
+      "concept": "Using context clues",
+      "prerequisites": ["read_3_rl_001"],
+      "enables": []
+    },
+    "read_5_rl_001": {
+      "concept": "Quoting accurately",
+      "prerequisites": ["read_4_rl_001"],
+      "enables": ["read_6_rl_001"]
+    },
+    "read_5_rl_002": {
+      "concept": "Comparing stories",
+      "prerequisites": ["read_4_rl_002"],
+      "enables": []
+    },
+    "read_5_ri_001": {
+      "concept": "Analyzing multiple accounts",
+      "prerequisites": ["read_4_ri_001"],
+      "enables": ["read_6_ri_001", "read_6_ri_002"]
+    },
+    "read_5_w_001": {
+      "concept": "Argumentative writing",
+      "prerequisites": ["read_3_w_001"],
+      "enables": ["read_6_w_001"]
+    },
+    "read_5_w_002": {
+      "concept": "Research and informative writing",
+      "prerequisites": ["read_4_ri_002"],
+      "enables": []
+    },
+    "read_6_rl_001": {
+      "concept": "Citing textual evidence",
+      "prerequisites": ["read_5_rl_001"],
+      "enables": ["read_6_rl_002"]
+    },
+    "read_6_rl_002": {
+      "concept": "Analyzing plot development",
+      "prerequisites": ["read_5_rl_002"],
+      "enables": []
+    },
+    "read_6_rl_003": {
+      "concept": "Point of view",
+      "prerequisites": ["read_5_rl_001"],
+      "enables": []
+    },
+    "read_6_ri_001": {
+      "concept": "Central idea and summary",
+      "prerequisites": ["read_5_ri_001"],
+      "enables": ["read_6_ri_002"]
+    },
+    "read_6_ri_002": {
+      "concept": "Author's purpose and argument",
+      "prerequisites": ["read_5_ri_001"],
+      "enables": []
+    },
+    "read_6_w_001": {
+      "concept": "Argument writing",
+      "prerequisites": ["read_5_w_001"],
+      "enables": []
+    }
+  },
+  "learning_pathways": {
+    "decoding_pathway": {
+      "name": "Decoding and Fluency Pathway",
+      "description": "Learning to read words accurately and fluently",
+      "sequence": [
+        "read_k_rf_002",
+        "read_k_rf_003",
+        "read_k_rf_004",
+        "read_k_rf_005",
+        "read_1_rf_001",
+        "read_1_rf_002",
+        "read_2_rf_001"
+      ]
+    },
+    "comprehension_pathway": {
+      "name": "Reading Comprehension Pathway",
+      "description": "Understanding and analyzing texts",
+      "sequence": [
+        "read_k_rl_001",
+        "read_1_rl_001",
+        "read_1_rl_002",
+        "read_2_rl_001",
+        "read_2_rl_002",
+        "read_3_rl_001",
+        "read_3_rl_002",
+        "read_4_rl_001",
+        "read_4_rl_002",
+        "read_5_rl_001",
+        "read_5_rl_002",
+        "read_6_rl_001",
+        "read_6_rl_002"
+      ]
+    },
+    "informational_text_pathway": {
+      "name": "Informational Text Pathway",
+      "description": "Reading and analyzing nonfiction",
+      "sequence": [
+        "read_3_ri_001",
+        "read_4_ri_001",
+        "read_4_ri_002",
+        "read_5_ri_001",
+        "read_6_ri_001",
+        "read_6_ri_002"
+      ]
+    },
+    "writing_pathway": {
+      "name": "Writing Development Pathway",
+      "description": "Developing writing skills across genres",
+      "sequence": [
+        "read_3_w_001",
+        "read_3_w_002",
+        "read_5_w_001",
+        "read_5_w_002",
+        "read_6_w_001"
+      ]
+    },
+    "literary_analysis_pathway": {
+      "name": "Literary Analysis Pathway",
+      "description": "Analyzing literature deeply",
+      "sequence": [
+        "read_3_rl_001",
+        "read_3_rl_002",
+        "read_3_rl_003",
+        "read_4_rl_001",
+        "read_4_rl_002",
+        "read_5_rl_001",
+        "read_6_rl_001",
+        "read_6_rl_002",
+        "read_6_rl_003"
+      ]
+    }
+  },
+  "skill_progression": {
+    "K": {
+      "grade": "Kindergarten",
+      "focus": "Print awareness, letter recognition, phonemic awareness, beginning reading",
+      "key_concepts": ["read_k_rf_001", "read_k_rf_002", "read_k_rf_003", "read_k_rf_004", "read_k_rf_005", "read_k_rl_001"]
+    },
+    "1": {
+      "grade": "Grade 1",
+      "focus": "Phonics mastery, reading fluency, basic comprehension",
+      "key_concepts": ["read_1_rf_001", "read_1_rf_002", "read_1_rl_001", "read_1_rl_002"]
+    },
+    "2": {
+      "grade": "Grade 2",
+      "focus": "Advanced phonics, fluent reading, story analysis",
+      "key_concepts": ["read_2_rf_001", "read_2_rl_001", "read_2_rl_002"]
+    },
+    "3": {
+      "grade": "Grade 3",
+      "focus": "Reading to learn, theme, informational text, writing",
+      "key_concepts": ["read_3_rl_001", "read_3_rl_002", "read_3_rl_003", "read_3_ri_001", "read_3_w_001", "read_3_w_002"]
+    },
+    "4": {
+      "grade": "Grade 4",
+      "focus": "Inference, text structure, vocabulary development",
+      "key_concepts": ["read_4_rl_001", "read_4_rl_002", "read_4_ri_001", "read_4_ri_002", "read_4_l_001"]
+    },
+    "5": {
+      "grade": "Grade 5",
+      "focus": "Text evidence, comparing texts, research writing",
+      "key_concepts": ["read_5_rl_001", "read_5_rl_002", "read_5_ri_001", "read_5_w_001", "read_5_w_002"]
+    },
+    "6": {
+      "grade": "Grade 6",
+      "focus": "Literary analysis, argument, author's craft",
+      "key_concepts": ["read_6_rl_001", "read_6_rl_002", "read_6_rl_003", "read_6_ri_001", "read_6_ri_002", "read_6_w_001"]
+    }
+  },
+  "reading_levels": {
+    "K": {
+      "typical_guided_reading_levels": "A-D",
+      "lexile_range": "BR-200L",
+      "skills": ["Emergent reader", "Picture support", "Simple sentences"]
+    },
+    "1": {
+      "typical_guided_reading_levels": "C-J",
+      "lexile_range": "100L-400L",
+      "skills": ["Beginning reader", "Decoding CVC words", "Simple chapter books"]
+    },
+    "2": {
+      "typical_guided_reading_levels": "I-M",
+      "lexile_range": "300L-500L",
+      "skills": ["Transitional reader", "Longer texts", "More complex sentences"]
+    },
+    "3": {
+      "typical_guided_reading_levels": "L-P",
+      "lexile_range": "500L-700L",
+      "skills": ["Independent reader", "Reading to learn", "Chapter books"]
+    },
+    "4": {
+      "typical_guided_reading_levels": "O-S",
+      "lexile_range": "600L-800L",
+      "skills": ["Fluent reader", "Analyzing text", "Making inferences"]
+    },
+    "5": {
+      "typical_guided_reading_levels": "R-V",
+      "lexile_range": "700L-900L",
+      "skills": ["Advanced reader", "Complex texts", "Multiple perspectives"]
+    },
+    "6": {
+      "typical_guided_reading_levels": "T-Z",
+      "lexile_range": "800L-1000L",
+      "skills": ["Mature reader", "Literary analysis", "Academic texts"]
+    }
+  }
+}

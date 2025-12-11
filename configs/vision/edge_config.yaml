@@ -1,0 +1,434 @@
+# Edge Deployment Configuration for Vision Models
+# Optimized for smart glasses with ARM-based processors
+#
+# Author: Vision Processing Agent (VIS-001)
+# Target: <500MB total memory, <500ms OCR, <1s handwriting inference
+
+# Device Configuration
+device:
+  # Device profile (auto-detected, can override)
+  profile: "auto"  # Options: auto, low_end, mid_range, high_end
+
+  # Target device type
+  target_device: "arm_cpu"  # Options: arm_cpu, x86_cpu, gpu, edge_tpu
+
+  # Hardware constraints
+  constraints:
+    max_memory_mb: 500
+    max_cpu_percent: 80
+    max_temperature_celsius: 75
+    min_battery_percent: 15
+
+  # Processor info
+  processor:
+    architecture: "arm"  # arm, x86_64
+    cores: 4
+    neon_support: true  # ARM NEON SIMD support
+
+# Model Optimization Configuration
+optimization:
+  # Quantization settings
+  quantization:
+    enabled: true
+    type: "int8"  # Options: int8, fp16, dynamic, static
+
+    # Calibration for static quantization
+    calibration:
+      enabled: false
+      num_samples: 100
+      data_source: "validation_set"
+
+  # Model pruning
+  pruning:
+    enabled: true
+    ratio: 0.3  # Remove 30% of weights
+    preserve_accuracy: true
+    min_accuracy_threshold: 0.90
+
+  # Graph optimizations
+  graph_optimization:
+    enabled: true
+    operator_fusion: true
+    constant_folding: true
+    remove_identity_ops: true
+
+  # ONNX conversion
+  onnx:
+    enabled: true
+    opset_version: 13
+    dynamic_axes: true
+    optimize: true
+
+# Model-Specific Configurations
+models:
+  # OCR Model
+  ocr:
+    enabled: true
+    model_path: "models/ocr_optimized.onnx"
+
+    # Performance targets
+    performance:
+      max_inference_time_ms: 500
+      max_memory_mb: 150
+      target_accuracy: 0.95
+
+    # Input configuration
+    input:
+      shape: [1, 1, 224, 224]  # [batch, channels, height, width]
+      dtype: "float32"
+      preprocessing:
+        normalize: true
+        mean: [0.485]
+        std: [0.229]
+
+    # Output configuration
+    output:
+      shape: [1, 1000]  # [batch, num_classes]
+      dtype: "float32"
+      postprocessing:
+        softmax: true
+        top_k: 5
+
+    # Quality levels
+    quality_levels:
+      minimal:
+        input_size: [112, 112]
+        batch_size: 1
+      low:
+        input_size: [160, 160]
+        batch_size: 1
+      medium:
+        input_size: [224, 224]
+        batch_size: 1
+      high:
+        input_size: [320, 320]
+        batch_size: 1
+      maximum:
+        input_size: [448, 448]
+        batch_size: 2
+
+  # Handwriting Recognition Model
+  handwriting:
+    enabled: true
+    model_path: "models/handwriting_optimized.onnx"
+
+    # Performance targets
+    performance:
+      max_inference_time_ms: 1000
+      max_memory_mb: 200
+      target_accuracy: 0.85
+
+    # Input configuration
+    input:
+      shape: [1, 1, 64, 256]  # [batch, channels, height, width]
+      dtype: "float32"
+      preprocessing:
+        normalize: true
+        mean: [0.5]
+        std: [0.5]
+
+    # Output configuration
+    output:
+      shape: [1, 100, 80]  # [batch, sequence_length, num_classes]
+      dtype: "float32"
+      postprocessing:
+        ctc_decode: true
+
+    # Quality levels
+    quality_levels:
+      minimal:
+        input_size: [32, 128]
+        batch_size: 1
+      low:
+        input_size: [48, 192]
+        batch_size: 1
+      medium:
+        input_size: [64, 256]
+        batch_size: 1
+      high:
+        input_size: [96, 384]
+        batch_size: 1
+      maximum:
+        input_size: [128, 512]
+        batch_size: 2
+
+  # Layout Analysis Model
+  layout:
+    enabled: true
+    model_path: "models/layout_optimized.onnx"
+
+    # Performance targets
+    performance:
+      max_inference_time_ms: 800
+      max_memory_mb: 150
+      target_accuracy: 0.92
+
+    # Input configuration
+    input:
+      shape: [1, 3, 512, 512]
+      dtype: "float32"
+      preprocessing:
+        normalize: true
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+
+    # Quality levels
+    quality_levels:
+      minimal:
+        input_size: [256, 256]
+      low:
+        input_size: [384, 384]
+      medium:
+        input_size: [512, 512]
+      high:
+        input_size: [640, 640]
+      maximum:
+        input_size: [768, 768]
+
+# Runtime Configuration
+runtime:
+  # Inference settings
+  inference:
+    # Execution providers (in order of preference)
+    providers:
+      - "CPUExecutionProvider"
+      # - "CUDAExecutionProvider"  # Uncomment if GPU available
+      # - "NnapiExecutionProvider"  # Android Neural Networks API
+
+    # Session options
+    session:
+      intra_op_num_threads: 2
+      inter_op_num_threads: 1
+      execution_mode: "sequential"  # sequential, parallel
+      graph_optimization_level: "all"  # disable, basic, extended, all
+
+    # Batch processing
+    batching:
+      enabled: true
+      max_batch_size: 4
+      timeout_ms: 100
+      dynamic_batching: true
+
+  # Warmup settings
+  warmup:
+    enabled: true
+    num_iterations: 5
+    on_load: true
+
+  # Caching
+  cache:
+    enabled: true
+    model_cache_dir: "/tmp/edulens_models"
+    preprocessed_cache_size: 50
+
+# Resource Management
+resource_management:
+  # Monitoring
+  monitoring:
+    enabled: true
+    interval_sec: 1.0
+    history_size: 100
+
+  # Automatic throttling
+  throttling:
+    enabled: true
+
+    # Throttle thresholds (as fraction of limits)
+    thresholds:
+      memory: 0.85  # Throttle at 85% of max memory
+      cpu: 0.90     # Throttle at 90% of max CPU
+      temperature: 0.95  # Throttle at 95% of max temp
+
+    # Throttling actions
+    actions:
+      reduce_quality: true
+      reduce_batch_size: true
+      increase_intervals: true
+      skip_preprocessing: false
+
+  # Adaptive quality
+  adaptive_quality:
+    enabled: true
+
+    # Quality adjustment rules
+    rules:
+      # Critical resources: use minimal quality
+      critical:
+        quality: "minimal"
+        max_batch_size: 1
+
+      # Low resources: use low quality
+      low:
+        quality: "low"
+        max_batch_size: 1
+
+      # Moderate resources: use medium quality
+      moderate:
+        quality: "medium"
+        max_batch_size: 2
+
+      # Good resources: use high quality
+      good:
+        quality: "high"
+        max_batch_size: 4
+
+      # Excellent resources: use maximum quality
+      excellent:
+        quality: "maximum"
+        max_batch_size: 4
+
+# Memory Management
+memory:
+  # Memory pool
+  pool:
+    enabled: true
+    preallocate_mb: 100
+    max_pool_mb: 400
+
+  # Garbage collection
+  gc:
+    enabled: true
+    interval_sec: 30
+    aggressive_on_low_memory: true
+
+  # Model unloading
+  auto_unload:
+    enabled: false
+    idle_timeout_sec: 300  # Unload if not used for 5 minutes
+
+# Power Management
+power:
+  # Battery-aware operation
+  battery_aware:
+    enabled: true
+
+    # Behavior when on battery
+    on_battery:
+      reduce_quality: true
+      increase_inference_interval: true
+      max_cpu_percent: 60
+
+    # Critical battery level actions
+    critical_battery:
+      threshold_percent: 15
+      actions:
+        force_minimal_quality: true
+        disable_background_tasks: true
+        reduce_frame_rate: true
+
+# Benchmarking
+benchmarking:
+  enabled: true
+
+  # Test configuration
+  tests:
+    warmup_iterations: 10
+    test_iterations: 100
+    measure_memory: true
+    measure_power: false  # May not be available on all devices
+
+  # Performance targets (for validation)
+  targets:
+    ocr_inference_ms: 500
+    handwriting_inference_ms: 1000
+    layout_inference_ms: 800
+    total_memory_mb: 500
+    memory_per_model_mb: 200
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+  # Performance logging
+  performance:
+    enabled: true
+    log_inference_times: true
+    log_memory_usage: true
+    log_throttling_events: true
+
+  # Model loading logging
+  model_loading:
+    enabled: true
+    verbose: false
+
+  # Resource monitoring logging
+  resource_monitoring:
+    enabled: true
+    interval_sec: 10  # Log every 10 seconds
+
+# Deployment
+deployment:
+  # Model versioning
+  versioning:
+    enabled: true
+    check_updates: false
+    auto_update: false
+
+  # Health checks
+  health_check:
+    enabled: true
+    interval_sec: 60
+
+    checks:
+      - memory_usage
+      - inference_time
+      - model_loaded
+      - resource_available
+
+  # Fallback behavior
+  fallback:
+    enabled: true
+
+    # Fallback to simpler models if targets not met
+    use_simpler_models: true
+
+    # Fallback to cloud processing if edge fails
+    cloud_fallback: false
+
+# Testing & Validation
+testing:
+  # Enable synthetic tests
+  synthetic_tests: true
+
+  # Test fixtures
+  fixtures_dir: "tests/vision/fixtures/edge"
+
+  # Validation thresholds
+  validation:
+    min_accuracy: 0.85
+    max_inference_time_ms: 1500
+    max_memory_mb: 500
+
+  # Automated testing
+  automated:
+    on_model_load: true
+    on_optimization: true
+    continuous: false
+
+# Advanced Settings
+advanced:
+  # Experimental features
+  experimental:
+    enabled: false
+    features: []
+
+  # Debug options
+  debug:
+    enabled: false
+    profile_inference: false
+    dump_intermediate: false
+    save_failed_inputs: false
+
+  # Platform-specific optimizations
+  platform_specific:
+    # ARM NEON optimizations
+    arm_neon: true
+
+    # x86 SIMD optimizations
+    x86_avx2: false
+
+    # Android-specific
+    android_nnapi: false
+
+    # iOS-specific
+    ios_metal: false

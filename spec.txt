@@ -1,0 +1,903 @@
+================================================================================
+                         EDULENS DEVELOPMENT SPECIFICATION
+                    Headless AI Agent Orchestration System
+================================================================================
+
+DOCUMENT VERSION: 1.0.0
+CREATED: 2025-01-XX
+PROJECT CODENAME: EduLens
+STATUS: READY FOR ORCHESTRATION
+
+================================================================================
+SECTION 1: PROJECT OVERVIEW
+================================================================================
+
+1.1 PRODUCT DEFINITION
+----------------------
+EduLens is an AI-powered smart glasses platform for elementary education (ages 
+6-12). The system provides real-time homework assistance through:
+  - Integrated camera for visual capture of learning materials
+  - On-device AI OS for context recognition and adaptive tutoring
+  - Audio-based explanations via built-in speakers
+  - Hands-free, voice-activated interaction
+
+1.2 DEVELOPMENT SCOPE
+---------------------
+This specification covers Phase 1 (Home Learning) development:
+  - Core AI tutoring system
+  - Vision processing pipeline
+  - Voice interface system
+  - Parent companion application
+  - Privacy and safety infrastructure
+
+1.3 SUCCESS CRITERIA
+--------------------
+  - [ ] AI can accurately recognize 95%+ of elementary-level printed text
+  - [ ] AI can recognize 85%+ of child handwriting samples
+  - [ ] Response latency < 2 seconds from query to audio output
+  - [ ] 4+ hours battery life under active use
+  - [ ] COPPA compliance certification ready
+  - [ ] Parent app functional with progress tracking
+
+================================================================================
+SECTION 2: AGENT TEAM ARCHITECTURE
+================================================================================
+
+2.1 ORCHESTRATOR AGENT (LEAD)
+-----------------------------
+AGENT_ID: ORCH-001
+ROLE: Project Orchestrator
+PRIORITY: CRITICAL
+CAPABILITIES:
+  - Task decomposition and assignment
+  - Dependency resolution
+  - Progress monitoring and reporting
+  - Conflict resolution between agents
+  - Resource allocation
+  - Milestone verification
+
+RESPONSIBILITIES:
+  - Parse this specification and create execution plan
+  - Spawn and manage subordinate agents
+  - Maintain global project state
+  - Enforce task dependencies
+  - Aggregate outputs and validate completions
+  - Handle failures and reassignments
+
+COMMUNICATION:
+  - Broadcast channel: /orchestrator/broadcast
+  - Command channel: /orchestrator/commands
+  - Status polling: /orchestrator/status
+
+--------------------------------------------------------------------------------
+
+2.2 VISION PROCESSING AGENT
+---------------------------
+AGENT_ID: VIS-001
+ROLE: Computer Vision Engineer
+PRIORITY: HIGH
+DEPENDENCIES: None (can start immediately)
+
+CAPABILITIES:
+  - OCR model development and optimization
+  - Handwriting recognition systems
+  - Document layout analysis
+  - Image preprocessing pipelines
+  - Edge deployment optimization
+
+TASKS:
+  VIS-001-T1: OCR Engine Development
+    DESCRIPTION: Build OCR system for printed elementary educational materials
+    INPUTS: Sample textbooks, worksheets, workbook images
+    OUTPUTS: 
+      - /models/ocr/printed_text_model.onnx
+      - /src/vision/ocr_engine.py
+      - /tests/vision/test_ocr_accuracy.py
+    ACCEPTANCE: 95% accuracy on test dataset
+    ESTIMATED_EFFORT: HIGH
+    
+  VIS-001-T2: Handwriting Recognition
+    DESCRIPTION: Develop CNN-based handwriting recognition for children's writing
+    INPUTS: Child handwriting datasets (ages 6-12)
+    OUTPUTS:
+      - /models/ocr/handwriting_model.onnx
+      - /src/vision/handwriting_engine.py
+      - /tests/vision/test_handwriting_accuracy.py
+    ACCEPTANCE: 85% accuracy on test dataset
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: VIS-001-T1
+
+  VIS-001-T3: Document Layout Analyzer
+    DESCRIPTION: Build system to identify problem boundaries, diagrams, and structure
+    INPUTS: Worksheet layout samples
+    OUTPUTS:
+      - /src/vision/layout_analyzer.py
+      - /src/vision/problem_segmenter.py
+    ACCEPTANCE: Correctly segments 90% of worksheet layouts
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: VIS-001-T1
+
+  VIS-001-T4: Edge Optimization
+    DESCRIPTION: Optimize all vision models for on-device inference
+    INPUTS: All vision models
+    OUTPUTS:
+      - /models/optimized/*.tflite
+      - /benchmarks/vision_latency_report.md
+    ACCEPTANCE: Inference < 500ms on target hardware
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: VIS-001-T1, VIS-001-T2, VIS-001-T3
+
+COMMUNICATION:
+  - Input channel: /agents/vision/tasks
+  - Output channel: /agents/vision/results
+  - Status: /agents/vision/status
+
+--------------------------------------------------------------------------------
+
+2.3 EDUCATIONAL AI AGENT
+------------------------
+AGENT_ID: EDU-001
+ROLE: Educational AI/ML Engineer
+PRIORITY: HIGH
+DEPENDENCIES: VIS-001-T1 (partial - for integration testing)
+
+CAPABILITIES:
+  - LLM fine-tuning and prompt engineering
+  - Curriculum knowledge base construction
+  - Pedagogical response generation
+  - Personalization and adaptive learning systems
+
+TASKS:
+  EDU-001-T1: Curriculum Knowledge Base
+    DESCRIPTION: Build structured knowledge base covering K-6 curriculum
+    INPUTS: 
+      - Common Core standards documentation
+      - Elementary curriculum guides
+      - Subject taxonomies (math, reading, science, social studies)
+    OUTPUTS:
+      - /data/curriculum/knowledge_base.json
+      - /data/curriculum/concept_graphs/
+      - /docs/curriculum_coverage_report.md
+    ACCEPTANCE: Coverage of 90%+ of Common Core K-6 standards
+    ESTIMATED_EFFORT: HIGH
+
+  EDU-001-T2: Tutoring LLM Fine-tuning
+    DESCRIPTION: Fine-tune base LLM for child-appropriate educational responses
+    INPUTS:
+      - Base model (specify: llama-3.2-3B or similar edge-deployable)
+      - Educational dialogue datasets
+      - Socratic method teaching examples
+    OUTPUTS:
+      - /models/llm/edulens_tutor_v1/
+      - /src/ai/tutor_inference.py
+      - /configs/llm/generation_config.yaml
+    ACCEPTANCE: 
+      - Responses are age-appropriate (human eval)
+      - Uses Socratic method 80%+ of applicable cases
+      - Never directly provides answers without explanation
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: EDU-001-T1
+
+  EDU-001-T3: Subject-Specific Reasoning Modules
+    DESCRIPTION: Build specialized reasoning for each subject area
+    INPUTS: Subject curricula, problem-solving methodologies
+    OUTPUTS:
+      - /src/ai/reasoning/math_solver.py
+      - /src/ai/reasoning/reading_comprehension.py
+      - /src/ai/reasoning/science_explainer.py
+      - /src/ai/reasoning/social_studies_helper.py
+    ACCEPTANCE: Correct reasoning in 90% of grade-level problems
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: EDU-001-T1, EDU-001-T2
+
+  EDU-001-T4: Personalization Engine
+    DESCRIPTION: Build adaptive learning system that tracks and responds to individual progress
+    INPUTS: Learning profile schema, progress tracking requirements
+    OUTPUTS:
+      - /src/ai/personalization/learner_profile.py
+      - /src/ai/personalization/adaptive_difficulty.py
+      - /src/ai/personalization/gap_detector.py
+      - /data/schemas/learner_profile_schema.json
+    ACCEPTANCE: System adapts explanation complexity based on profile
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: EDU-001-T2
+
+  EDU-001-T5: Response Safety Filters
+    DESCRIPTION: Implement content safety and appropriateness filters
+    INPUTS: Child safety guidelines, content policies
+    OUTPUTS:
+      - /src/ai/safety/content_filter.py
+      - /src/ai/safety/response_validator.py
+      - /tests/ai/test_safety_filters.py
+    ACCEPTANCE: 100% blocking of inappropriate content in test suite
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: EDU-001-T2
+
+COMMUNICATION:
+  - Input channel: /agents/education/tasks
+  - Output channel: /agents/education/results
+  - Status: /agents/education/status
+
+--------------------------------------------------------------------------------
+
+2.4 VOICE INTERFACE AGENT
+-------------------------
+AGENT_ID: VOI-001
+ROLE: Voice/Audio Systems Engineer
+PRIORITY: HIGH
+DEPENDENCIES: EDU-001-T2 (for integration)
+
+CAPABILITIES:
+  - Speech recognition systems
+  - Text-to-speech synthesis
+  - Wake word detection
+  - Audio processing and optimization
+
+TASKS:
+  VOI-001-T1: Wake Word Detection
+    DESCRIPTION: Build lightweight wake word detector for "Hey EduLens"
+    INPUTS: Wake word audio samples, negative samples
+    OUTPUTS:
+      - /models/audio/wake_word_detector.tflite
+      - /src/audio/wake_word_engine.py
+    ACCEPTANCE: 
+      - 95%+ true positive rate
+      - <2% false positive rate
+      - <100ms detection latency
+    ESTIMATED_EFFORT: MEDIUM
+
+  VOI-001-T2: Child Speech Recognition
+    DESCRIPTION: Implement ASR optimized for children's speech patterns
+    INPUTS: Child speech datasets (ages 6-12)
+    OUTPUTS:
+      - /models/audio/child_asr_model.onnx
+      - /src/audio/speech_recognizer.py
+      - /src/audio/child_speech_adapter.py
+    ACCEPTANCE: 90%+ accuracy on child speech test set
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: VOI-001-T1
+
+  VOI-001-T3: Text-to-Speech System
+    DESCRIPTION: Implement child-friendly TTS with encouraging tone
+    INPUTS: Voice persona requirements, TTS model options
+    OUTPUTS:
+      - /models/audio/tts_model/
+      - /src/audio/tts_engine.py
+      - /configs/audio/voice_persona.yaml
+    ACCEPTANCE: 
+      - Natural, friendly voice (human eval)
+      - Pronunciation accuracy 98%+
+      - Supports variable speed for explanations
+    ESTIMATED_EFFORT: MEDIUM
+
+  VOI-001-T4: Audio Pipeline Integration
+    DESCRIPTION: Build end-to-end audio processing pipeline
+    INPUTS: All audio components
+    OUTPUTS:
+      - /src/audio/audio_pipeline.py
+      - /src/audio/noise_cancellation.py
+      - /tests/audio/test_pipeline_latency.py
+    ACCEPTANCE: End-to-end latency < 500ms
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: VOI-001-T1, VOI-001-T2, VOI-001-T3
+
+COMMUNICATION:
+  - Input channel: /agents/voice/tasks
+  - Output channel: /agents/voice/results
+  - Status: /agents/voice/status
+
+--------------------------------------------------------------------------------
+
+2.5 INTEGRATION AGENT
+---------------------
+AGENT_ID: INT-001
+ROLE: Systems Integration Engineer
+PRIORITY: HIGH
+DEPENDENCIES: VIS-001, EDU-001, VOI-001 (all must have core components complete)
+
+CAPABILITIES:
+  - System architecture design
+  - Component integration
+  - API design and implementation
+  - Performance optimization
+
+TASKS:
+  INT-001-T1: Core System Architecture
+    DESCRIPTION: Design and implement the main application architecture
+    INPUTS: All component specifications
+    OUTPUTS:
+      - /src/core/edulens_main.py
+      - /src/core/component_manager.py
+      - /src/core/event_bus.py
+      - /docs/architecture/system_design.md
+    ACCEPTANCE: Clean separation of concerns, documented interfaces
+    ESTIMATED_EFFORT: HIGH
+
+  INT-001-T2: Vision-AI Integration
+    DESCRIPTION: Connect vision pipeline to educational AI
+    INPUTS: Vision outputs, AI inputs
+    OUTPUTS:
+      - /src/integration/vision_to_ai_bridge.py
+      - /src/integration/context_builder.py
+    ACCEPTANCE: Seamless data flow, <100ms overhead
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: INT-001-T1, VIS-001-T4, EDU-001-T2
+
+  INT-001-T3: Voice-AI Integration
+    DESCRIPTION: Connect voice interface to educational AI
+    INPUTS: Voice outputs, AI inputs/outputs
+    OUTPUTS:
+      - /src/integration/voice_to_ai_bridge.py
+      - /src/integration/response_to_speech.py
+    ACCEPTANCE: Natural conversation flow, <200ms overhead
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: INT-001-T1, VOI-001-T4, EDU-001-T2
+
+  INT-001-T4: End-to-End Pipeline
+    DESCRIPTION: Build complete homework assistance pipeline
+    INPUTS: All integrated components
+    OUTPUTS:
+      - /src/pipeline/homework_assistant.py
+      - /src/pipeline/session_manager.py
+      - /tests/integration/test_e2e_flow.py
+    ACCEPTANCE: 
+      - Complete flow from visual input to audio response
+      - Total latency < 2 seconds
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: INT-001-T2, INT-001-T3
+
+  INT-001-T5: On-Device Runtime
+    DESCRIPTION: Optimize complete system for target hardware
+    INPUTS: All models and code
+    OUTPUTS:
+      - /src/runtime/device_runtime.py
+      - /src/runtime/resource_manager.py
+      - /src/runtime/power_optimizer.py
+      - /benchmarks/device_performance_report.md
+    ACCEPTANCE: 
+      - 4+ hour battery life
+      - <50% CPU average utilization
+      - <2GB RAM peak usage
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: INT-001-T4
+
+COMMUNICATION:
+  - Input channel: /agents/integration/tasks
+  - Output channel: /agents/integration/results
+  - Status: /agents/integration/status
+
+--------------------------------------------------------------------------------
+
+2.6 PRIVACY & SECURITY AGENT
+----------------------------
+AGENT_ID: SEC-001
+ROLE: Security and Privacy Engineer
+PRIORITY: CRITICAL
+DEPENDENCIES: None (can start immediately, blocks deployment)
+
+CAPABILITIES:
+  - Privacy-preserving system design
+  - Security implementation
+  - Compliance verification
+  - Data protection systems
+
+TASKS:
+  SEC-001-T1: Privacy Architecture
+    DESCRIPTION: Design privacy-first data handling architecture
+    INPUTS: COPPA requirements, data flow diagrams
+    OUTPUTS:
+      - /docs/privacy/data_flow_diagram.md
+      - /docs/privacy/privacy_architecture.md
+      - /src/privacy/data_handler.py
+    ACCEPTANCE: Architecture review passes privacy audit
+    ESTIMATED_EFFORT: HIGH
+
+  SEC-001-T2: On-Device Data Protection
+    DESCRIPTION: Implement local data protection and minimization
+    INPUTS: Privacy architecture
+    OUTPUTS:
+      - /src/privacy/local_storage_manager.py
+      - /src/privacy/data_minimizer.py
+      - /src/privacy/auto_deletion.py
+    ACCEPTANCE: No persistent storage of images or raw audio
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: SEC-001-T1
+
+  SEC-001-T3: Secure Communication
+    DESCRIPTION: Implement encrypted communication for any cloud features
+    INPUTS: API specifications
+    OUTPUTS:
+      - /src/security/encryption_manager.py
+      - /src/security/secure_api_client.py
+      - /src/security/certificate_pinning.py
+    ACCEPTANCE: All transmissions encrypted, certificate pinning enabled
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: SEC-001-T1
+
+  SEC-001-T4: Parental Controls Backend
+    DESCRIPTION: Build backend for parental control features
+    INPUTS: Parent app requirements
+    OUTPUTS:
+      - /src/parental/control_manager.py
+      - /src/parental/usage_limiter.py
+      - /src/parental/feature_toggles.py
+    ACCEPTANCE: All parental controls functional and secure
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: SEC-001-T1
+
+  SEC-001-T5: COPPA Compliance Verification
+    DESCRIPTION: Verify and document COPPA compliance
+    INPUTS: Complete system
+    OUTPUTS:
+      - /docs/compliance/coppa_checklist.md
+      - /docs/compliance/data_practices.md
+      - /tests/security/test_compliance.py
+    ACCEPTANCE: All COPPA requirements verified
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: SEC-001-T2, SEC-001-T3, SEC-001-T4
+
+COMMUNICATION:
+  - Input channel: /agents/security/tasks
+  - Output channel: /agents/security/results
+  - Status: /agents/security/status
+
+--------------------------------------------------------------------------------
+
+2.7 COMPANION APP AGENT
+-----------------------
+AGENT_ID: APP-001
+ROLE: Mobile Application Developer
+PRIORITY: MEDIUM
+DEPENDENCIES: SEC-001-T4, INT-001-T1
+
+CAPABILITIES:
+  - Mobile app development (React Native)
+  - API integration
+  - UI/UX implementation
+  - Analytics integration
+
+TASKS:
+  APP-001-T1: App Architecture
+    DESCRIPTION: Design parent companion app architecture
+    INPUTS: Feature requirements, design specs
+    OUTPUTS:
+      - /app/src/App.tsx
+      - /app/src/navigation/
+      - /app/docs/app_architecture.md
+    ACCEPTANCE: Clean architecture, documented components
+    ESTIMATED_EFFORT: MEDIUM
+
+  APP-001-T2: Authentication System
+    DESCRIPTION: Implement secure parent authentication
+    INPUTS: Security requirements
+    OUTPUTS:
+      - /app/src/auth/
+      - /app/src/services/auth_service.ts
+    ACCEPTANCE: Secure auth flow, token management
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: APP-001-T1
+
+  APP-001-T3: Device Pairing
+    DESCRIPTION: Build Bluetooth pairing flow for glasses
+    INPUTS: Device communication protocol
+    OUTPUTS:
+      - /app/src/bluetooth/
+      - /app/src/screens/PairingScreen.tsx
+    ACCEPTANCE: Reliable pairing within 30 seconds
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: APP-001-T1
+
+  APP-001-T4: Progress Dashboard
+    DESCRIPTION: Build learning progress visualization
+    INPUTS: Learner profile data schema
+    OUTPUTS:
+      - /app/src/screens/DashboardScreen.tsx
+      - /app/src/components/ProgressCharts/
+      - /app/src/components/SubjectBreakdown/
+    ACCEPTANCE: Clear visualization of child's learning progress
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: APP-001-T2, APP-001-T3
+
+  APP-001-T5: Parental Controls UI
+    DESCRIPTION: Implement parental control settings interface
+    INPUTS: Parental control backend API
+    OUTPUTS:
+      - /app/src/screens/SettingsScreen.tsx
+      - /app/src/screens/UsageLimitsScreen.tsx
+      - /app/src/screens/ContentFiltersScreen.tsx
+    ACCEPTANCE: All parental controls accessible and functional
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: APP-001-T2, SEC-001-T4
+
+COMMUNICATION:
+  - Input channel: /agents/app/tasks
+  - Output channel: /agents/app/results
+  - Status: /agents/app/status
+
+--------------------------------------------------------------------------------
+
+2.8 TESTING AGENT
+-----------------
+AGENT_ID: TST-001
+ROLE: Quality Assurance Engineer
+PRIORITY: HIGH
+DEPENDENCIES: All agents (continuous testing)
+
+CAPABILITIES:
+  - Test automation
+  - Performance testing
+  - Security testing
+  - User acceptance testing coordination
+
+TASKS:
+  TST-001-T1: Test Infrastructure
+    DESCRIPTION: Set up testing frameworks and CI/CD pipeline
+    INPUTS: Project structure
+    OUTPUTS:
+      - /tests/conftest.py
+      - /.github/workflows/ci.yml
+      - /tests/fixtures/
+    ACCEPTANCE: Automated testing on all PRs
+    ESTIMATED_EFFORT: MEDIUM
+
+  TST-001-T2: Unit Test Suite
+    DESCRIPTION: Build comprehensive unit tests for all components
+    INPUTS: All component code
+    OUTPUTS:
+      - /tests/unit/
+      - Coverage report (target: 80%+)
+    ACCEPTANCE: 80%+ code coverage
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: TST-001-T1
+    CONTINUOUS: TRUE
+
+  TST-001-T3: Integration Test Suite
+    DESCRIPTION: Build integration tests for component interactions
+    INPUTS: Integrated components
+    OUTPUTS:
+      - /tests/integration/
+    ACCEPTANCE: All integration points tested
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: TST-001-T1, INT-001-T4
+    CONTINUOUS: TRUE
+
+  TST-001-T4: Performance Test Suite
+    DESCRIPTION: Build and run performance benchmarks
+    INPUTS: Complete system
+    OUTPUTS:
+      - /tests/performance/
+      - /benchmarks/performance_report.md
+    ACCEPTANCE: All latency and resource targets met
+    ESTIMATED_EFFORT: MEDIUM
+    DEPENDS_ON: INT-001-T5
+
+  TST-001-T5: Safety Test Suite
+    DESCRIPTION: Build adversarial tests for content safety
+    INPUTS: Safety filters
+    OUTPUTS:
+      - /tests/safety/
+      - /docs/safety_test_report.md
+    ACCEPTANCE: Zero unsafe responses in test suite
+    ESTIMATED_EFFORT: HIGH
+    DEPENDS_ON: EDU-001-T5
+
+COMMUNICATION:
+  - Input channel: /agents/testing/tasks
+  - Output channel: /agents/testing/results
+  - Status: /agents/testing/status
+
+================================================================================
+SECTION 3: TASK DEPENDENCY GRAPH
+================================================================================
+
+CRITICAL PATH (must complete in order):
+---------------------------------------
+SEC-001-T1 ──┐
+             ├──> SEC-001-T2 ──> SEC-001-T5 ──> [DEPLOYMENT GATE]
+VIS-001-T1 ──┼──> VIS-001-T2 ──> VIS-001-T4 ──┐
+             │                                 │
+EDU-001-T1 ──┴──> EDU-001-T2 ──> EDU-001-T3 ──┼──> INT-001-T4 ──> INT-001-T5
+                                              │
+VOI-001-T1 ──> VOI-001-T2 ──> VOI-001-T4 ────┘
+
+PARALLEL WORKSTREAMS:
+--------------------
+Stream 1: Vision Pipeline
+  VIS-001-T1 → VIS-001-T2 → VIS-001-T3 → VIS-001-T4
+
+Stream 2: Educational AI
+  EDU-001-T1 → EDU-001-T2 → EDU-001-T3 → EDU-001-T4
+                         └→ EDU-001-T5
+
+Stream 3: Voice Interface
+  VOI-001-T1 → VOI-001-T2 → VOI-001-T3 → VOI-001-T4
+
+Stream 4: Security (BLOCKING)
+  SEC-001-T1 → SEC-001-T2 → SEC-001-T3 → SEC-001-T4 → SEC-001-T5
+
+Stream 5: Companion App (after security foundation)
+  SEC-001-T4 → APP-001-T1 → APP-001-T2 → APP-001-T3 → APP-001-T4 → APP-001-T5
+
+Stream 6: Integration (convergence point)
+  [VIS + EDU + VOI complete] → INT-001-T1 → INT-001-T2 → INT-001-T3 → INT-001-T4 → INT-001-T5
+
+Stream 7: Testing (continuous)
+  TST-001-T1 → [TST-001-T2, TST-001-T3, TST-001-T4, TST-001-T5] (ongoing)
+
+================================================================================
+SECTION 4: COMMUNICATION PROTOCOLS
+================================================================================
+
+4.1 MESSAGE FORMAT
+------------------
+All inter-agent communication uses JSON:
+
+{
+  "message_id": "uuid-v4",
+  "timestamp": "ISO-8601",
+  "from_agent": "AGENT_ID",
+  "to_agent": "AGENT_ID | BROADCAST",
+  "message_type": "TASK_ASSIGNMENT | STATUS_UPDATE | COMPLETION | ERROR | QUERY",
+  "payload": {
+    "task_id": "string",
+    "status": "PENDING | IN_PROGRESS | BLOCKED | COMPLETED | FAILED",
+    "data": {},
+    "error": null
+  }
+}
+
+4.2 STATUS REPORTING
+--------------------
+Agents report status every 5 minutes (simulated) or on state change:
+
+{
+  "agent_id": "AGENT_ID",
+  "current_task": "TASK_ID",
+  "progress_percent": 0-100,
+  "blockers": [],
+  "estimated_completion": "ISO-8601",
+  "resource_usage": {
+    "tokens_used": int,
+    "api_calls": int
+  }
+}
+
+4.3 ERROR HANDLING
+------------------
+On error, agents must:
+  1. Log error with full context
+  2. Notify orchestrator immediately
+  3. Attempt recovery if possible
+  4. If unrecoverable, mark task FAILED with detailed explanation
+
+Error escalation:
+  - Minor (recoverable): Log and retry
+  - Major (blocking): Notify orchestrator, await instructions
+  - Critical (system): Halt and alert all agents
+
+4.4 ARTIFACT HANDOFF
+--------------------
+When a task produces artifacts for another agent:
+  1. Producer writes to designated output path
+  2. Producer sends COMPLETION message with artifact manifest
+  3. Orchestrator validates artifacts exist
+  4. Orchestrator notifies dependent agents
+  5. Consumer acknowledges receipt
+
+================================================================================
+SECTION 5: EXECUTION CONSTRAINTS
+================================================================================
+
+5.1 RESOURCE LIMITS
+-------------------
+Per-agent limits:
+  - Max concurrent API calls: 10
+  - Max file operations: 100/minute
+  - Max memory allocation: 4GB
+  - Max execution time per task: 4 hours
+
+5.2 QUALITY GATES
+-----------------
+Before marking any task COMPLETED:
+  [ ] All acceptance criteria met
+  [ ] Unit tests pass (if applicable)
+  [ ] Documentation updated
+  [ ] Artifacts in correct locations
+  [ ] No security vulnerabilities introduced
+
+5.3 MANDATORY REVIEWS
+---------------------
+The following require orchestrator approval before proceeding:
+  - Any changes to privacy/security architecture
+  - Model deployments
+  - API contract changes
+  - Database schema changes
+
+5.4 ROLLBACK REQUIREMENTS
+-------------------------
+All tasks must support rollback:
+  - Version control all artifacts
+  - Document rollback procedures
+  - Test rollback before marking complete
+
+================================================================================
+SECTION 6: FILE SYSTEM STRUCTURE
+================================================================================
+
+/edulens
+├── /src
+│   ├── /core                 # Main application code
+│   ├── /vision               # Vision processing modules
+│   ├── /ai                   # Educational AI modules
+│   │   ├── /reasoning        # Subject-specific reasoning
+│   │   ├── /personalization  # Adaptive learning
+│   │   └── /safety           # Content safety filters
+│   ├── /audio                # Voice interface modules
+│   ├── /integration          # Component bridges
+│   ├── /pipeline             # End-to-end pipelines
+│   ├── /runtime              # Device runtime
+│   ├── /privacy              # Privacy handling
+│   ├── /security             # Security modules
+│   └── /parental             # Parental controls
+├── /models
+│   ├── /ocr                  # OCR models
+│   ├── /audio                # Audio models
+│   ├── /llm                  # Language models
+│   └── /optimized            # Edge-optimized models
+├── /app                      # Parent companion app
+│   ├── /src
+│   │   ├── /screens
+│   │   ├── /components
+│   │   ├── /services
+│   │   ├── /auth
+│   │   └── /bluetooth
+│   └── /docs
+├── /data
+│   ├── /curriculum           # Educational content
+│   ├── /schemas              # Data schemas
+│   └── /test_fixtures        # Test data
+├── /tests
+│   ├── /unit
+│   ├── /integration
+│   ├── /performance
+│   └── /safety
+├── /configs                  # Configuration files
+├── /benchmarks               # Performance reports
+├── /docs
+│   ├── /architecture
+│   ├── /privacy
+│   ├── /compliance
+│   └── /api
+└── /.github
+    └── /workflows            # CI/CD pipelines
+
+================================================================================
+SECTION 7: INITIALIZATION SEQUENCE
+================================================================================
+
+ORCHESTRATOR BOOT SEQUENCE:
+---------------------------
+1. PARSE this specification file
+2. VALIDATE all task definitions and dependencies
+3. BUILD dependency graph
+4. IDENTIFY parallel workstreams
+5. SPAWN initial agents (no dependencies):
+   - VIS-001
+   - EDU-001
+   - VOI-001
+   - SEC-001
+   - TST-001
+6. ASSIGN initial tasks:
+   - VIS-001: VIS-001-T1
+   - EDU-001: EDU-001-T1
+   - VOI-001: VOI-001-T1
+   - SEC-001: SEC-001-T1
+   - TST-001: TST-001-T1
+7. MONITOR status channels
+8. ON task completion:
+   - Validate outputs
+   - Update dependency graph
+   - Assign next available tasks
+   - Spawn new agents if needed (INT-001, APP-001)
+9. CONTINUE until all tasks complete or critical failure
+
+================================================================================
+SECTION 8: MILESTONE DEFINITIONS
+================================================================================
+
+MILESTONE 1: Foundation Complete
+--------------------------------
+CRITERIA:
+  - [ ] SEC-001-T1 complete (Privacy Architecture)
+  - [ ] VIS-001-T1 complete (OCR Engine)
+  - [ ] EDU-001-T1 complete (Curriculum KB)
+  - [ ] VOI-001-T1 complete (Wake Word)
+  - [ ] TST-001-T1 complete (Test Infrastructure)
+GATE: Orchestrator review required
+
+MILESTONE 2: Core Components Complete
+-------------------------------------
+CRITERIA:
+  - [ ] VIS-001-T4 complete (All vision optimized)
+  - [ ] EDU-001-T3 complete (Subject reasoning)
+  - [ ] VOI-001-T4 complete (Audio pipeline)
+  - [ ] SEC-001-T3 complete (Secure comms)
+GATE: Integration testing green
+
+MILESTONE 3: Integration Complete
+---------------------------------
+CRITERIA:
+  - [ ] INT-001-T4 complete (E2E pipeline)
+  - [ ] TST-001-T3 complete (Integration tests)
+  - [ ] EDU-001-T5 complete (Safety filters)
+GATE: Performance benchmarks met
+
+MILESTONE 4: Deployment Ready
+-----------------------------
+CRITERIA:
+  - [ ] INT-001-T5 complete (On-device runtime)
+  - [ ] SEC-001-T5 complete (COPPA compliance)
+  - [ ] APP-001-T5 complete (Parent app)
+  - [ ] TST-001-T5 complete (Safety tests)
+  - [ ] All acceptance criteria verified
+GATE: Full system review, security audit
+
+================================================================================
+SECTION 9: EMERGENCY PROCEDURES
+================================================================================
+
+9.1 AGENT FAILURE
+-----------------
+IF agent becomes unresponsive:
+  1. Orchestrator attempts 3 restarts (30s intervals)
+  2. If still failed, reassign tasks to backup agent
+  3. Log full state for debugging
+  4. Notify all dependent agents of delay
+
+9.2 CRITICAL BUG DISCOVERED
+---------------------------
+IF security/safety bug found:
+  1. HALT all dependent work immediately
+  2. Prioritize SEC-001 for investigation
+  3. Do NOT proceed past affected milestone
+  4. Full audit required before resume
+
+9.3 RESOURCE EXHAUSTION
+-----------------------
+IF resource limits approached:
+  1. Pause non-critical tasks
+  2. Prioritize critical path
+  3. Request resource increase from orchestrator
+  4. Resume when resources available
+
+================================================================================
+SECTION 10: SUCCESS VERIFICATION
+================================================================================
+
+FINAL CHECKLIST:
+----------------
+[ ] All 35 tasks marked COMPLETED
+[ ] All 4 milestones passed
+[ ] Test coverage > 80%
+[ ] All performance targets met:
+    [ ] OCR accuracy > 95%
+    [ ] Handwriting accuracy > 85%
+    [ ] E2E latency < 2 seconds
+    [ ] Battery life > 4 hours
+[ ] Security audit passed
+[ ] COPPA compliance verified
+[ ] Parent app functional
+[ ] Documentation complete
+
+DELIVERABLES:
+-------------
+1. /models/ - All trained and optimized models
+2. /src/ - Complete source code
+3. /app/ - Parent companion application
+4. /docs/ - Full documentation
+5. /tests/ - Complete test suites
+6. /benchmarks/ - Performance reports
+
+================================================================================
+                              END OF SPECIFICATION
+================================================================================

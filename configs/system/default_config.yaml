@@ -1,0 +1,473 @@
+# EduLens Default System Configuration
+#
+# This is the default configuration file for the EduLens smart glasses system.
+# It defines all configurable parameters for the various components.
+#
+# Environment-specific configurations can override these defaults by creating
+# additional config files: development_config.yaml, staging_config.yaml, production_config.yaml
+#
+# Environment variables can also override settings using the EDULENS_ prefix:
+#   Example: EDULENS_CAMERA_FPS=60 will override camera.fps
+#
+# Version: 1.0.0
+# Last Updated: 2025-12-10
+
+# =============================================================================
+# General Settings
+# =============================================================================
+
+environment: development
+debug: true
+
+# =============================================================================
+# Camera Configuration
+# =============================================================================
+
+camera:
+  # Frames per second for video capture
+  fps: 30
+
+  # Resolution (width x height)
+  resolution_width: 1920
+  resolution_height: 1080
+
+  # Camera device ID (0 for default camera)
+  device_id: 0
+
+  # Auto-exposure control
+  auto_exposure: true
+
+  # Frame buffer size for processing queue
+  buffer_size: 10
+
+# =============================================================================
+# Audio Configuration
+# =============================================================================
+
+audio:
+  # Audio sample rate in Hz (8000, 16000, 22050, 44100, 48000)
+  sample_rate: 16000
+
+  # Number of audio channels (1 = mono, 2 = stereo)
+  channels: 1
+
+  # Duration of each audio chunk in milliseconds
+  chunk_duration_ms: 100
+
+  # Audio input device ID (null for default)
+  device_id: null
+
+  # Enable noise reduction
+  noise_reduction: true
+
+# =============================================================================
+# Vision Pipeline Configuration
+# =============================================================================
+
+vision_pipeline:
+  # Enable object detection
+  object_detection_enabled: true
+
+  # Confidence threshold for object detection (0.0 - 1.0)
+  object_detection_threshold: 0.5
+
+  # Enable OCR (Optical Character Recognition)
+  ocr_enabled: true
+
+  # Languages for OCR (ISO 639-1 codes)
+  ocr_languages:
+    - en
+    - es
+    - fr
+
+  # Enable scene analysis
+  scene_analysis_enabled: true
+
+  # Image preprocessing target size (width, height)
+  preprocessing_size:
+    - 640
+    - 640
+
+# =============================================================================
+# Audio Pipeline Configuration
+# =============================================================================
+
+audio_pipeline:
+  # Enable speech recognition
+  speech_recognition_enabled: true
+
+  # Enable speaker identification
+  speaker_identification_enabled: false
+
+  # Default language for speech recognition
+  language: en
+
+  # Speech recognition model
+  # Options: whisper-tiny, whisper-base, whisper-small, whisper-medium, whisper-large
+  model: whisper-tiny
+
+# =============================================================================
+# Privacy Layer Configuration
+# =============================================================================
+
+privacy:
+  # Enable PII (Personally Identifiable Information) detection
+  pii_detection_enabled: true
+
+  # Enable face blurring
+  face_blur_enabled: true
+
+  # Blur sigma value (higher = more blur)
+  blur_sigma: 50.0
+
+  # Enable text redaction
+  text_redaction_enabled: true
+
+  # Require user consent for data collection
+  consent_required: true
+
+  # Data retention period in days
+  data_retention_days: 30
+
+# =============================================================================
+# AI Engine Configuration
+# =============================================================================
+
+ai_engine:
+  # LLM provider
+  # Options: anthropic, openai, local
+  llm_provider: anthropic
+
+  # LLM model identifier
+  # Anthropic: claude-3-5-sonnet-20241022, claude-3-opus-20240229
+  # OpenAI: gpt-4-turbo, gpt-3.5-turbo
+  llm_model: claude-3-5-sonnet-20241022
+
+  # Sampling temperature (0.0 - 2.0)
+  # Lower = more deterministic, Higher = more creative
+  temperature: 0.7
+
+  # Maximum tokens to generate
+  max_tokens: 1000
+
+  # Context window size (number of previous interactions to include)
+  context_window_size: 10
+
+  # Enable RAG (Retrieval Augmented Generation)
+  rag_enabled: true
+
+  # Number of documents to retrieve for RAG
+  rag_top_k: 5
+
+# =============================================================================
+# Storage Configuration
+# =============================================================================
+
+storage:
+  # Database type
+  # Options: sqlite, postgresql
+  database_type: sqlite
+
+  # Database path (for SQLite) or connection string (for PostgreSQL)
+  database_path: ./data/edulens.db
+
+  # Enable caching
+  cache_enabled: true
+
+  # Cache backend
+  # Options: memory, redis
+  cache_backend: memory
+
+  # Cache TTL (Time To Live) in seconds
+  cache_ttl_seconds: 3600
+
+# =============================================================================
+# Cloud Services Configuration
+# =============================================================================
+
+cloud:
+  # Enable cloud services
+  enabled: false
+
+  # Cloud API endpoint
+  api_endpoint: https://api.edulens.com
+
+  # Sync interval in seconds
+  sync_interval_seconds: 300
+
+  # Retry attempts for failed requests
+  retry_attempts: 3
+
+  # Request timeout in seconds
+  timeout_seconds: 30
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+
+logging:
+  # Logging level
+  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: INFO
+
+  # Log format string
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Enable logging to file
+  log_to_file: true
+
+  # Log file path
+  log_file_path: ./logs/edulens.log
+
+  # Maximum log file size in MB
+  max_file_size_mb: 100
+
+  # Number of backup log files to keep
+  backup_count: 5
+
+# =============================================================================
+# Performance Configuration
+# =============================================================================
+
+performance:
+  # Maximum number of worker threads
+  max_workers: 4
+
+  # Batch size for processing
+  batch_size: 1
+
+  # Enable model quantization for faster inference
+  model_quantization: true
+
+  # Enable GPU acceleration
+  gpu_enabled: false
+
+  # GPU device ID (0 for first GPU)
+  gpu_device_id: 0
+
+# =============================================================================
+# Model Paths Configuration
+# =============================================================================
+
+models:
+  # Object detection model
+  object_detection:
+    path: ./models/yolov8n-int8.tflite
+    type: tflite
+
+  # OCR model
+  ocr:
+    path: ./models/easyocr-en.onnx
+    type: onnx
+
+  # Speech recognition model
+  speech_recognition:
+    path: ./models/whisper-tiny.onnx
+    type: onnx
+
+  # Face detection model
+  face_detection:
+    path: ./models/mediapipe-face-detector.tflite
+    type: tflite
+
+  # Embeddings model
+  embeddings:
+    path: ./models/all-minilm-l6-v2.onnx
+    type: onnx
+
+# =============================================================================
+# Feature Flags
+# =============================================================================
+
+features:
+  # Enable experimental features
+  experimental_enabled: false
+
+  # Enable multimodal processing (vision + audio simultaneously)
+  multimodal_enabled: true
+
+  # Enable AR overlays
+  ar_overlays_enabled: false
+
+  # Enable real-time translation
+  translation_enabled: false
+
+  # Enable offline mode
+  offline_mode_enabled: true
+
+# =============================================================================
+# Security Configuration
+# =============================================================================
+
+security:
+  # Enable TLS/SSL for network communication
+  tls_enabled: false
+
+  # TLS certificate path
+  tls_cert_path: null
+
+  # TLS key path
+  tls_key_path: null
+
+  # Enable API authentication
+  api_auth_enabled: true
+
+  # JWT secret key (should be overridden via environment variable)
+  jwt_secret: change_this_in_production
+
+  # JWT token expiration in seconds
+  jwt_expiration_seconds: 3600
+
+# =============================================================================
+# API Configuration
+# =============================================================================
+
+api:
+  # API host
+  host: 0.0.0.0
+
+  # API port
+  port: 8080
+
+  # Enable CORS (Cross-Origin Resource Sharing)
+  cors_enabled: true
+
+  # Allowed origins for CORS
+  cors_origins:
+    - http://localhost:3000
+    - http://localhost:8080
+
+  # API rate limiting
+  rate_limit_enabled: true
+
+  # Maximum requests per minute
+  rate_limit_requests_per_minute: 60
+
+# =============================================================================
+# User Experience Configuration
+# =============================================================================
+
+ux:
+  # Default language for UI
+  default_language: en
+
+  # Supported languages
+  supported_languages:
+    - en
+    - es
+    - fr
+    - de
+    - zh
+
+  # Voice feedback enabled
+  voice_feedback_enabled: true
+
+  # Haptic feedback enabled
+  haptic_feedback_enabled: false
+
+  # Display mode
+  # Options: minimal, standard, verbose
+  display_mode: standard
+
+# =============================================================================
+# Educational Features Configuration
+# =============================================================================
+
+education:
+  # Enable curriculum integration
+  curriculum_integration_enabled: false
+
+  # Default subject areas
+  default_subjects:
+    - mathematics
+    - science
+    - history
+    - literature
+
+  # Enable quiz mode
+  quiz_mode_enabled: true
+
+  # Enable study assistance
+  study_assistance_enabled: true
+
+  # Enable note-taking
+  note_taking_enabled: true
+
+# =============================================================================
+# Monitoring & Telemetry Configuration
+# =============================================================================
+
+monitoring:
+  # Enable metrics collection
+  metrics_enabled: true
+
+  # Metrics export port (Prometheus format)
+  metrics_port: 9090
+
+  # Enable distributed tracing
+  tracing_enabled: false
+
+  # Tracing backend
+  # Options: jaeger, zipkin
+  tracing_backend: jaeger
+
+  # Tracing endpoint
+  tracing_endpoint: http://localhost:14268/api/traces
+
+  # Health check endpoint enabled
+  health_check_enabled: true
+
+# =============================================================================
+# Advanced Configuration
+# =============================================================================
+
+advanced:
+  # Frame processing pipeline stages
+  pipeline_stages:
+    - capture
+    - preprocess
+    - detect
+    - analyze
+    - filter
+    - enrich
+
+  # Event bus configuration
+  event_bus:
+    type: memory  # memory, redis, kafka
+    buffer_size: 1000
+
+  # Message queue configuration
+  message_queue:
+    type: memory  # memory, rabbitmq, kafka
+    max_retries: 3
+    retry_delay_seconds: 5
+
+  # Circuit breaker configuration
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    timeout_seconds: 60
+    half_open_max_calls: 3
+
+# =============================================================================
+# Development & Testing Configuration
+# =============================================================================
+
+development:
+  # Enable mock services (for testing without hardware)
+  mock_camera: false
+  mock_audio: false
+
+  # Enable debug endpoints
+  debug_endpoints_enabled: true
+
+  # Profile performance
+  profiling_enabled: false
+
+  # Save debug frames
+  save_debug_frames: false
+  debug_frames_path: ./debug/frames
+
+  # Save debug audio
+  save_debug_audio: false
+  debug_audio_path: ./debug/audio

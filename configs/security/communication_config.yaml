@@ -1,0 +1,295 @@
+# EduLens Secure Communication Configuration
+# This file contains security settings for communication between glasses and companion app
+
+version: "1.0"
+
+# TLS/SSL Configuration
+tls:
+  enabled: true
+  version: "TLS_1_3"  # TLS 1.3 for maximum security
+  cipher_suites:
+    - "TLS_AES_256_GCM_SHA384"
+    - "TLS_CHACHA20_POLY1305_SHA256"
+    - "TLS_AES_128_GCM_SHA256"
+  verify_certificates: true
+  require_client_cert: true
+  min_protocol_version: "TLS_1_2"
+
+# Certificate Configuration
+certificates:
+  device_cert_validity_days: 365
+  root_cert_validity_days: 3650
+  key_algorithm: "EC"  # EC (Elliptic Curve) or RSA
+  ec_curve: "SECP384R1"  # SECP256R1, SECP384R1, or SECP521R1
+  rsa_key_size: 2048
+  cert_directory: "~/.edulens/certs"
+  auto_generate: true
+  organization: "EduLens"
+
+# Certificate Pinning
+certificate_pinning:
+  enabled: true
+  pin_type: "public_key"  # "certificate" or "public_key"
+  backup_pins: true  # Keep backup pins for key rotation
+  pin_lifetime_days: 90
+  pinned_hosts:
+    - hostname: "api.edulens.com"
+      fingerprints:
+        - "sha256/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        - "sha256/BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="
+    - hostname: "sync.edulens.com"
+      fingerprints:
+        - "sha256/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC="
+
+# Encryption Configuration
+encryption:
+  algorithm: "AES_256_GCM"  # AES-256-GCM for authenticated encryption
+  key_size: 256  # bits
+  nonce_size: 96  # bits (12 bytes)
+  tag_size: 128  # bits (16 bytes)
+  enable_compression: false  # Disabled to prevent CRIME-like attacks
+
+# Key Exchange
+key_exchange:
+  algorithm: "ECDH"  # Elliptic Curve Diffie-Hellman
+  curve: "SECP384R1"
+  enable_perfect_forward_secrecy: true
+  ephemeral_key_lifetime_hours: 1
+
+# Key Derivation
+key_derivation:
+  function: "HKDF"  # HMAC-based Key Derivation Function
+  hash_algorithm: "SHA256"
+  salt_size: 32  # bytes
+  info_string: "edulens_session_v1"
+
+# Key Rotation
+key_rotation:
+  enabled: true
+  rotation_interval_hours: 1
+  rotation_after_messages: 10000
+  rotation_after_bytes: 104857600  # 100 MB
+  auto_rotate: true
+
+# Device Pairing
+pairing:
+  code_length: 6
+  code_lifetime_minutes: 5
+  max_pairing_attempts: 3
+  rate_limit_window_minutes: 1
+  max_requests_per_window: 5
+  qr_code_enabled: true
+  nfc_enabled: false  # Future feature
+  pairing_data_file: "~/.edulens/paired_devices.json"
+
+# Session Management
+session:
+  timeout_minutes: 30
+  idle_timeout_minutes: 15
+  max_sessions_per_device: 3
+  session_key_lifetime_hours: 24
+  require_reauthentication: true
+
+# Communication Channel
+channel:
+  heartbeat_interval_seconds: 30
+  connection_timeout_seconds: 30
+  max_message_size_bytes: 1048576  # 1 MB
+  max_queue_size: 100
+  retry_attempts: 3
+  retry_delay_seconds: 5
+  enable_keep_alive: true
+
+# Message Authentication
+message_authentication:
+  algorithm: "HMAC_SHA256"
+  key_size: 32  # bytes
+  verify_timestamp: true
+  max_clock_skew_seconds: 300  # 5 minutes
+
+# Replay Attack Protection
+replay_protection:
+  enabled: true
+  sequence_number_window: 64
+  timestamp_window_seconds: 60
+  store_seen_nonces: true
+  nonce_cache_size: 1000
+
+# Rate Limiting
+rate_limiting:
+  enabled: true
+  max_requests_per_minute: 60
+  max_requests_per_hour: 1000
+  burst_size: 10
+  block_duration_minutes: 5
+
+# Logging and Monitoring
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_security_events: true
+  log_failed_authentications: true
+  log_key_rotations: true
+  log_connection_events: true
+  sanitize_sensitive_data: true
+
+# Security Headers
+security_headers:
+  enable_hsts: true
+  hsts_max_age_seconds: 31536000  # 1 year
+  enable_csp: true
+  csp_policy: "default-src 'self'"
+
+# Attack Mitigation
+attack_mitigation:
+  # Man-in-the-Middle (MITM)
+  mitm_protection:
+    enabled: true
+    verify_peer_identity: true
+    require_mutual_authentication: true
+    check_certificate_revocation: false  # OCSP/CRL checking
+
+  # Downgrade Attack Protection
+  downgrade_protection:
+    enabled: true
+    min_tls_version: "TLS_1_2"
+    disable_compression: true
+    disable_renegotiation: true
+
+  # Timing Attack Protection
+  timing_attack_protection:
+    enabled: true
+    constant_time_comparisons: true
+    add_random_delays: false
+
+  # Side Channel Protection
+  side_channel_protection:
+    enabled: true
+    secure_memory_clearing: true
+    constant_time_operations: true
+
+# Compliance and Standards
+compliance:
+  fips_mode: false  # Federal Information Processing Standard
+  hipaa_compliant: false  # Health Insurance Portability and Accountability Act
+  gdpr_compliant: true  # General Data Protection Regulation
+  pci_dss_compliant: false  # Payment Card Industry Data Security Standard
+
+# Development and Testing
+development:
+  allow_self_signed_certs: false
+  disable_certificate_validation: false
+  enable_debug_logging: false
+  mock_pairing: false
+  skip_tls: false
+
+# Performance Tuning
+performance:
+  enable_connection_pooling: true
+  max_connections: 10
+  connection_pool_timeout_seconds: 30
+  enable_pipelining: false
+  buffer_size_bytes: 8192
+
+# Backup and Recovery
+backup:
+  backup_keys: true
+  backup_directory: "~/.edulens/backup"
+  backup_encryption: true
+  backup_retention_days: 30
+  auto_backup_interval_hours: 24
+
+# Emergency Controls
+emergency:
+  enable_kill_switch: false
+  revoke_all_sessions: false
+  disable_new_pairings: false
+  force_key_rotation: false
+
+# Notifications
+notifications:
+  notify_on_new_pairing: true
+  notify_on_failed_authentication: true
+  notify_on_certificate_expiry: true
+  certificate_expiry_warning_days: 30
+  notify_on_suspicious_activity: true
+
+# Metrics and Statistics
+metrics:
+  collect_metrics: true
+  metrics_interval_seconds: 60
+  track_encryption_performance: true
+  track_connection_stats: true
+  track_error_rates: true
+
+# Advanced Security Features
+advanced:
+  # Perfect Forward Secrecy (PFS)
+  perfect_forward_secrecy:
+    enabled: true
+    ephemeral_key_algorithm: "ECDH"
+    key_rotation_on_disconnect: true
+
+  # Zero-Knowledge Proof (future feature)
+  zero_knowledge_proof:
+    enabled: false
+    protocol: "zkSNARK"
+
+  # Quantum-Resistant Algorithms (future feature)
+  quantum_resistant:
+    enabled: false
+    algorithm: "CRYSTALS-Kyber"
+
+  # Hardware Security Module (HSM) support
+  hsm:
+    enabled: false
+    provider: "SoftHSM"
+    key_storage: "hsm"
+
+# Protocol-Specific Settings
+protocol:
+  version: 1
+  magic_bytes: "EDLNS"
+  endianness: "big"
+  max_protocol_version: 1
+  min_protocol_version: 1
+
+# Network Configuration
+network:
+  bind_address: "0.0.0.0"
+  port: 8443
+  use_ipv6: false
+  socket_timeout_seconds: 30
+  tcp_keep_alive: true
+  tcp_no_delay: true
+
+# Error Handling
+error_handling:
+  max_consecutive_errors: 5
+  error_backoff_seconds: 10
+  auto_reconnect: true
+  max_reconnect_attempts: 3
+  notify_on_error: true
+
+# Data Integrity
+data_integrity:
+  verify_checksums: true
+  checksum_algorithm: "SHA256"
+  detect_corruption: true
+  auto_repair: false
+
+# Audit and Compliance
+audit:
+  enable_audit_log: true
+  audit_log_file: "~/.edulens/logs/security_audit.log"
+  log_rotation_days: 7
+  audit_events:
+    - "pairing_request"
+    - "pairing_success"
+    - "pairing_failure"
+    - "authentication_success"
+    - "authentication_failure"
+    - "key_rotation"
+    - "certificate_validation"
+    - "connection_established"
+    - "connection_closed"
+    - "security_violation"

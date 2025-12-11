@@ -1,0 +1,88 @@
+# EduLens Audio Pipeline Configuration
+# Configuration for unified voice interaction pipeline
+
+# Audio Settings
+sample_rate: 16000  # Sample rate in Hz
+channels: 1  # Mono audio
+chunk_size: 1024  # Audio chunk size for processing
+
+# Wake Word Detection
+wake_word_sensitivity: 0.5  # Sensitivity (0.0-1.0)
+  # 0.0 = fewer false positives, more false negatives
+  # 1.0 = fewer false negatives, more false positives
+wake_word_model_path: null  # Path to custom wake word model (optional)
+
+# Automatic Speech Recognition (ASR)
+asr_model_size: "base"  # Whisper model size: tiny, base, small, medium, large
+asr_language: "en"  # Primary language code
+asr_device: "cpu"  # Device: cpu or cuda
+asr_compute_type: "int8"  # Compute type: float16, int8
+
+# Text-to-Speech (TTS)
+tts_backend: "pyttsx3"  # Backend: pyttsx3, edge, coqui
+tts_voice_id: null  # Voice ID (backend-specific)
+tts_speed: 1.0  # Speaking rate (0.5-2.0)
+tts_pitch: 1.0  # Pitch adjustment (0.5-2.0)
+tts_volume: 1.0  # Volume (0.0-1.0)
+
+# Timing & Latency
+listening_timeout: 5.0  # Max time to wait for speech (seconds)
+silence_timeout: 1.5  # Silence duration to end listening (seconds)
+latency_threshold: 2000.0  # Latency threshold for alerts (milliseconds)
+  # Target: <2000ms from speech end to response start
+
+# Barge-in / Interruption
+enable_barge_in: true  # Allow student to interrupt TTS
+barge_in_sensitivity: 0.7  # Interruption sensitivity (0.0-1.0)
+  # 0.0 = harder to interrupt (fewer false triggers)
+  # 1.0 = easier to interrupt (more responsive)
+barge_in_min_duration: 150  # Minimum speech duration to trigger (ms)
+barge_in_cooldown: 500  # Cooldown after interruption (ms)
+
+# Audio Buffer
+buffer_duration: 30.0  # Maximum buffer duration (seconds)
+buffer_silence_threshold: 0.02  # RMS threshold for silence detection
+buffer_pre_padding: 0.3  # Pre-speech padding (seconds)
+buffer_post_padding: 0.3  # Post-speech padding (seconds)
+
+# Advanced Settings
+enable_monitoring: true  # Enable performance monitoring
+enable_statistics: true  # Collect usage statistics
+log_level: "INFO"  # Logging level: DEBUG, INFO, WARNING, ERROR
+
+# Child Speech Optimizations
+child_mode: true  # Enable child speech adaptations
+age_group: "6-12"  # Target age group
+lower_pitch_threshold: true  # Adjust for higher-pitched voices
+boost_clarity: true  # Boost speech clarity
+
+# Educational Context
+enable_vocabulary_boost: true  # Boost educational terms
+context_window: 10  # Number of previous utterances for context
+
+# Performance Tuning
+max_concurrent_sessions: 1  # Max simultaneous sessions
+audio_queue_size: 100  # Audio queue buffer size
+response_queue_size: 10  # Response queue size
+
+# Error Handling
+retry_on_asr_failure: true  # Retry ASR on failure
+max_retries: 3  # Maximum retry attempts
+fallback_response: "I'm sorry, I didn't understand that. Could you say that again?"
+
+# State Transition Delays (milliseconds)
+wake_to_listening_delay: 100  # Delay after wake word before listening
+listening_to_processing_delay: 50  # Delay before processing speech
+processing_to_speaking_delay: 50  # Delay before TTS playback
+speaking_to_idle_delay: 200  # Delay after speaking before returning to idle
+
+# Debug & Development
+debug_mode: false  # Enable debug features
+save_audio_segments: false  # Save audio for debugging
+audio_save_path: "./debug/audio"  # Path for saved audio
+log_latency_breakdown: true  # Log detailed latency breakdown
+
+# Resource Limits
+max_audio_duration: 60.0  # Maximum audio duration to process (seconds)
+max_transcription_length: 500  # Maximum transcription length (chars)
+max_response_length: 1000  # Maximum response length (chars)

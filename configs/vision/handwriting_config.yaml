@@ -1,0 +1,555 @@
+# Handwriting Recognition Configuration for EduLens
+# Optimized for children's handwriting (ages 6-12)
+#
+# Author: Vision Processing Agent (VIS-001)
+# Target: 85% accuracy on child handwriting samples
+
+# Recognition Engine Configuration
+engine:
+  mode: "handwriting"  # handwriting, text, math
+
+  # Model configuration
+  model:
+    architecture: "cnn"  # CNN-based character recognition
+    text_model_path: "models/handwriting_text_model.h5"
+    math_model_path: "models/handwriting_math_model.h5"
+
+    # Model input dimensions
+    char_width: 28
+    char_height: 28
+    channels: 1  # Grayscale
+
+    # Edge deployment optimization
+    edge_optimized: true
+    quantization: "int8"  # For edge device deployment
+
+  # Character recognition parameters
+  recognition:
+    min_confidence: 0.50  # Minimum confidence to accept recognition
+    high_confidence: 0.85  # Threshold for high confidence
+    top_k_predictions: 5   # Number of alternate predictions to return
+
+    # Confidence adjustment for age groups
+    confidence_adjustment:
+      early_elementary: -0.10  # More lenient for 6-8 year olds
+      mid_elementary: 0.0      # Standard for 9-10 year olds
+      late_elementary: 0.05    # Slightly stricter for 11-12 year olds
+
+# Age Group Specific Configurations
+age_groups:
+  early_elementary:  # Ages 6-8 (Kindergarten - 2nd grade)
+    description: "Emerging writers with larger, irregular letters"
+
+    preprocessing:
+      deskew: true
+      denoise: true
+      denoise_method: "bilateral"
+      denoise_strength: 12
+      enhance_contrast: true
+      contrast_method: "clahe"
+      clahe_clip_limit: 2.5
+      binarization_method: "adaptive"
+      adaptive_block_size: 15
+      adaptive_c: 3
+      normalize_stroke_width: true
+      remove_border_noise: true
+
+    segmentation:
+      min_component_area: 30
+      max_component_area: 15000
+      char_spacing_factor: 0.4
+      word_spacing_factor: 2.0
+      min_line_height: 20
+      line_spacing_threshold: 15
+
+    recognition:
+      min_confidence: 0.60
+      expected_features:
+        - "irregular_letter_sizes"
+        - "inconsistent_spacing"
+        - "mixed_upper_lower"
+        - "letter_reversals"  # Common at this age
+
+  mid_elementary:  # Ages 9-10 (3rd - 4th grade)
+    description: "Developing writers with more consistent handwriting"
+
+    preprocessing:
+      deskew: true
+      denoise: true
+      denoise_method: "bilateral"
+      denoise_strength: 10
+      enhance_contrast: true
+      contrast_method: "clahe"
+      clahe_clip_limit: 2.0
+      binarization_method: "adaptive"
+      adaptive_block_size: 11
+      adaptive_c: 2
+      normalize_stroke_width: true
+      remove_border_noise: true
+
+    segmentation:
+      min_component_area: 20
+      max_component_area: 12000
+      char_spacing_factor: 0.3
+      word_spacing_factor: 1.5
+      min_line_height: 18
+      line_spacing_threshold: 12
+
+    recognition:
+      min_confidence: 0.70
+      expected_features:
+        - "more_consistent_sizing"
+        - "improved_spacing"
+        - "cursive_attempts"
+
+  late_elementary:  # Ages 11-12 (5th - 6th grade)
+    description: "Mature elementary writers"
+
+    preprocessing:
+      deskew: true
+      denoise: true
+      denoise_method: "bilateral"
+      denoise_strength: 10
+      enhance_contrast: true
+      contrast_method: "clahe"
+      clahe_clip_limit: 2.0
+      binarization_method: "adaptive"
+      adaptive_block_size: 11
+      adaptive_c: 2
+      normalize_stroke_width: false
+      remove_border_noise: true
+
+    segmentation:
+      min_component_area: 15
+      max_component_area: 10000
+      char_spacing_factor: 0.25
+      word_spacing_factor: 1.2
+      min_line_height: 15
+      line_spacing_threshold: 10
+
+    recognition:
+      min_confidence: 0.75
+      expected_features:
+        - "mature_handwriting"
+        - "consistent_style"
+        - "cursive_proficiency"
+
+# Handwriting Style Configuration
+styles:
+  printed:
+    description: "Block letters, printed style"
+    characteristics:
+      - "discrete_characters"
+      - "no_connections"
+      - "upright_letters"
+    optimization: "character_segmentation"
+
+  cursive:
+    description: "Connected cursive writing"
+    characteristics:
+      - "connected_letters"
+      - "flowing_strokes"
+      - "slanted_letters"
+    optimization: "word_level_recognition"
+
+  mixed:
+    description: "Mix of printed and cursive"
+    characteristics:
+      - "some_connections"
+      - "variable_style"
+      - "transition_stage"
+    optimization: "adaptive_segmentation"
+
+# Image Preprocessing Configuration
+preprocessing:
+  # Handwriting-specific preprocessing
+  handwriting_optimized: true
+
+  # Deskewing (rotation correction)
+  deskew:
+    enabled: true
+    max_angle: 15.0  # Children's writing often more rotated
+
+  # Noise reduction
+  denoise:
+    enabled: true
+    method: "bilateral"  # Preserves edges (strokes)
+    strength: 10
+    preserve_thin_strokes: true
+
+  # Contrast enhancement
+  enhance_contrast:
+    enabled: true
+    method: "clahe"
+    clahe_clip_limit: 2.0
+    clahe_tile_size: 8
+
+  # Binarization
+  binarization:
+    method: "adaptive"
+    adaptive_block_size: 11
+    adaptive_c: 2
+
+  # Stroke normalization
+  stroke_normalization:
+    enabled: true
+    target_thickness: 2  # pixels
+    preserve_variation: true
+
+  # Border noise removal
+  border_cleanup:
+    enabled: true
+    border_size: 5  # pixels
+
+# Character Segmentation Configuration
+segmentation:
+  # Segmentation strategy
+  strategy: "hybrid"  # Options: projection, connected_components, hybrid
+
+  # Component filtering
+  component_filter:
+    min_area: 20
+    max_area: 10000
+    min_width: 3
+    min_height: 5
+    max_aspect_ratio: 10.0
+
+  # Spacing analysis
+  spacing:
+    char_spacing_factor: 0.3   # Fraction of avg char width
+    word_spacing_factor: 1.5   # Multiplier for word gaps
+    adaptive_spacing: true     # Adapt to local variations
+
+  # Line detection
+  line_detection:
+    method: "horizontal_projection"
+    min_line_height: 15
+    line_spacing_threshold: 10
+    smooth_projection: true
+    smoothing_kernel_size: 5
+
+  # Refinement
+  refinement:
+    enabled: true
+    merge_close_components: true
+    merge_threshold: 5  # pixels
+    split_wide_components: false  # Usually not needed for children
+
+# Character Sets
+character_sets:
+  text:
+    uppercase: true
+    lowercase: true
+    digits: true
+    punctuation:
+      - "."
+      - ","
+      - "!"
+      - "?"
+      - ";"
+      - ":"
+      - "'"
+      - "\""
+      - "-"
+      - "("
+      - ")"
+
+  math:
+    digits: true
+    operators:
+      - "+"
+      - "-"
+      - "×"
+      - "÷"
+      - "="
+      - "<"
+      - ">"
+      - "≤"
+      - "≥"
+      - "±"
+    symbols:
+      - "("
+      - ")"
+      - "["
+      - "]"
+      - "{"
+      - "}"
+      - "/"
+      - "."
+      - ","
+      - "%"
+      - "$"
+    variables: "abcdefghijklmnopqrstuvwxyz"
+
+  # Common confusions for children
+  confusion_pairs:
+    - ["b", "d"]
+    - ["p", "q"]
+    - ["6", "9"]
+    - ["1", "l"]
+    - ["0", "O"]
+    - ["5", "S"]
+    - ["2", "Z"]
+
+# Mathematical Expression Configuration
+math_recognition:
+  enabled: true
+
+  # Math-specific preprocessing
+  preprocessing:
+    preserve_symbols: true
+    enhance_operators: true
+
+  # Expression parsing
+  expression_parsing:
+    detect_operators: true
+    detect_equations: true
+    detect_fractions: false  # Complex for elementary
+    detect_exponents: false  # Complex for elementary
+
+  # Common corrections
+  auto_corrections:
+    enabled: true
+    corrections:
+      "x": "×"
+      "X": "×"
+      "/": "÷"
+      "O": "0"
+      "I": "1"
+      "l": "1"
+      "S": "5"
+      "Z": "2"
+
+  # Math context
+  context_awareness:
+    enabled: true
+    prefer_digits_in_numbers: true
+    prefer_operators_between_numbers: true
+
+# Quality Assurance
+quality:
+  # Accuracy targets by age group
+  accuracy_targets:
+    early_elementary: 0.80   # 80% for ages 6-8
+    mid_elementary: 0.85     # 85% for ages 9-10
+    late_elementary: 0.90    # 90% for ages 11-12
+
+  # Confidence scoring
+  confidence_scoring:
+    enabled: true
+    per_character: true
+    per_word: true
+    per_line: true
+
+  # Quality metrics
+  metrics:
+    track_accuracy: true
+    track_confidence: true
+    track_processing_time: true
+    track_segmentation_quality: true
+
+  # Validation
+  validation:
+    min_characters_per_word: 1
+    max_characters_per_word: 20
+    min_words_per_line: 1
+    max_words_per_line: 30
+
+  # Error handling
+  error_handling:
+    low_confidence_threshold: 0.60
+    flag_low_confidence: true
+    provide_alternates: true
+    num_alternates: 3
+
+# Performance Configuration
+performance:
+  # Edge deployment
+  edge_optimized: true
+  target_device: "mobile"  # mobile, embedded, desktop
+
+  # Processing limits
+  max_processing_time_ms: 3000  # Per image
+  max_image_size: [2048, 2048]  # Max width, height
+
+  # Resource constraints
+  max_memory_mb: 256
+  use_gpu: false  # Typically not available on edge
+  num_threads: 2
+
+  # Batch processing
+  batch_processing: false
+  batch_size: 1
+
+  # Caching
+  cache_models: true
+  cache_preprocessed: false
+
+# Output Configuration
+output:
+  # Result format
+  format: "dict"  # dict, json
+
+  # Detail level
+  include_bounding_boxes: true
+  include_confidence_scores: true
+  include_alternates: true
+  include_segmentation: false  # Set true for debugging
+  include_metadata: true
+
+  # Text assembly
+  text_assembly:
+    join_words_with: " "
+    join_lines_with: "\n"
+    preserve_layout: true
+
+  # Visualization
+  visualization:
+    enabled: false
+    draw_bounding_boxes: true
+    draw_confidence: true
+    draw_segmentation: true
+
+# Training Configuration (for model development)
+training:
+  # Dataset
+  dataset:
+    train_split: 0.8
+    val_split: 0.1
+    test_split: 0.1
+    augmentation: true
+
+  # Augmentation strategies
+  augmentation:
+    rotation: [-15, 15]  # degrees
+    scaling: [0.8, 1.2]
+    shearing: [-0.2, 0.2]
+    noise: [0, 0.1]
+    blur: [0, 2]  # kernel size
+
+  # Model architecture
+  model_architecture:
+    type: "cnn"
+    layers:
+      - {type: "conv2d", filters: 32, kernel: 3, activation: "relu"}
+      - {type: "maxpool2d", pool: 2}
+      - {type: "conv2d", filters: 64, kernel: 3, activation: "relu"}
+      - {type: "maxpool2d", pool: 2}
+      - {type: "flatten"}
+      - {type: "dense", units: 128, activation: "relu"}
+      - {type: "dropout", rate: 0.5}
+      - {type: "dense", units: "num_classes", activation: "softmax"}
+
+  # Training parameters
+  training_params:
+    epochs: 50
+    batch_size: 32
+    learning_rate: 0.001
+    optimizer: "adam"
+    loss: "categorical_crossentropy"
+    metrics: ["accuracy"]
+    early_stopping:
+      enabled: true
+      patience: 5
+      monitor: "val_accuracy"
+
+# Testing Configuration
+testing:
+  # Test scenarios
+  test_scenarios:
+    - "clean_handwriting"
+    - "noisy_images"
+    - "rotated_writing"
+    - "mixed_styles"
+    - "math_expressions"
+
+  # Accuracy benchmarks by age and content
+  accuracy_benchmarks:
+    early_elementary:
+      uppercase_letters: 0.82
+      lowercase_letters: 0.78
+      digits: 0.85
+      simple_words: 0.75
+      math_basic: 0.80
+
+    mid_elementary:
+      uppercase_letters: 0.88
+      lowercase_letters: 0.85
+      digits: 0.90
+      simple_words: 0.82
+      cursive_attempts: 0.70
+      math_basic: 0.85
+
+    late_elementary:
+      uppercase_letters: 0.92
+      lowercase_letters: 0.90
+      digits: 0.95
+      simple_words: 0.88
+      cursive: 0.80
+      math_advanced: 0.88
+
+  # Performance benchmarks
+  performance_benchmarks:
+    max_processing_time_ms: 3000
+    min_throughput_images_per_sec: 0.3
+    max_memory_mb: 256
+
+  # Test data
+  test_data:
+    fixtures_dir: "tests/vision/fixtures/handwriting"
+    sample_images:
+      - "early_elem_printed.png"
+      - "mid_elem_mixed.png"
+      - "late_elem_cursive.png"
+      - "math_expressions.png"
+
+  # Result output
+  output_results: true
+  results_dir: "tests/vision/results/handwriting"
+  generate_report: true
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+  # Log categories
+  log_preprocessing: true
+  log_segmentation: true
+  log_recognition: true
+  log_performance: true
+  log_accuracy: true
+
+  # Log output
+  console: true
+  file: false
+  log_file: "logs/handwriting_recognition.log"
+
+  # Debugging
+  debug_mode: false
+  save_intermediate_images: false
+  intermediate_dir: "debug/handwriting"
+
+# Advanced Settings
+advanced:
+  # Experimental features
+  experimental_features:
+    enabled: false
+    features:
+      - "word_level_lstm"
+      - "context_aware_correction"
+      - "adaptive_confidence"
+
+  # Custom models
+  custom_models:
+    enabled: false
+    model_registry: {}
+
+  # Plugin support
+  plugins:
+    enabled: false
+    plugin_dir: "plugins/handwriting"
+
+  # Multi-language support (future)
+  multi_language:
+    enabled: false
+    languages: ["en"]

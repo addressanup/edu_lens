@@ -1,0 +1,2703 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-12-10",
+    "standards_alignment": "Common Core State Standards (CCSS)",
+    "grade_range": "K-6",
+    "subjects": ["math", "reading", "science", "social_studies"]
+  },
+  "subjects": {
+    "math": {
+      "name": "Mathematics",
+      "description": "Core mathematical concepts aligned with Common Core Math Standards",
+      "standards_framework": "CCSS.MATH",
+      "grade_levels": {
+        "K": {
+          "grade": "Kindergarten",
+          "domains": {
+            "counting_cardinality": {
+              "name": "Counting and Cardinality",
+              "standard_code": "CCSS.MATH.CONTENT.K.CC",
+              "concepts": {
+                "count_to_100": {
+                  "id": "math_k_cc_001",
+                  "name": "Count to 100 by ones and tens",
+                  "definition": "Ability to count sequentially from 1 to 100 by ones, and count by tens to 100",
+                  "prerequisites": [],
+                  "grade_level": "K",
+                  "difficulty": 1,
+                  "examples": [
+                    "Count: 1, 2, 3, 4, 5... up to 100",
+                    "Count by tens: 10, 20, 30, 40... 100"
+                  ],
+                  "common_misconceptions": [
+                    "Skipping numbers in sequence (e.g., 15, 16, 18...)",
+                    "Confusing teen numbers (thirteen vs thirty)"
+                  ],
+                  "learning_objectives": [
+                    "Count to 100 by ones",
+                    "Count to 100 by tens starting at any number"
+                  ]
+                },
+                "one_to_one_correspondence": {
+                  "id": "math_k_cc_002",
+                  "name": "One-to-one correspondence",
+                  "definition": "Understanding that each object in a set corresponds to exactly one number when counting",
+                  "prerequisites": [],
+                  "grade_level": "K",
+                  "difficulty": 1,
+                  "examples": [
+                    "Touching each toy once while counting: 1, 2, 3, 4, 5 toys",
+                    "Matching one plate to each person at a table"
+                  ],
+                  "common_misconceptions": [
+                    "Counting the same object twice",
+                    "Saying numbers without pointing to objects",
+                    "Skipping objects while counting"
+                  ],
+                  "learning_objectives": [
+                    "Touch each object once when counting",
+                    "Understand the last number counted represents the total quantity"
+                  ]
+                },
+                "compare_numbers": {
+                  "id": "math_k_cc_003",
+                  "name": "Compare numbers",
+                  "definition": "Identify whether a group of objects has more, less, or the same number as another group",
+                  "prerequisites": ["math_k_cc_002"],
+                  "grade_level": "K",
+                  "difficulty": 2,
+                  "examples": [
+                    "Which has more: 5 apples or 3 apples?",
+                    "Do these groups have the same amount?"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing size of objects with quantity",
+                    "Thinking spread out objects means more items"
+                  ],
+                  "learning_objectives": [
+                    "Compare two groups using more, less, same",
+                    "Use matching to compare quantities"
+                  ]
+                }
+              }
+            },
+            "operations": {
+              "name": "Operations and Algebraic Thinking",
+              "standard_code": "CCSS.MATH.CONTENT.K.OA",
+              "concepts": {
+                "addition_within_5": {
+                  "id": "math_k_oa_001",
+                  "name": "Addition within 5",
+                  "definition": "Solve addition problems with sums up to 5 using objects, fingers, or drawings",
+                  "prerequisites": ["math_k_cc_002"],
+                  "grade_level": "K",
+                  "difficulty": 2,
+                  "examples": [
+                    "2 + 1 = 3 (using blocks)",
+                    "I have 3 apples, you give me 2 more. How many do I have?"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding addition means combining groups",
+                    "Counting all objects from 1 instead of counting on"
+                  ],
+                  "learning_objectives": [
+                    "Represent addition with objects and drawings",
+                    "Solve addition problems within 5"
+                  ]
+                },
+                "subtraction_within_5": {
+                  "id": "math_k_oa_002",
+                  "name": "Subtraction within 5",
+                  "definition": "Solve subtraction problems within 5 using objects, fingers, or drawings",
+                  "prerequisites": ["math_k_cc_002", "math_k_oa_001"],
+                  "grade_level": "K",
+                  "difficulty": 2,
+                  "examples": [
+                    "5 - 2 = 3 (taking away blocks)",
+                    "I have 4 cookies and eat 1. How many are left?"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding subtraction means taking away",
+                    "Subtracting the smaller number from the larger regardless of order"
+                  ],
+                  "learning_objectives": [
+                    "Represent subtraction with objects and drawings",
+                    "Solve subtraction problems within 5"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "1": {
+          "grade": "Grade 1",
+          "domains": {
+            "operations": {
+              "name": "Operations and Algebraic Thinking",
+              "standard_code": "CCSS.MATH.CONTENT.1.OA",
+              "concepts": {
+                "addition_within_20": {
+                  "id": "math_1_oa_001",
+                  "name": "Addition within 20",
+                  "definition": "Add numbers with sums up to 20 using strategies like counting on, making ten, and decomposing numbers",
+                  "prerequisites": ["math_k_oa_001"],
+                  "grade_level": "1",
+                  "difficulty": 3,
+                  "examples": [
+                    "8 + 5 = 13 (8 + 2 + 3 = 10 + 3 = 13)",
+                    "9 + 7 = 16"
+                  ],
+                  "common_misconceptions": [
+                    "Always counting from one instead of counting on",
+                    "Not recognizing making ten as an efficient strategy"
+                  ],
+                  "learning_objectives": [
+                    "Add within 20 fluently",
+                    "Use strategies like making ten",
+                    "Understand commutative property (3+4 = 4+3)"
+                  ]
+                },
+                "subtraction_within_20": {
+                  "id": "math_1_oa_002",
+                  "name": "Subtraction within 20",
+                  "definition": "Subtract numbers within 20 using strategies and understand relationship between addition and subtraction",
+                  "prerequisites": ["math_k_oa_002", "math_1_oa_001"],
+                  "grade_level": "1",
+                  "difficulty": 3,
+                  "examples": [
+                    "15 - 8 = 7",
+                    "If 8 + 7 = 15, then 15 - 8 = 7"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding inverse relationship with addition",
+                    "Always subtracting smaller from larger number"
+                  ],
+                  "learning_objectives": [
+                    "Subtract within 20 fluently",
+                    "Use addition to check subtraction",
+                    "Solve word problems involving subtraction"
+                  ]
+                },
+                "word_problems": {
+                  "id": "math_1_oa_003",
+                  "name": "Addition and subtraction word problems",
+                  "definition": "Solve word problems that involve adding and subtracting within 20",
+                  "prerequisites": ["math_1_oa_001", "math_1_oa_002"],
+                  "grade_level": "1",
+                  "difficulty": 4,
+                  "examples": [
+                    "Sarah has 8 stickers. Tom gives her 5 more. How many does she have now?",
+                    "There are 12 birds in a tree. 4 fly away. How many are left?"
+                  ],
+                  "common_misconceptions": [
+                    "Not reading the problem carefully",
+                    "Choosing the wrong operation",
+                    "Not understanding what the question asks"
+                  ],
+                  "learning_objectives": [
+                    "Identify relevant information in word problems",
+                    "Choose appropriate operation",
+                    "Write number sentences to represent problems"
+                  ]
+                }
+              }
+            },
+            "place_value": {
+              "name": "Number and Operations in Base Ten",
+              "standard_code": "CCSS.MATH.CONTENT.1.NBT",
+              "concepts": {
+                "place_value_tens_ones": {
+                  "id": "math_1_nbt_001",
+                  "name": "Understanding place value (tens and ones)",
+                  "definition": "Understand that two-digit numbers represent amounts of tens and ones",
+                  "prerequisites": ["math_k_cc_001"],
+                  "grade_level": "1",
+                  "difficulty": 3,
+                  "examples": [
+                    "43 = 4 tens and 3 ones = 40 + 3",
+                    "Ten ones can be thought of as one ten"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking '43' is just '4' and '3' next to each other",
+                    "Not understanding the value of digit position"
+                  ],
+                  "learning_objectives": [
+                    "Represent two-digit numbers with models",
+                    "Understand 10 can be thought of as a bundle of ten ones",
+                    "Identify tens and ones in two-digit numbers"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "2": {
+          "grade": "Grade 2",
+          "domains": {
+            "operations": {
+              "name": "Operations and Algebraic Thinking",
+              "standard_code": "CCSS.MATH.CONTENT.2.OA",
+              "concepts": {
+                "addition_within_100": {
+                  "id": "math_2_oa_001",
+                  "name": "Addition within 100",
+                  "definition": "Fluently add within 100 using place value strategies and properties of operations",
+                  "prerequisites": ["math_1_oa_001", "math_1_nbt_001"],
+                  "grade_level": "2",
+                  "difficulty": 4,
+                  "examples": [
+                    "45 + 28 = 73",
+                    "Using place value: 40 + 20 = 60, 5 + 8 = 13, so 60 + 13 = 73"
+                  ],
+                  "common_misconceptions": [
+                    "Not aligning place values correctly",
+                    "Forgetting to regroup when needed"
+                  ],
+                  "learning_objectives": [
+                    "Add two-digit numbers fluently",
+                    "Use place value strategies",
+                    "Add with and without regrouping"
+                  ]
+                },
+                "arrays_repeated_addition": {
+                  "id": "math_2_oa_002",
+                  "name": "Arrays and repeated addition",
+                  "definition": "Work with equal groups to build foundation for multiplication using arrays and repeated addition",
+                  "prerequisites": ["math_1_oa_001"],
+                  "grade_level": "2",
+                  "difficulty": 4,
+                  "examples": [
+                    "3 rows of 4 apples = 4 + 4 + 4 = 12 apples",
+                    "Array with 2 rows and 5 columns = 5 + 5 = 10"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing rows and columns",
+                    "Not recognizing arrays as equal groups"
+                  ],
+                  "learning_objectives": [
+                    "Represent equal groups with arrays",
+                    "Use repeated addition for equal groups",
+                    "Understand foundation for multiplication"
+                  ]
+                }
+              }
+            },
+            "place_value": {
+              "name": "Number and Operations in Base Ten",
+              "standard_code": "CCSS.MATH.CONTENT.2.NBT",
+              "concepts": {
+                "place_value_hundreds": {
+                  "id": "math_2_nbt_001",
+                  "name": "Understanding place value to 1000",
+                  "definition": "Understand that three-digit numbers represent amounts of hundreds, tens, and ones",
+                  "prerequisites": ["math_1_nbt_001"],
+                  "grade_level": "2",
+                  "difficulty": 4,
+                  "examples": [
+                    "456 = 4 hundreds + 5 tens + 6 ones = 400 + 50 + 6",
+                    "Ten tens equal one hundred"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding regrouping between place values",
+                    "Thinking digits have the same value regardless of position"
+                  ],
+                  "learning_objectives": [
+                    "Read and write numbers to 1000",
+                    "Understand place value in three-digit numbers",
+                    "Compare three-digit numbers"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "3": {
+          "grade": "Grade 3",
+          "domains": {
+            "multiplication_division": {
+              "name": "Operations and Algebraic Thinking",
+              "standard_code": "CCSS.MATH.CONTENT.3.OA",
+              "concepts": {
+                "multiplication_basics": {
+                  "id": "math_3_oa_001",
+                  "name": "Understanding multiplication",
+                  "definition": "Interpret products of whole numbers as total number of objects in equal groups",
+                  "prerequisites": ["math_2_oa_002"],
+                  "grade_level": "3",
+                  "difficulty": 5,
+                  "examples": [
+                    "3 × 4 = 12 (3 groups of 4 objects)",
+                    "5 × 6 = 30 (5 rows of 6)"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing multiplication with addition",
+                    "Not understanding commutative property (3×4 = 4×3)"
+                  ],
+                  "learning_objectives": [
+                    "Understand multiplication as equal groups",
+                    "Know multiplication facts to 10 × 10",
+                    "Use properties of multiplication"
+                  ]
+                },
+                "division_basics": {
+                  "id": "math_3_oa_002",
+                  "name": "Understanding division",
+                  "definition": "Interpret quotients as number of objects in each share or number of shares",
+                  "prerequisites": ["math_3_oa_001"],
+                  "grade_level": "3",
+                  "difficulty": 5,
+                  "examples": [
+                    "12 ÷ 3 = 4 (12 objects divided into 3 equal groups)",
+                    "20 ÷ 4 = 5 (20 objects with 4 in each group)"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding division as inverse of multiplication",
+                    "Confusing dividend and divisor"
+                  ],
+                  "learning_objectives": [
+                    "Understand division as equal sharing",
+                    "Know division facts to 100 ÷ 10",
+                    "Understand relationship to multiplication"
+                  ]
+                },
+                "word_problems_mult_div": {
+                  "id": "math_3_oa_003",
+                  "name": "Multiplication and division word problems",
+                  "definition": "Solve two-step word problems using multiplication and division",
+                  "prerequisites": ["math_3_oa_001", "math_3_oa_002"],
+                  "grade_level": "3",
+                  "difficulty": 6,
+                  "examples": [
+                    "A baker makes 4 trays with 6 cookies each. He sells 8 cookies. How many are left?",
+                    "24 students sit in 4 equal rows. How many students per row?"
+                  ],
+                  "common_misconceptions": [
+                    "Not identifying multiple steps needed",
+                    "Choosing wrong operation"
+                  ],
+                  "learning_objectives": [
+                    "Solve two-step word problems",
+                    "Represent problems with equations",
+                    "Check reasonableness of answers"
+                  ]
+                }
+              }
+            },
+            "fractions": {
+              "name": "Number and Operations - Fractions",
+              "standard_code": "CCSS.MATH.CONTENT.3.NF",
+              "concepts": {
+                "unit_fractions": {
+                  "id": "math_3_nf_001",
+                  "name": "Understanding unit fractions",
+                  "definition": "Understand a fraction 1/b as the quantity formed by 1 part when a whole is partitioned into b equal parts",
+                  "prerequisites": ["math_2_nbt_001"],
+                  "grade_level": "3",
+                  "difficulty": 5,
+                  "examples": [
+                    "1/4 represents one part when something is divided into 4 equal parts",
+                    "Pizza cut into 8 slices, one slice is 1/8"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking larger denominator means larger fraction",
+                    "Not understanding parts must be equal"
+                  ],
+                  "learning_objectives": [
+                    "Identify unit fractions",
+                    "Represent fractions on number lines",
+                    "Understand numerator and denominator"
+                  ]
+                },
+                "comparing_fractions": {
+                  "id": "math_3_nf_002",
+                  "name": "Comparing fractions",
+                  "definition": "Compare two fractions with same numerator or denominator by reasoning about their size",
+                  "prerequisites": ["math_3_nf_001"],
+                  "grade_level": "3",
+                  "difficulty": 6,
+                  "examples": [
+                    "1/3 > 1/4 (same numerator, fewer parts means larger pieces)",
+                    "3/4 > 2/4 (same denominator, more pieces)"
+                  ],
+                  "common_misconceptions": [
+                    "Comparing numerators when denominators differ",
+                    "Not recognizing equivalent fractions"
+                  ],
+                  "learning_objectives": [
+                    "Compare fractions with same denominator",
+                    "Compare fractions with same numerator",
+                    "Recognize equivalent fractions"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "4": {
+          "grade": "Grade 4",
+          "domains": {
+            "operations": {
+              "name": "Operations and Algebraic Thinking",
+              "standard_code": "CCSS.MATH.CONTENT.4.OA",
+              "concepts": {
+                "multi_digit_multiplication": {
+                  "id": "math_4_oa_001",
+                  "name": "Multi-digit multiplication",
+                  "definition": "Multiply multi-digit numbers using strategies based on place value and properties of operations",
+                  "prerequisites": ["math_3_oa_001", "math_2_nbt_001"],
+                  "grade_level": "4",
+                  "difficulty": 6,
+                  "examples": [
+                    "23 × 45 = 1,035",
+                    "Using area model or standard algorithm"
+                  ],
+                  "common_misconceptions": [
+                    "Not aligning partial products correctly",
+                    "Forgetting to add zeros as place holders"
+                  ],
+                  "learning_objectives": [
+                    "Multiply up to 4-digit by 1-digit numbers",
+                    "Multiply two 2-digit numbers",
+                    "Use area models and algorithms"
+                  ]
+                },
+                "factors_multiples": {
+                  "id": "math_4_oa_002",
+                  "name": "Factors and multiples",
+                  "definition": "Find factors and multiples of numbers, identify prime and composite numbers",
+                  "prerequisites": ["math_3_oa_001", "math_3_oa_002"],
+                  "grade_level": "4",
+                  "difficulty": 6,
+                  "examples": [
+                    "Factors of 12: 1, 2, 3, 4, 6, 12",
+                    "Multiples of 3: 3, 6, 9, 12, 15...",
+                    "Prime number: 7 (only factors are 1 and 7)"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing factors and multiples",
+                    "Thinking 1 is prime"
+                  ],
+                  "learning_objectives": [
+                    "Find all factor pairs for numbers 1-100",
+                    "Identify prime and composite numbers",
+                    "Understand multiples"
+                  ]
+                }
+              }
+            },
+            "fractions": {
+              "name": "Number and Operations - Fractions",
+              "standard_code": "CCSS.MATH.CONTENT.4.NF",
+              "concepts": {
+                "equivalent_fractions": {
+                  "id": "math_4_nf_001",
+                  "name": "Equivalent fractions",
+                  "definition": "Generate and recognize equivalent fractions using visual models and multiplication/division",
+                  "prerequisites": ["math_3_nf_001"],
+                  "grade_level": "4",
+                  "difficulty": 6,
+                  "examples": [
+                    "1/2 = 2/4 = 3/6 = 4/8",
+                    "Multiply numerator and denominator by same number"
+                  ],
+                  "common_misconceptions": [
+                    "Adding same number to numerator and denominator",
+                    "Not recognizing simplified forms"
+                  ],
+                  "learning_objectives": [
+                    "Generate equivalent fractions",
+                    "Simplify fractions",
+                    "Compare fractions using equivalence"
+                  ]
+                },
+                "adding_fractions": {
+                  "id": "math_4_nf_002",
+                  "name": "Adding and subtracting fractions",
+                  "definition": "Add and subtract fractions with like denominators, including mixed numbers",
+                  "prerequisites": ["math_3_nf_001", "math_4_nf_001"],
+                  "grade_level": "4",
+                  "difficulty": 7,
+                  "examples": [
+                    "3/8 + 2/8 = 5/8",
+                    "2 1/4 + 1 2/4 = 3 3/4"
+                  ],
+                  "common_misconceptions": [
+                    "Adding denominators together",
+                    "Not converting mixed numbers properly"
+                  ],
+                  "learning_objectives": [
+                    "Add fractions with like denominators",
+                    "Subtract fractions with like denominators",
+                    "Work with mixed numbers"
+                  ]
+                },
+                "multiplying_fractions": {
+                  "id": "math_4_nf_003",
+                  "name": "Multiplying fractions by whole numbers",
+                  "definition": "Multiply a fraction by a whole number using visual models and equations",
+                  "prerequisites": ["math_3_nf_001", "math_3_oa_001"],
+                  "grade_level": "4",
+                  "difficulty": 7,
+                  "examples": [
+                    "3 × 1/4 = 3/4",
+                    "5 × 2/3 = 10/3 = 3 1/3"
+                  ],
+                  "common_misconceptions": [
+                    "Multiplying both numerator and denominator",
+                    "Not understanding it as repeated addition"
+                  ],
+                  "learning_objectives": [
+                    "Multiply fractions by whole numbers",
+                    "Understand as repeated addition",
+                    "Solve word problems"
+                  ]
+                },
+                "decimal_fractions": {
+                  "id": "math_4_nf_004",
+                  "name": "Decimal notation for fractions",
+                  "definition": "Express fractions with denominators of 10 or 100 as decimals",
+                  "prerequisites": ["math_3_nf_001", "math_2_nbt_001"],
+                  "grade_level": "4",
+                  "difficulty": 6,
+                  "examples": [
+                    "3/10 = 0.3",
+                    "45/100 = 0.45"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding place value in decimals",
+                    "Confusing 0.3 and 0.03"
+                  ],
+                  "learning_objectives": [
+                    "Convert fractions to decimals",
+                    "Compare decimal numbers",
+                    "Understand decimal place value"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "5": {
+          "grade": "Grade 5",
+          "domains": {
+            "place_value": {
+              "name": "Number and Operations in Base Ten",
+              "standard_code": "CCSS.MATH.CONTENT.5.NBT",
+              "concepts": {
+                "place_value_decimals": {
+                  "id": "math_5_nbt_001",
+                  "name": "Place value with decimals",
+                  "definition": "Understand place value system extends to decimal places (tenths, hundredths, thousandths)",
+                  "prerequisites": ["math_4_nf_004"],
+                  "grade_level": "5",
+                  "difficulty": 7,
+                  "examples": [
+                    "4.567 = 4 ones + 5 tenths + 6 hundredths + 7 thousandths",
+                    "Compare 3.45 and 3.5"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking more decimal places means larger number",
+                    "Not aligning decimal points when comparing"
+                  ],
+                  "learning_objectives": [
+                    "Read and write decimals to thousandths",
+                    "Compare and round decimals",
+                    "Understand powers of 10"
+                  ]
+                },
+                "decimal_operations": {
+                  "id": "math_5_nbt_002",
+                  "name": "Operations with decimals",
+                  "definition": "Add, subtract, multiply, and divide decimals to hundredths",
+                  "prerequisites": ["math_5_nbt_001"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "3.45 + 2.8 = 6.25",
+                    "0.6 × 0.4 = 0.24",
+                    "12.5 ÷ 5 = 2.5"
+                  ],
+                  "common_misconceptions": [
+                    "Not aligning decimal points in addition/subtraction",
+                    "Misplacing decimal point in multiplication"
+                  ],
+                  "learning_objectives": [
+                    "Add and subtract decimals",
+                    "Multiply decimals",
+                    "Divide decimals by whole numbers"
+                  ]
+                }
+              }
+            },
+            "fractions": {
+              "name": "Number and Operations - Fractions",
+              "standard_code": "CCSS.MATH.CONTENT.5.NF",
+              "concepts": {
+                "adding_unlike_denominators": {
+                  "id": "math_5_nf_001",
+                  "name": "Adding fractions with unlike denominators",
+                  "definition": "Add and subtract fractions with unlike denominators by finding common denominators",
+                  "prerequisites": ["math_4_nf_002", "math_4_nf_001"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "1/3 + 1/4 = 4/12 + 3/12 = 7/12",
+                    "5/6 - 1/2 = 5/6 - 3/6 = 2/6 = 1/3"
+                  ],
+                  "common_misconceptions": [
+                    "Just adding numerators and denominators",
+                    "Not finding least common denominator",
+                    "Not simplifying final answer"
+                  ],
+                  "learning_objectives": [
+                    "Find common denominators",
+                    "Add fractions with unlike denominators",
+                    "Subtract fractions with unlike denominators"
+                  ]
+                },
+                "multiplying_fractions_by_fractions": {
+                  "id": "math_5_nf_002",
+                  "name": "Multiplying fractions",
+                  "definition": "Multiply fractions by fractions using area models and algorithms",
+                  "prerequisites": ["math_4_nf_003"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "1/2 × 3/4 = 3/8",
+                    "2/3 × 1/5 = 2/15"
+                  ],
+                  "common_misconceptions": [
+                    "Adding instead of multiplying",
+                    "Not simplifying answers",
+                    "Thinking result should be larger"
+                  ],
+                  "learning_objectives": [
+                    "Multiply fraction by fraction",
+                    "Use area models to visualize",
+                    "Understand product may be smaller than factors"
+                  ]
+                },
+                "dividing_fractions": {
+                  "id": "math_5_nf_003",
+                  "name": "Dividing with fractions",
+                  "definition": "Divide unit fractions by whole numbers and whole numbers by unit fractions",
+                  "prerequisites": ["math_5_nf_002"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "1/2 ÷ 3 = 1/6",
+                    "4 ÷ 1/2 = 8"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding division with fractions conceptually",
+                    "Confusing when to invert and multiply"
+                  ],
+                  "learning_objectives": [
+                    "Divide unit fractions by whole numbers",
+                    "Divide whole numbers by unit fractions",
+                    "Interpret division in context"
+                  ]
+                }
+              }
+            },
+            "volume": {
+              "name": "Measurement and Data",
+              "standard_code": "CCSS.MATH.CONTENT.5.MD",
+              "concepts": {
+                "volume_concepts": {
+                  "id": "math_5_md_001",
+                  "name": "Understanding volume",
+                  "definition": "Understand volume as attribute of 3D space, measured in cubic units",
+                  "prerequisites": ["math_3_oa_001"],
+                  "grade_level": "5",
+                  "difficulty": 7,
+                  "examples": [
+                    "Volume of box: length × width × height",
+                    "Counting cubic units to find volume"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing volume with area",
+                    "Not understanding cubic units"
+                  ],
+                  "learning_objectives": [
+                    "Measure volume by counting unit cubes",
+                    "Use formulas for volume",
+                    "Solve real-world volume problems"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "6": {
+          "grade": "Grade 6",
+          "domains": {
+            "ratios": {
+              "name": "Ratios and Proportional Relationships",
+              "standard_code": "CCSS.MATH.CONTENT.6.RP",
+              "concepts": {
+                "ratio_concepts": {
+                  "id": "math_6_rp_001",
+                  "name": "Understanding ratios",
+                  "definition": "Understand ratio as comparison of two quantities, use ratio language to describe relationships",
+                  "prerequisites": ["math_3_oa_001", "math_4_nf_001"],
+                  "grade_level": "6",
+                  "difficulty": 8,
+                  "examples": [
+                    "Ratio of boys to girls is 3:2 or 3 to 2 or 3/2",
+                    "For every 3 cups of flour, use 2 cups of sugar"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding order matters in ratios",
+                    "Confusing ratios with fractions"
+                  ],
+                  "learning_objectives": [
+                    "Describe ratios in multiple ways",
+                    "Use ratio language",
+                    "Find equivalent ratios"
+                  ]
+                },
+                "unit_rates": {
+                  "id": "math_6_rp_002",
+                  "name": "Unit rates",
+                  "definition": "Find unit rates associated with ratios of quantities measured in different units",
+                  "prerequisites": ["math_6_rp_001"],
+                  "grade_level": "6",
+                  "difficulty": 8,
+                  "examples": [
+                    "$12 for 3 pounds, so $4 per pound",
+                    "150 miles in 3 hours = 50 miles per hour"
+                  ],
+                  "common_misconceptions": [
+                    "Not identifying the unit correctly",
+                    "Dividing wrong quantities"
+                  ],
+                  "learning_objectives": [
+                    "Calculate unit rates",
+                    "Compare unit rates",
+                    "Solve unit rate problems"
+                  ]
+                },
+                "percent_concepts": {
+                  "id": "math_6_rp_003",
+                  "name": "Understanding percent",
+                  "definition": "Understand percent as rate per 100, find percentages of quantities and solve percent problems",
+                  "prerequisites": ["math_6_rp_001", "math_4_nf_004"],
+                  "grade_level": "6",
+                  "difficulty": 8,
+                  "examples": [
+                    "50% = 50/100 = 1/2 = 0.5",
+                    "Find 25% of 80 = 20"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing percent with decimal (50% vs 0.5)",
+                    "Not converting properly between forms"
+                  ],
+                  "learning_objectives": [
+                    "Convert between percent, fraction, decimal",
+                    "Find percent of quantity",
+                    "Solve percent word problems"
+                  ]
+                }
+              }
+            },
+            "integers": {
+              "name": "The Number System",
+              "standard_code": "CCSS.MATH.CONTENT.6.NS",
+              "concepts": {
+                "negative_numbers": {
+                  "id": "math_6_ns_001",
+                  "name": "Understanding negative numbers",
+                  "definition": "Understand positive and negative numbers describe quantities in real-world contexts",
+                  "prerequisites": ["math_5_nbt_001"],
+                  "grade_level": "6",
+                  "difficulty": 7,
+                  "examples": [
+                    "Temperature of -5°F means 5 degrees below zero",
+                    "Bank account balance of -$20 means $20 in debt"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking negative means just 'less than'",
+                    "Not understanding opposites on number line"
+                  ],
+                  "learning_objectives": [
+                    "Understand negative numbers in context",
+                    "Plot integers on number line",
+                    "Compare and order integers"
+                  ]
+                },
+                "integer_operations": {
+                  "id": "math_6_ns_002",
+                  "name": "Operations with integers",
+                  "definition": "Add, subtract, multiply, and divide integers using models and rules",
+                  "prerequisites": ["math_6_ns_001"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "-3 + 5 = 2",
+                    "4 - (-2) = 6",
+                    "-3 × -4 = 12",
+                    "-12 ÷ 3 = -4"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding double negatives",
+                    "Confusing rules for different operations"
+                  ],
+                  "learning_objectives": [
+                    "Add and subtract integers",
+                    "Multiply and divide integers",
+                    "Apply integer operations to problems"
+                  ]
+                },
+                "rational_numbers": {
+                  "id": "math_6_ns_003",
+                  "name": "Rational numbers",
+                  "definition": "Work with rational numbers (fractions, decimals, integers) on number line and in coordinate plane",
+                  "prerequisites": ["math_6_ns_001", "math_5_nf_001"],
+                  "grade_level": "6",
+                  "difficulty": 8,
+                  "examples": [
+                    "Plot -2.5 on number line",
+                    "Point (-3, 4) in coordinate plane"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding all integers are rational",
+                    "Confusing absolute value with opposite"
+                  ],
+                  "learning_objectives": [
+                    "Plot rational numbers",
+                    "Find absolute value",
+                    "Work in coordinate plane"
+                  ]
+                }
+              }
+            },
+            "expressions": {
+              "name": "Expressions and Equations",
+              "standard_code": "CCSS.MATH.CONTENT.6.EE",
+              "concepts": {
+                "algebraic_expressions": {
+                  "id": "math_6_ee_001",
+                  "name": "Writing and evaluating expressions",
+                  "definition": "Write and evaluate numerical and algebraic expressions using order of operations",
+                  "prerequisites": ["math_5_nbt_002"],
+                  "grade_level": "6",
+                  "difficulty": 8,
+                  "examples": [
+                    "Write expression: 5 more than twice a number = 2n + 5",
+                    "Evaluate 3x + 2 when x = 4: 3(4) + 2 = 14"
+                  ],
+                  "common_misconceptions": [
+                    "Not following order of operations",
+                    "Confusing 2x and 2 + x"
+                  ],
+                  "learning_objectives": [
+                    "Write algebraic expressions from words",
+                    "Evaluate expressions",
+                    "Apply order of operations"
+                  ]
+                },
+                "solving_equations": {
+                  "id": "math_6_ee_002",
+                  "name": "Solving one-variable equations",
+                  "definition": "Solve one-step equations using inverse operations",
+                  "prerequisites": ["math_6_ee_001"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "x + 7 = 12, so x = 5",
+                    "3y = 15, so y = 5"
+                  ],
+                  "common_misconceptions": [
+                    "Not performing same operation on both sides",
+                    "Confusing which operation to use"
+                  ],
+                  "learning_objectives": [
+                    "Solve one-step equations",
+                    "Use inverse operations",
+                    "Check solutions"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading": {
+      "name": "Reading/Language Arts",
+      "description": "Reading, writing, and language skills aligned with Common Core ELA Standards",
+      "standards_framework": "CCSS.ELA-LITERACY",
+      "grade_levels": {
+        "K": {
+          "grade": "Kindergarten",
+          "domains": {
+            "foundational_skills": {
+              "name": "Foundational Skills",
+              "standard_code": "CCSS.ELA-LITERACY.RF.K",
+              "concepts": {
+                "print_concepts": {
+                  "id": "read_k_rf_001",
+                  "name": "Print concepts",
+                  "definition": "Understand that print carries meaning, follows left-to-right and top-to-bottom directionality",
+                  "prerequisites": [],
+                  "grade_level": "K",
+                  "difficulty": 1,
+                  "examples": [
+                    "Following words with finger while reading",
+                    "Knowing where to start reading on a page",
+                    "Recognizing that spaces separate words"
+                  ],
+                  "common_misconceptions": [
+                    "Starting to read from the right side",
+                    "Not understanding that pictures and text are different"
+                  ],
+                  "learning_objectives": [
+                    "Follow left-to-right directionality",
+                    "Understand concept of word",
+                    "Recognize that print has meaning"
+                  ]
+                },
+                "letter_recognition": {
+                  "id": "read_k_rf_002",
+                  "name": "Letter recognition",
+                  "definition": "Recognize and name all upper and lowercase letters of the alphabet",
+                  "prerequisites": [],
+                  "grade_level": "K",
+                  "difficulty": 2,
+                  "examples": [
+                    "Point to and name letter 'A'",
+                    "Find all the letter 'b's in a sentence"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing similar-looking letters (b/d, p/q)",
+                    "Not distinguishing uppercase from lowercase"
+                  ],
+                  "learning_objectives": [
+                    "Name all 26 uppercase letters",
+                    "Name all 26 lowercase letters",
+                    "Match uppercase to lowercase"
+                  ]
+                },
+                "phonemic_awareness": {
+                  "id": "read_k_rf_003",
+                  "name": "Phonemic awareness",
+                  "definition": "Demonstrate understanding of spoken words, syllables, and sounds (phonemes)",
+                  "prerequisites": [],
+                  "grade_level": "K",
+                  "difficulty": 2,
+                  "examples": [
+                    "Clapping syllables in 'butterfly' (but-ter-fly)",
+                    "Identifying first sound in 'cat' (/k/)",
+                    "Blending sounds /c/ /a/ /t/ to make 'cat'"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing letter names with sounds",
+                    "Not hearing individual sounds in words"
+                  ],
+                  "learning_objectives": [
+                    "Isolate and pronounce initial sounds",
+                    "Blend sounds to form words",
+                    "Segment words into individual sounds"
+                  ]
+                },
+                "letter_sounds": {
+                  "id": "read_k_rf_004",
+                  "name": "Letter-sound correspondence",
+                  "definition": "Associate the long and short sounds with common spellings for the five major vowels and common consonants",
+                  "prerequisites": ["read_k_rf_002", "read_k_rf_003"],
+                  "grade_level": "K",
+                  "difficulty": 3,
+                  "examples": [
+                    "Letter 'm' makes /m/ sound",
+                    "Letter 'a' makes /a/ as in 'apple'",
+                    "Letter 'c' makes /k/ sound"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking each letter has only one sound",
+                    "Confusing similar sounds"
+                  ],
+                  "learning_objectives": [
+                    "Know consonant sounds",
+                    "Know short vowel sounds",
+                    "Begin to decode simple words"
+                  ]
+                },
+                "simple_words": {
+                  "id": "read_k_rf_005",
+                  "name": "Reading simple words",
+                  "definition": "Read common high-frequency words by sight and decode simple CVC words",
+                  "prerequisites": ["read_k_rf_004"],
+                  "grade_level": "K",
+                  "difficulty": 3,
+                  "examples": [
+                    "Sight words: I, the, we, see, a",
+                    "CVC words: cat, dog, sun, hop"
+                  ],
+                  "common_misconceptions": [
+                    "Guessing based on first letter only",
+                    "Not blending all sounds together"
+                  ],
+                  "learning_objectives": [
+                    "Read sight words automatically",
+                    "Decode CVC words",
+                    "Read emergent-reader texts"
+                  ]
+                }
+              }
+            },
+            "reading_literature": {
+              "name": "Reading Literature",
+              "standard_code": "CCSS.ELA-LITERACY.RL.K",
+              "concepts": {
+                "story_elements": {
+                  "id": "read_k_rl_001",
+                  "name": "Story elements",
+                  "definition": "Identify characters, settings, and major events in a story",
+                  "prerequisites": ["read_k_rf_001"],
+                  "grade_level": "K",
+                  "difficulty": 2,
+                  "examples": [
+                    "Who is in the story? (characters)",
+                    "Where does it happen? (setting)",
+                    "What happens? (plot events)"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing character names",
+                    "Not distinguishing between different events"
+                  ],
+                  "learning_objectives": [
+                    "Name main characters",
+                    "Describe setting",
+                    "Retell key events in sequence"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "1": {
+          "grade": "Grade 1",
+          "domains": {
+            "foundational_skills": {
+              "name": "Foundational Skills",
+              "standard_code": "CCSS.ELA-LITERACY.RF.1",
+              "concepts": {
+                "phonics_patterns": {
+                  "id": "read_1_rf_001",
+                  "name": "Phonics and word patterns",
+                  "definition": "Know and apply grade-level phonics including consonant blends, digraphs, and vowel patterns",
+                  "prerequisites": ["read_k_rf_004"],
+                  "grade_level": "1",
+                  "difficulty": 4,
+                  "examples": [
+                    "Blends: st, bl, gr (stop, blue, green)",
+                    "Digraphs: sh, ch, th (ship, chin, then)",
+                    "Long vowels: CVCe pattern (make, like, home)"
+                  ],
+                  "common_misconceptions": [
+                    "Sounding out digraphs as two sounds",
+                    "Not recognizing silent e pattern"
+                  ],
+                  "learning_objectives": [
+                    "Decode words with blends and digraphs",
+                    "Read long vowel patterns",
+                    "Decode two-syllable words"
+                  ]
+                },
+                "fluency": {
+                  "id": "read_1_rf_002",
+                  "name": "Reading fluency",
+                  "definition": "Read grade-level text with sufficient accuracy, appropriate rate, and expression",
+                  "prerequisites": ["read_k_rf_005", "read_1_rf_001"],
+                  "grade_level": "1",
+                  "difficulty": 4,
+                  "examples": [
+                    "Reading with expression, not word-by-word",
+                    "Self-correcting errors",
+                    "Phrasing appropriately"
+                  ],
+                  "common_misconceptions": [
+                    "Reading too fast without understanding",
+                    "Not pausing at punctuation"
+                  ],
+                  "learning_objectives": [
+                    "Read grade-level text accurately",
+                    "Read with appropriate speed",
+                    "Use expression and phrasing"
+                  ]
+                }
+              }
+            },
+            "reading_comprehension": {
+              "name": "Reading Comprehension",
+              "standard_code": "CCSS.ELA-LITERACY.RL.1",
+              "concepts": {
+                "key_details": {
+                  "id": "read_1_rl_001",
+                  "name": "Identifying key details",
+                  "definition": "Ask and answer questions about key details in a text",
+                  "prerequisites": ["read_k_rl_001"],
+                  "grade_level": "1",
+                  "difficulty": 3,
+                  "examples": [
+                    "Who, what, where, when questions",
+                    "Finding evidence in text to answer"
+                  ],
+                  "common_misconceptions": [
+                    "Making up answers not supported by text",
+                    "Confusing details from different parts"
+                  ],
+                  "learning_objectives": [
+                    "Answer literal comprehension questions",
+                    "Locate information in text",
+                    "Retell stories with key details"
+                  ]
+                },
+                "characters_lessons": {
+                  "id": "read_1_rl_002",
+                  "name": "Characters and lessons",
+                  "definition": "Describe characters and explain what lesson or moral the story teaches",
+                  "prerequisites": ["read_1_rl_001"],
+                  "grade_level": "1",
+                  "difficulty": 4,
+                  "examples": [
+                    "The character was brave because...",
+                    "The story teaches us to be kind"
+                  ],
+                  "common_misconceptions": [
+                    "Not connecting character actions to traits",
+                    "Missing the central message"
+                  ],
+                  "learning_objectives": [
+                    "Describe character traits and feelings",
+                    "Identify lesson or moral",
+                    "Make simple inferences"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "2": {
+          "grade": "Grade 2",
+          "domains": {
+            "foundational_skills": {
+              "name": "Foundational Skills",
+              "standard_code": "CCSS.ELA-LITERACY.RF.2",
+              "concepts": {
+                "advanced_phonics": {
+                  "id": "read_2_rf_001",
+                  "name": "Advanced phonics patterns",
+                  "definition": "Decode words with advanced patterns including vowel teams, r-controlled, and common suffixes",
+                  "prerequisites": ["read_1_rf_001"],
+                  "grade_level": "2",
+                  "difficulty": 5,
+                  "examples": [
+                    "Vowel teams: ai, ea, oa (rain, team, boat)",
+                    "R-controlled: ar, or, er (car, fork, her)",
+                    "Suffixes: -ed, -ing, -er (jumped, running, faster)"
+                  ],
+                  "common_misconceptions": [
+                    "Not recognizing vowel team patterns",
+                    "Incorrectly adding suffixes"
+                  ],
+                  "learning_objectives": [
+                    "Decode multisyllabic words",
+                    "Apply vowel patterns",
+                    "Read words with affixes"
+                  ]
+                }
+              }
+            },
+            "reading_comprehension": {
+              "name": "Reading Comprehension",
+              "standard_code": "CCSS.ELA-LITERACY.RL.2",
+              "concepts": {
+                "story_structure": {
+                  "id": "read_2_rl_001",
+                  "name": "Story structure",
+                  "definition": "Describe how stories have beginning, middle, and end; understand sequence of events",
+                  "prerequisites": ["read_1_rl_001"],
+                  "grade_level": "2",
+                  "difficulty": 5,
+                  "examples": [
+                    "First, then, next, finally",
+                    "Problem and solution in stories"
+                  ],
+                  "common_misconceptions": [
+                    "Not distinguishing story parts",
+                    "Missing cause and effect relationships"
+                  ],
+                  "learning_objectives": [
+                    "Identify story structure",
+                    "Sequence events in order",
+                    "Recognize problem and solution"
+                  ]
+                },
+                "characters_compare": {
+                  "id": "read_2_rl_002",
+                  "name": "Comparing characters",
+                  "definition": "Compare and contrast characters, settings, or events in stories",
+                  "prerequisites": ["read_1_rl_002"],
+                  "grade_level": "2",
+                  "difficulty": 6,
+                  "examples": [
+                    "How are these two characters alike and different?",
+                    "Compare settings in two stories"
+                  ],
+                  "common_misconceptions": [
+                    "Only identifying similarities or only differences",
+                    "Not using evidence from text"
+                  ],
+                  "learning_objectives": [
+                    "Compare and contrast characters",
+                    "Use comparison language",
+                    "Support with text evidence"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "3": {
+          "grade": "Grade 3",
+          "domains": {
+            "reading_literature": {
+              "name": "Reading Literature",
+              "standard_code": "CCSS.ELA-LITERACY.RL.3",
+              "concepts": {
+                "theme": {
+                  "id": "read_3_rl_001",
+                  "name": "Theme and central message",
+                  "definition": "Determine the theme or central message and explain how it is conveyed through key details",
+                  "prerequisites": ["read_2_rl_001"],
+                  "grade_level": "3",
+                  "difficulty": 6,
+                  "examples": [
+                    "Theme: Friendship is important",
+                    "Supporting details show characters helping each other"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing theme with plot summary",
+                    "Identifying topic instead of theme"
+                  ],
+                  "learning_objectives": [
+                    "Identify theme",
+                    "Support theme with details",
+                    "Distinguish theme from plot"
+                  ]
+                },
+                "character_actions": {
+                  "id": "read_3_rl_002",
+                  "name": "Character traits and motivations",
+                  "definition": "Describe characters and explain how their actions contribute to the sequence of events",
+                  "prerequisites": ["read_2_rl_002"],
+                  "grade_level": "3",
+                  "difficulty": 6,
+                  "examples": [
+                    "Character is determined, which leads to...",
+                    "Character's fear causes them to..."
+                  ],
+                  "common_misconceptions": [
+                    "Not connecting actions to consequences",
+                    "Missing character motivations"
+                  ],
+                  "learning_objectives": [
+                    "Analyze character traits",
+                    "Explain character motivations",
+                    "Trace cause and effect of actions"
+                  ]
+                },
+                "figurative_language": {
+                  "id": "read_3_rl_003",
+                  "name": "Figurative language",
+                  "definition": "Distinguish literal from non-literal language and understand similes and metaphors",
+                  "prerequisites": ["read_2_rl_001"],
+                  "grade_level": "3",
+                  "difficulty": 7,
+                  "examples": [
+                    "Simile: as brave as a lion",
+                    "Metaphor: time is money",
+                    "Idiom: raining cats and dogs"
+                  ],
+                  "common_misconceptions": [
+                    "Taking figurative language literally",
+                    "Not recognizing comparison language"
+                  ],
+                  "learning_objectives": [
+                    "Identify similes and metaphors",
+                    "Interpret figurative meanings",
+                    "Explain effect of language choices"
+                  ]
+                }
+              }
+            },
+            "reading_informational": {
+              "name": "Reading Informational Text",
+              "standard_code": "CCSS.ELA-LITERACY.RI.3",
+              "concepts": {
+                "main_idea": {
+                  "id": "read_3_ri_001",
+                  "name": "Main idea and supporting details",
+                  "definition": "Determine main idea of text and explain how it is supported by key details",
+                  "prerequisites": ["read_2_rl_001"],
+                  "grade_level": "3",
+                  "difficulty": 6,
+                  "examples": [
+                    "Main idea: Dolphins are intelligent animals",
+                    "Supporting details: they communicate, use tools, solve problems"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing topic with main idea",
+                    "Listing details without identifying main idea"
+                  ],
+                  "learning_objectives": [
+                    "Identify main idea",
+                    "Find supporting details",
+                    "Summarize informational texts"
+                  ]
+                }
+              }
+            },
+            "writing": {
+              "name": "Writing",
+              "standard_code": "CCSS.ELA-LITERACY.W.3",
+              "concepts": {
+                "opinion_writing": {
+                  "id": "read_3_w_001",
+                  "name": "Opinion writing",
+                  "definition": "Write opinion pieces with reasons supporting the opinion",
+                  "prerequisites": ["read_2_rl_001"],
+                  "grade_level": "3",
+                  "difficulty": 6,
+                  "examples": [
+                    "I think recess should be longer because...",
+                    "My favorite season is summer. First reason..., second reason..."
+                  ],
+                  "common_misconceptions": [
+                    "Not providing reasons",
+                    "Confusing facts with opinions"
+                  ],
+                  "learning_objectives": [
+                    "State clear opinion",
+                    "Provide supporting reasons",
+                    "Use linking words"
+                  ]
+                },
+                "narrative_writing": {
+                  "id": "read_3_w_002",
+                  "name": "Narrative writing",
+                  "definition": "Write narratives with details describing actions, thoughts, and feelings",
+                  "prerequisites": ["read_2_rl_001"],
+                  "grade_level": "3",
+                  "difficulty": 6,
+                  "examples": [
+                    "Personal narratives with beginning, middle, end",
+                    "Using dialogue and description"
+                  ],
+                  "common_misconceptions": [
+                    "Not including enough details",
+                    "Unclear sequence of events"
+                  ],
+                  "learning_objectives": [
+                    "Write clear narratives",
+                    "Use temporal words",
+                    "Include descriptive details"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "4": {
+          "grade": "Grade 4",
+          "domains": {
+            "reading_literature": {
+              "name": "Reading Literature",
+              "standard_code": "CCSS.ELA-LITERACY.RL.4",
+              "concepts": {
+                "inferencing": {
+                  "id": "read_4_rl_001",
+                  "name": "Making inferences",
+                  "definition": "Refer to details and examples when explaining what text says explicitly and when making inferences",
+                  "prerequisites": ["read_3_rl_002"],
+                  "grade_level": "4",
+                  "difficulty": 7,
+                  "examples": [
+                    "The character slammed the door. (Infer: they are angry)",
+                    "Using text clues plus background knowledge"
+                  ],
+                  "common_misconceptions": [
+                    "Making inferences without text evidence",
+                    "Not going beyond literal meaning"
+                  ],
+                  "learning_objectives": [
+                    "Make inferences from text",
+                    "Support inferences with evidence",
+                    "Draw conclusions"
+                  ]
+                },
+                "theme_summary": {
+                  "id": "read_4_rl_002",
+                  "name": "Theme and summary",
+                  "definition": "Determine theme from details and summarize the text",
+                  "prerequisites": ["read_3_rl_001"],
+                  "grade_level": "4",
+                  "difficulty": 7,
+                  "examples": [
+                    "Theme: perseverance leads to success",
+                    "Summary: main events in order without opinion"
+                  ],
+                  "common_misconceptions": [
+                    "Including too many details in summary",
+                    "Adding personal opinions to summary"
+                  ],
+                  "learning_objectives": [
+                    "Determine theme",
+                    "Write objective summaries",
+                    "Distinguish important from unimportant details"
+                  ]
+                }
+              }
+            },
+            "reading_informational": {
+              "name": "Reading Informational Text",
+              "standard_code": "CCSS.ELA-LITERACY.RI.4",
+              "concepts": {
+                "text_structure": {
+                  "id": "read_4_ri_001",
+                  "name": "Text structure",
+                  "definition": "Describe overall structure of events, ideas, concepts, or information in a text",
+                  "prerequisites": ["read_3_ri_001"],
+                  "grade_level": "4",
+                  "difficulty": 7,
+                  "examples": [
+                    "Chronological order: first, then, finally",
+                    "Cause and effect: because, as a result",
+                    "Compare and contrast: similarly, however"
+                  ],
+                  "common_misconceptions": [
+                    "Not recognizing organizational patterns",
+                    "Missing signal words"
+                  ],
+                  "learning_objectives": [
+                    "Identify text structures",
+                    "Understand how structure affects meaning",
+                    "Use structure to aid comprehension"
+                  ]
+                },
+                "text_features": {
+                  "id": "read_4_ri_002",
+                  "name": "Using text features",
+                  "definition": "Interpret information from charts, graphs, diagrams, timelines, and other visual elements",
+                  "prerequisites": ["read_3_ri_001"],
+                  "grade_level": "4",
+                  "difficulty": 6,
+                  "examples": [
+                    "Reading information from a bar graph",
+                    "Using diagram labels to understand content"
+                  ],
+                  "common_misconceptions": [
+                    "Ignoring visual information",
+                    "Not integrating visuals with text"
+                  ],
+                  "learning_objectives": [
+                    "Interpret charts and graphs",
+                    "Use text features to locate information",
+                    "Integrate text and visual information"
+                  ]
+                }
+              }
+            },
+            "vocabulary": {
+              "name": "Vocabulary Acquisition",
+              "standard_code": "CCSS.ELA-LITERACY.L.4",
+              "concepts": {
+                "context_clues": {
+                  "id": "read_4_l_001",
+                  "name": "Using context clues",
+                  "definition": "Determine meaning of unknown words using context clues",
+                  "prerequisites": ["read_3_rl_001"],
+                  "grade_level": "4",
+                  "difficulty": 7,
+                  "examples": [
+                    "Definition clues: enormous, which means very large",
+                    "Example clues: vehicles such as cars, trucks, and buses"
+                  ],
+                  "common_misconceptions": [
+                    "Not using surrounding sentences",
+                    "Giving up on unknown words"
+                  ],
+                  "learning_objectives": [
+                    "Use context clues effectively",
+                    "Determine word meanings",
+                    "Verify meanings with dictionary"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "5": {
+          "grade": "Grade 5",
+          "domains": {
+            "reading_literature": {
+              "name": "Reading Literature",
+              "standard_code": "CCSS.ELA-LITERACY.RL.5",
+              "concepts": {
+                "quote_text": {
+                  "id": "read_5_rl_001",
+                  "name": "Quoting accurately",
+                  "definition": "Quote accurately from text when explaining what text says explicitly and when making inferences",
+                  "prerequisites": ["read_4_rl_001"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "According to the text, \"the storm grew fiercer.\"",
+                    "Using quotation marks correctly"
+                  ],
+                  "common_misconceptions": [
+                    "Paraphrasing when quoting is required",
+                    "Not using quotation marks"
+                  ],
+                  "learning_objectives": [
+                    "Quote text accurately",
+                    "Use quotes as evidence",
+                    "Integrate quotes into writing"
+                  ]
+                },
+                "compare_stories": {
+                  "id": "read_5_rl_002",
+                  "name": "Comparing stories",
+                  "definition": "Compare and contrast stories in the same genre on their approaches to themes and topics",
+                  "prerequisites": ["read_4_rl_002"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "Both stories are about friendship but approach it differently...",
+                    "Comparing similar characters across stories"
+                  ],
+                  "common_misconceptions": [
+                    "Only comparing plots",
+                    "Not analyzing how theme is developed"
+                  ],
+                  "learning_objectives": [
+                    "Compare themes across texts",
+                    "Analyze different approaches",
+                    "Understand genre characteristics"
+                  ]
+                }
+              }
+            },
+            "reading_informational": {
+              "name": "Reading Informational Text",
+              "standard_code": "CCSS.ELA-LITERACY.RI.5",
+              "concepts": {
+                "multiple_accounts": {
+                  "id": "read_5_ri_001",
+                  "name": "Analyzing multiple accounts",
+                  "definition": "Analyze multiple accounts of same event or topic, noting similarities and differences in point of view",
+                  "prerequisites": ["read_4_ri_001"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "Comparing two articles about same historical event",
+                    "Understanding different perspectives"
+                  ],
+                  "common_misconceptions": [
+                    "Not recognizing author's point of view",
+                    "Thinking there's only one correct account"
+                  ],
+                  "learning_objectives": [
+                    "Compare multiple texts",
+                    "Identify point of view",
+                    "Evaluate different perspectives"
+                  ]
+                }
+              }
+            },
+            "writing": {
+              "name": "Writing",
+              "standard_code": "CCSS.ELA-LITERACY.W.5",
+              "concepts": {
+                "argumentative_writing": {
+                  "id": "read_5_w_001",
+                  "name": "Argumentative writing",
+                  "definition": "Write opinion pieces with logically ordered reasons supported by facts and details",
+                  "prerequisites": ["read_3_w_001"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "Claim: Schools should have longer lunch periods",
+                    "Supporting with facts, examples, and expert opinions"
+                  ],
+                  "common_misconceptions": [
+                    "Not distinguishing opinion from fact",
+                    "Weak or irrelevant reasons"
+                  ],
+                  "learning_objectives": [
+                    "State clear claim",
+                    "Support with logical reasons",
+                    "Use transitional words and phrases"
+                  ]
+                },
+                "research_writing": {
+                  "id": "read_5_w_002",
+                  "name": "Research and informative writing",
+                  "definition": "Conduct short research projects and write informative texts with facts, definitions, and details",
+                  "prerequisites": ["read_4_ri_002"],
+                  "grade_level": "5",
+                  "difficulty": 8,
+                  "examples": [
+                    "Research report on solar system",
+                    "Using multiple sources to gather information"
+                  ],
+                  "common_misconceptions": [
+                    "Copying information without paraphrasing",
+                    "Not organizing information logically"
+                  ],
+                  "learning_objectives": [
+                    "Conduct research",
+                    "Take notes from sources",
+                    "Write organized informative texts"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "6": {
+          "grade": "Grade 6",
+          "domains": {
+            "reading_literature": {
+              "name": "Reading Literature",
+              "standard_code": "CCSS.ELA-LITERACY.RL.6",
+              "concepts": {
+                "textual_evidence": {
+                  "id": "read_6_rl_001",
+                  "name": "Citing textual evidence",
+                  "definition": "Cite textual evidence to support analysis of what text says explicitly and implicitly",
+                  "prerequisites": ["read_5_rl_001"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "The text suggests... because it states...",
+                    "Evidence: direct quotes and paraphrased ideas"
+                  ],
+                  "common_misconceptions": [
+                    "Not providing sufficient evidence",
+                    "Misinterpreting evidence"
+                  ],
+                  "learning_objectives": [
+                    "Cite strong textual evidence",
+                    "Support analytical claims",
+                    "Distinguish strong from weak evidence"
+                  ]
+                },
+                "plot_development": {
+                  "id": "read_6_rl_002",
+                  "name": "Analyzing plot development",
+                  "definition": "Describe how plot unfolds in series of episodes and how characters respond or change",
+                  "prerequisites": ["read_5_rl_002"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "Exposition, rising action, climax, falling action, resolution",
+                    "Character arc and development"
+                  ],
+                  "common_misconceptions": [
+                    "Not recognizing turning points",
+                    "Missing character development"
+                  ],
+                  "learning_objectives": [
+                    "Analyze plot structure",
+                    "Trace character development",
+                    "Understand cause and effect in plots"
+                  ]
+                },
+                "point_of_view": {
+                  "id": "read_6_rl_003",
+                  "name": "Point of view",
+                  "definition": "Explain how author develops point of view of narrator or speaker",
+                  "prerequisites": ["read_5_rl_001"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "First person: I, me, my",
+                    "Third person limited vs. omniscient",
+                    "How narrator's perspective affects story"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing narrator with author",
+                    "Not recognizing unreliable narrators"
+                  ],
+                  "learning_objectives": [
+                    "Identify point of view",
+                    "Analyze effect of narrator's perspective",
+                    "Understand how POV shapes meaning"
+                  ]
+                }
+              }
+            },
+            "reading_informational": {
+              "name": "Reading Informational Text",
+              "standard_code": "CCSS.ELA-LITERACY.RI.6",
+              "concepts": {
+                "central_idea": {
+                  "id": "read_6_ri_001",
+                  "name": "Central idea and summary",
+                  "definition": "Determine central idea and how it is conveyed through details; provide objective summary",
+                  "prerequisites": ["read_5_ri_001"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "Central idea: renewable energy is the future",
+                    "Objective summary without opinion"
+                  ],
+                  "common_misconceptions": [
+                    "Including too much detail in summary",
+                    "Adding personal opinions"
+                  ],
+                  "learning_objectives": [
+                    "Determine central idea",
+                    "Write objective summaries",
+                    "Trace idea development"
+                  ]
+                },
+                "author_purpose": {
+                  "id": "read_6_ri_002",
+                  "name": "Author's purpose and argument",
+                  "definition": "Determine author's purpose and analyze how it is conveyed; evaluate arguments and claims",
+                  "prerequisites": ["read_5_ri_001"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "Purpose: to inform, persuade, entertain",
+                    "Evaluating strength of claims and evidence"
+                  ],
+                  "common_misconceptions": [
+                    "Not recognizing persuasive techniques",
+                    "Accepting all claims without evaluation"
+                  ],
+                  "learning_objectives": [
+                    "Identify author's purpose",
+                    "Evaluate arguments",
+                    "Distinguish claims from evidence"
+                  ]
+                }
+              }
+            },
+            "writing": {
+              "name": "Writing",
+              "standard_code": "CCSS.ELA-LITERACY.W.6",
+              "concepts": {
+                "argument_writing": {
+                  "id": "read_6_w_001",
+                  "name": "Argument writing",
+                  "definition": "Write arguments to support claims with clear reasons and relevant evidence",
+                  "prerequisites": ["read_5_w_001"],
+                  "grade_level": "6",
+                  "difficulty": 9,
+                  "examples": [
+                    "Claim with supporting reasons and evidence",
+                    "Addressing counterclaims",
+                    "Logical organization with transitions"
+                  ],
+                  "common_misconceptions": [
+                    "Not addressing opposing viewpoints",
+                    "Using emotional appeals instead of logic"
+                  ],
+                  "learning_objectives": [
+                    "Write clear claims",
+                    "Support with credible evidence",
+                    "Organize arguments logically"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "science": {
+      "name": "Science",
+      "description": "Elementary science concepts covering life, physical, and earth sciences",
+      "standards_framework": "Next Generation Science Standards (NGSS)",
+      "grade_levels": {
+        "K-2": {
+          "grade": "K-2",
+          "domains": {
+            "life_science": {
+              "name": "Life Science",
+              "concepts": {
+                "living_nonliving": {
+                  "id": "sci_k2_ls_001",
+                  "name": "Living vs. non-living things",
+                  "definition": "Understand characteristics that distinguish living from non-living things",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Living: grow, need food/water, reproduce (plants, animals)",
+                    "Non-living: rocks, toys, books"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking things that move are always alive",
+                    "Thinking plants aren't alive because they don't move"
+                  ],
+                  "learning_objectives": [
+                    "Identify living things",
+                    "List characteristics of life",
+                    "Distinguish living from non-living"
+                  ]
+                },
+                "animal_needs": {
+                  "id": "sci_k2_ls_002",
+                  "name": "Animal needs",
+                  "definition": "Understand that animals need food, water, and shelter to survive",
+                  "prerequisites": ["sci_k2_ls_001"],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Birds need nests for shelter",
+                    "Fish need water to live",
+                    "All animals need food for energy"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding all animals have same basic needs",
+                    "Thinking animals get needs in same way"
+                  ],
+                  "learning_objectives": [
+                    "Identify animal needs",
+                    "Explain why animals need these things",
+                    "Describe how animals meet their needs"
+                  ]
+                },
+                "plant_needs": {
+                  "id": "sci_k2_ls_003",
+                  "name": "Plant needs",
+                  "definition": "Understand that plants need sunlight, water, and air to grow",
+                  "prerequisites": ["sci_k2_ls_001"],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Plants need sunlight to make food",
+                    "Roots absorb water from soil",
+                    "Plants make oxygen"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking plants eat soil",
+                    "Not understanding photosynthesis basics"
+                  ],
+                  "learning_objectives": [
+                    "Identify plant needs",
+                    "Observe plant growth",
+                    "Explain what happens without needs"
+                  ]
+                },
+                "life_cycles": {
+                  "id": "sci_k2_ls_004",
+                  "name": "Life cycles",
+                  "definition": "Understand that living things have life cycles: born, grow, reproduce, die",
+                  "prerequisites": ["sci_k2_ls_001"],
+                  "grade_level": "K-2",
+                  "difficulty": 3,
+                  "examples": [
+                    "Butterfly: egg → caterpillar → chrysalis → butterfly",
+                    "Frog: egg → tadpole → frog",
+                    "Plant: seed → seedling → adult plant"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding metamorphosis",
+                    "Thinking all animals have same life cycle"
+                  ],
+                  "learning_objectives": [
+                    "Describe life cycle stages",
+                    "Compare different life cycles",
+                    "Understand cycle concept"
+                  ]
+                }
+              }
+            },
+            "physical_science": {
+              "name": "Physical Science",
+              "concepts": {
+                "properties_matter": {
+                  "id": "sci_k2_ps_001",
+                  "name": "Properties of matter",
+                  "definition": "Observe and describe properties of objects: size, shape, color, texture, weight",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Describing a ball: round, red, smooth, light",
+                    "Comparing properties of different materials"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing size with weight",
+                    "Not recognizing objects can have multiple properties"
+                  ],
+                  "learning_objectives": [
+                    "Observe and describe objects",
+                    "Use descriptive vocabulary",
+                    "Compare properties"
+                  ]
+                },
+                "push_pull": {
+                  "id": "sci_k2_ps_002",
+                  "name": "Pushes and pulls",
+                  "definition": "Understand that pushes and pulls can change how objects move",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Pushing a swing makes it go",
+                    "Pulling a wagon makes it move",
+                    "Stronger pushes make things go faster/farther"
+                  ],
+                  "common_misconceptions": [
+                    "Not recognizing force is needed for motion",
+                    "Thinking objects move on their own"
+                  ],
+                  "learning_objectives": [
+                    "Identify pushes and pulls",
+                    "Predict effects of forces",
+                    "Investigate how strength affects motion"
+                  ]
+                }
+              }
+            },
+            "earth_science": {
+              "name": "Earth Science",
+              "concepts": {
+                "weather": {
+                  "id": "sci_k2_es_001",
+                  "name": "Weather and seasons",
+                  "definition": "Observe and describe weather patterns and seasonal changes",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Types of weather: sunny, rainy, cloudy, snowy",
+                    "Four seasons: spring, summer, fall, winter",
+                    "Temperature changes with seasons"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking weather and climate are the same",
+                    "Not understanding seasons differ by location"
+                  ],
+                  "learning_objectives": [
+                    "Describe weather conditions",
+                    "Identify seasons",
+                    "Understand weather can change"
+                  ]
+                },
+                "earth_materials": {
+                  "id": "sci_k2_es_002",
+                  "name": "Earth materials",
+                  "definition": "Identify different types of earth materials: rocks, soil, water, sand",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Different types of rocks",
+                    "Soil is made of broken rocks and organic matter",
+                    "Water in different forms: liquid, ice"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking all rocks are the same",
+                    "Not understanding soil contains once-living things"
+                  ],
+                  "learning_objectives": [
+                    "Identify earth materials",
+                    "Describe properties",
+                    "Compare different materials"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "3-5": {
+          "grade": "3-5",
+          "domains": {
+            "life_science": {
+              "name": "Life Science",
+              "concepts": {
+                "adaptations": {
+                  "id": "sci_35_ls_001",
+                  "name": "Adaptations",
+                  "definition": "Understand that organisms have structures and behaviors that help them survive in their environment",
+                  "prerequisites": ["sci_k2_ls_002"],
+                  "grade_level": "3-5",
+                  "difficulty": 6,
+                  "examples": [
+                    "Polar bear's thick fur for cold climate",
+                    "Cactus stores water in desert",
+                    "Birds have different beak shapes for different foods"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking animals choose their adaptations",
+                    "Not understanding adaptations develop over time"
+                  ],
+                  "learning_objectives": [
+                    "Identify adaptations",
+                    "Explain how adaptations help survival",
+                    "Connect structure to function"
+                  ]
+                },
+                "food_chains": {
+                  "id": "sci_35_ls_002",
+                  "name": "Food chains and webs",
+                  "definition": "Understand how energy flows from sun to plants to animals in ecosystems",
+                  "prerequisites": ["sci_k2_ls_002", "sci_k2_ls_003"],
+                  "grade_level": "3-5",
+                  "difficulty": 7,
+                  "examples": [
+                    "Sun → grass → rabbit → fox",
+                    "Producers (plants), consumers (animals), decomposers",
+                    "Food webs show interconnected relationships"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding energy comes from sun",
+                    "Thinking all animals eat plants"
+                  ],
+                  "learning_objectives": [
+                    "Construct food chains",
+                    "Identify producers, consumers, decomposers",
+                    "Understand energy transfer"
+                  ]
+                },
+                "ecosystems": {
+                  "id": "sci_35_ls_003",
+                  "name": "Ecosystems and habitats",
+                  "definition": "Understand that organisms live in habitats that provide their needs and interact with other organisms",
+                  "prerequisites": ["sci_35_ls_001", "sci_35_ls_002"],
+                  "grade_level": "3-5",
+                  "difficulty": 7,
+                  "examples": [
+                    "Forest ecosystem: trees, deer, owls, insects",
+                    "Pond ecosystem: algae, fish, frogs",
+                    "Changes affect whole ecosystem"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding interconnectedness",
+                    "Thinking removing one species doesn't affect others"
+                  ],
+                  "learning_objectives": [
+                    "Describe ecosystems",
+                    "Explain organism interactions",
+                    "Predict effects of changes"
+                  ]
+                }
+              }
+            },
+            "physical_science": {
+              "name": "Physical Science",
+              "concepts": {
+                "states_of_matter": {
+                  "id": "sci_35_ps_001",
+                  "name": "States of matter",
+                  "definition": "Understand that matter exists in different states: solid, liquid, gas",
+                  "prerequisites": ["sci_k2_ps_001"],
+                  "grade_level": "3-5",
+                  "difficulty": 6,
+                  "examples": [
+                    "Water as solid (ice), liquid (water), gas (steam)",
+                    "Solids have definite shape",
+                    "Liquids take shape of container",
+                    "Gases spread out to fill space"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding particles are always present",
+                    "Thinking matter disappears when it changes state"
+                  ],
+                  "learning_objectives": [
+                    "Identify states of matter",
+                    "Describe properties of each state",
+                    "Explain changes between states"
+                  ]
+                },
+                "energy": {
+                  "id": "sci_35_ps_002",
+                  "name": "Energy and motion",
+                  "definition": "Understand that energy causes motion and heat, and can transfer between objects",
+                  "prerequisites": ["sci_k2_ps_002"],
+                  "grade_level": "3-5",
+                  "difficulty": 7,
+                  "examples": [
+                    "Kinetic energy: energy of motion",
+                    "Potential energy: stored energy",
+                    "Heat energy transfers from hot to cold"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking energy is a substance",
+                    "Not understanding energy conservation"
+                  ],
+                  "learning_objectives": [
+                    "Identify forms of energy",
+                    "Describe energy transfer",
+                    "Explain energy transformations"
+                  ]
+                },
+                "simple_machines": {
+                  "id": "sci_35_ps_003",
+                  "name": "Simple machines",
+                  "definition": "Understand how simple machines make work easier by changing force or direction",
+                  "prerequisites": ["sci_k2_ps_002"],
+                  "grade_level": "3-5",
+                  "difficulty": 6,
+                  "examples": [
+                    "Lever: seesaw, crowbar",
+                    "Wheel and axle: doorknob, car wheel",
+                    "Pulley: flagpole, blinds",
+                    "Inclined plane: ramp, slide",
+                    "Wedge: knife, axe",
+                    "Screw: jar lid, bolt"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking machines create energy",
+                    "Not recognizing simple machines in everyday objects"
+                  ],
+                  "learning_objectives": [
+                    "Identify six simple machines",
+                    "Explain how each works",
+                    "Find examples in daily life"
+                  ]
+                }
+              }
+            },
+            "earth_science": {
+              "name": "Earth Science",
+              "concepts": {
+                "earth_systems": {
+                  "id": "sci_35_es_001",
+                  "name": "Earth's systems",
+                  "definition": "Understand Earth has different systems: geosphere, hydrosphere, atmosphere, biosphere",
+                  "prerequisites": ["sci_k2_es_002"],
+                  "grade_level": "3-5",
+                  "difficulty": 7,
+                  "examples": [
+                    "Geosphere: rocks, soil, mountains",
+                    "Hydrosphere: oceans, rivers, groundwater",
+                    "Atmosphere: air, weather, climate",
+                    "Biosphere: all living things"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding systems interact",
+                    "Thinking each system is separate"
+                  ],
+                  "learning_objectives": [
+                    "Identify Earth's systems",
+                    "Describe interactions",
+                    "Explain importance of each"
+                  ]
+                },
+                "water_cycle": {
+                  "id": "sci_35_es_002",
+                  "name": "Water cycle",
+                  "definition": "Understand how water moves through Earth's systems: evaporation, condensation, precipitation",
+                  "prerequisites": ["sci_35_ps_001", "sci_k2_es_001"],
+                  "grade_level": "3-5",
+                  "difficulty": 7,
+                  "examples": [
+                    "Evaporation: water turns to vapor",
+                    "Condensation: vapor turns to liquid (clouds)",
+                    "Precipitation: rain, snow, sleet, hail",
+                    "Collection: water returns to bodies of water"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking water disappears when it evaporates",
+                    "Not understanding it's a cycle"
+                  ],
+                  "learning_objectives": [
+                    "Describe water cycle stages",
+                    "Explain what causes each stage",
+                    "Draw and label water cycle"
+                  ]
+                },
+                "rocks_soil": {
+                  "id": "sci_35_es_003",
+                  "name": "Rocks and soil formation",
+                  "definition": "Understand how rocks form and break down, and how soil is formed from weathered rock and organic matter",
+                  "prerequisites": ["sci_k2_es_002"],
+                  "grade_level": "3-5",
+                  "difficulty": 6,
+                  "examples": [
+                    "Three rock types: igneous, sedimentary, metamorphic",
+                    "Weathering breaks down rocks",
+                    "Erosion moves rock pieces",
+                    "Soil layers: topsoil, subsoil, bedrock"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking rocks don't change",
+                    "Not understanding time scale of processes"
+                  ],
+                  "learning_objectives": [
+                    "Classify rock types",
+                    "Explain weathering and erosion",
+                    "Describe soil formation"
+                  ]
+                },
+                "solar_system": {
+                  "id": "sci_35_es_004",
+                  "name": "Solar system",
+                  "definition": "Understand basic structure of solar system: sun, planets, moons, orbits",
+                  "prerequisites": [],
+                  "grade_level": "3-5",
+                  "difficulty": 7,
+                  "examples": [
+                    "Sun is a star at center",
+                    "Eight planets orbit the sun",
+                    "Inner planets (rocky): Mercury, Venus, Earth, Mars",
+                    "Outer planets (gas giants): Jupiter, Saturn, Uranus, Neptune"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking planets are same size/distance",
+                    "Not understanding scale of solar system"
+                  ],
+                  "learning_objectives": [
+                    "Name planets in order",
+                    "Describe planet characteristics",
+                    "Explain day/night and seasons"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "social_studies": {
+      "name": "Social Studies",
+      "description": "Elementary social studies covering community, geography, history, and civics",
+      "standards_framework": "National Council for the Social Studies (NCSS)",
+      "grade_levels": {
+        "K-2": {
+          "grade": "K-2",
+          "domains": {
+            "community": {
+              "name": "Community and Culture",
+              "concepts": {
+                "family_community": {
+                  "id": "ss_k2_c_001",
+                  "name": "Families and communities",
+                  "definition": "Understand that people live in families and communities with shared characteristics",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 1,
+                  "examples": [
+                    "Types of families",
+                    "Roles in families and schools",
+                    "Community helpers: teachers, firefighters, doctors"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking all families are the same",
+                    "Not understanding community diversity"
+                  ],
+                  "learning_objectives": [
+                    "Describe own family and community",
+                    "Identify community roles",
+                    "Understand similarities and differences"
+                  ]
+                },
+                "rules_responsibilities": {
+                  "id": "ss_k2_c_002",
+                  "name": "Rules and responsibilities",
+                  "definition": "Understand that rules help people get along and everyone has responsibilities",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Classroom rules",
+                    "Following directions",
+                    "Being a good citizen: helping, sharing, taking turns"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding why rules exist",
+                    "Thinking rules are just to restrict"
+                  ],
+                  "learning_objectives": [
+                    "Explain why we need rules",
+                    "Follow rules and routines",
+                    "Understand personal responsibilities"
+                  ]
+                }
+              }
+            },
+            "geography": {
+              "name": "Geography",
+              "concepts": {
+                "maps_globes": {
+                  "id": "ss_k2_g_001",
+                  "name": "Maps and globes",
+                  "definition": "Understand that maps and globes represent places and how to use basic map features",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Map shows places from above",
+                    "Globe is model of Earth",
+                    "Simple map symbols and legends"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding maps are representations",
+                    "Confusing map with actual place"
+                  ],
+                  "learning_objectives": [
+                    "Identify basic map features",
+                    "Use simple maps",
+                    "Understand globe shows Earth"
+                  ]
+                },
+                "locations": {
+                  "id": "ss_k2_g_002",
+                  "name": "Location and place",
+                  "definition": "Describe location using positional words and understand places have characteristics",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Near, far, left, right, above, below",
+                    "Describing your home, school, neighborhood",
+                    "City vs. country characteristics"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing relative and absolute location",
+                    "Not understanding perspective"
+                  ],
+                  "learning_objectives": [
+                    "Use location words",
+                    "Describe familiar places",
+                    "Compare different types of places"
+                  ]
+                }
+              }
+            },
+            "history": {
+              "name": "History",
+              "concepts": {
+                "time_sequence": {
+                  "id": "ss_k2_h_001",
+                  "name": "Time and sequence",
+                  "definition": "Understand concepts of past, present, future and sequence of events",
+                  "prerequisites": [],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Yesterday, today, tomorrow",
+                    "Days of week, months",
+                    "Timeline of own life"
+                  ],
+                  "common_misconceptions": [
+                    "Difficulty understanding abstract time",
+                    "Confusing sequence of events"
+                  ],
+                  "learning_objectives": [
+                    "Use time vocabulary",
+                    "Sequence events in order",
+                    "Create simple timelines"
+                  ]
+                },
+                "personal_history": {
+                  "id": "ss_k2_h_002",
+                  "name": "Personal and family history",
+                  "definition": "Understand own history and how families have histories and traditions",
+                  "prerequisites": ["ss_k2_h_001"],
+                  "grade_level": "K-2",
+                  "difficulty": 2,
+                  "examples": [
+                    "Baby photos to now",
+                    "Family traditions and celebrations",
+                    "Objects from the past"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding change over time",
+                    "Thinking past was exactly like present"
+                  ],
+                  "learning_objectives": [
+                    "Describe personal history",
+                    "Share family traditions",
+                    "Understand change over time"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "3-6": {
+          "grade": "3-6",
+          "domains": {
+            "geography": {
+              "name": "Geography",
+              "concepts": {
+                "continents_oceans": {
+                  "id": "ss_36_g_001",
+                  "name": "Continents and oceans",
+                  "definition": "Identify and locate seven continents and major oceans on maps and globes",
+                  "prerequisites": ["ss_k2_g_001"],
+                  "grade_level": "3-6",
+                  "difficulty": 5,
+                  "examples": [
+                    "7 continents: North America, South America, Europe, Asia, Africa, Australia, Antarctica",
+                    "5 oceans: Pacific, Atlantic, Indian, Arctic, Southern"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing countries with continents",
+                    "Not understanding relative sizes"
+                  ],
+                  "learning_objectives": [
+                    "Label continents and oceans on map",
+                    "Locate own continent and country",
+                    "Understand Earth's geography"
+                  ]
+                },
+                "map_skills": {
+                  "id": "ss_36_g_002",
+                  "name": "Advanced map skills",
+                  "definition": "Use map components: compass rose, scale, legend, latitude/longitude",
+                  "prerequisites": ["ss_k2_g_001"],
+                  "grade_level": "3-6",
+                  "difficulty": 6,
+                  "examples": [
+                    "Cardinal directions: N, S, E, W",
+                    "Intermediate directions: NE, SE, SW, NW",
+                    "Map scale shows distance",
+                    "Grid system for location"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding map scale",
+                    "Confusing latitude and longitude"
+                  ],
+                  "learning_objectives": [
+                    "Use compass rose",
+                    "Interpret map scale",
+                    "Read map legends"
+                  ]
+                },
+                "regions_landforms": {
+                  "id": "ss_36_g_003",
+                  "name": "Regions and landforms",
+                  "definition": "Identify different types of landforms and understand regions share common characteristics",
+                  "prerequisites": ["ss_36_g_001"],
+                  "grade_level": "3-6",
+                  "difficulty": 6,
+                  "examples": [
+                    "Landforms: mountains, plains, plateaus, valleys, deserts",
+                    "Bodies of water: rivers, lakes, oceans",
+                    "Climate regions: tropical, temperate, polar"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding how landforms affect climate",
+                    "Thinking regions have exact boundaries"
+                  ],
+                  "learning_objectives": [
+                    "Identify major landforms",
+                    "Describe regional characteristics",
+                    "Explain human-environment interaction"
+                  ]
+                }
+              }
+            },
+            "history": {
+              "name": "History",
+              "concepts": {
+                "native_americans": {
+                  "id": "ss_36_h_001",
+                  "name": "Native Americans",
+                  "definition": "Understand Native Americans were first inhabitants of America with diverse cultures",
+                  "prerequisites": ["ss_k2_h_002"],
+                  "grade_level": "3-6",
+                  "difficulty": 6,
+                  "examples": [
+                    "Different tribal nations and cultures",
+                    "Adaptation to different environments",
+                    "Contributions to American culture"
+                  ],
+                  "common_misconceptions": [
+                    "Stereotyping all Native Americans as the same",
+                    "Using past tense (they still exist today)"
+                  ],
+                  "learning_objectives": [
+                    "Describe diverse Native American cultures",
+                    "Understand adaptation to environment",
+                    "Respect cultural differences"
+                  ]
+                },
+                "exploration_colonization": {
+                  "id": "ss_36_h_002",
+                  "name": "European exploration and colonization",
+                  "definition": "Understand why and how Europeans explored and colonized the Americas",
+                  "prerequisites": ["ss_36_h_001", "ss_36_g_001"],
+                  "grade_level": "3-6",
+                  "difficulty": 7,
+                  "examples": [
+                    "Christopher Columbus (1492)",
+                    "Reasons for exploration: trade, resources, religious freedom",
+                    "13 original colonies",
+                    "Impact on Native Americans"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking Columbus discovered empty land",
+                    "Not understanding multiple perspectives"
+                  ],
+                  "learning_objectives": [
+                    "Explain reasons for exploration",
+                    "Identify key explorers",
+                    "Understand impact on indigenous peoples"
+                  ]
+                },
+                "american_revolution": {
+                  "id": "ss_36_h_003",
+                  "name": "American Revolution",
+                  "definition": "Understand causes and key events of American independence from Britain",
+                  "prerequisites": ["ss_36_h_002"],
+                  "grade_level": "3-6",
+                  "difficulty": 7,
+                  "examples": [
+                    "Causes: taxation without representation",
+                    "Key events: Boston Tea Party, Declaration of Independence (1776)",
+                    "Important figures: George Washington, Thomas Jefferson",
+                    "Result: United States independence"
+                  ],
+                  "common_misconceptions": [
+                    "Oversimplifying complex causes",
+                    "Not understanding it was a civil war aspect"
+                  ],
+                  "learning_objectives": [
+                    "Identify causes of Revolution",
+                    "Describe key events",
+                    "Understand significance"
+                  ]
+                }
+              }
+            },
+            "civics": {
+              "name": "Civics and Government",
+              "concepts": {
+                "government_purpose": {
+                  "id": "ss_36_cv_001",
+                  "name": "Purpose of government",
+                  "definition": "Understand government makes and enforces laws to maintain order and protect rights",
+                  "prerequisites": ["ss_k2_c_002"],
+                  "grade_level": "3-6",
+                  "difficulty": 6,
+                  "examples": [
+                    "Making laws",
+                    "Providing services: schools, roads, police",
+                    "Protecting rights and freedoms"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding difference between laws and rules",
+                    "Thinking government is just the president"
+                  ],
+                  "learning_objectives": [
+                    "Explain purpose of government",
+                    "Identify government services",
+                    "Understand rights and responsibilities"
+                  ]
+                },
+                "branches_government": {
+                  "id": "ss_36_cv_002",
+                  "name": "Three branches of government",
+                  "definition": "Understand U.S. government has three branches with different roles",
+                  "prerequisites": ["ss_36_cv_001"],
+                  "grade_level": "3-6",
+                  "difficulty": 7,
+                  "examples": [
+                    "Legislative (Congress): makes laws",
+                    "Executive (President): enforces laws",
+                    "Judicial (Courts): interprets laws",
+                    "Checks and balances"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking one branch has all power",
+                    "Not understanding separation of powers"
+                  ],
+                  "learning_objectives": [
+                    "Name three branches",
+                    "Describe role of each",
+                    "Understand checks and balances"
+                  ]
+                },
+                "citizenship": {
+                  "id": "ss_36_cv_003",
+                  "name": "Rights and responsibilities of citizens",
+                  "definition": "Understand citizens have both rights and responsibilities in a democracy",
+                  "prerequisites": ["ss_36_cv_001"],
+                  "grade_level": "3-6",
+                  "difficulty": 6,
+                  "examples": [
+                    "Rights: freedom of speech, religion, assembly",
+                    "Responsibilities: voting, obeying laws, paying taxes",
+                    "Ways to participate: voting, volunteering, staying informed"
+                  ],
+                  "common_misconceptions": [
+                    "Thinking rights have no limits",
+                    "Not understanding civic responsibilities"
+                  ],
+                  "learning_objectives": [
+                    "Identify rights in Bill of Rights",
+                    "List civic responsibilities",
+                    "Explain importance of participation"
+                  ]
+                }
+              }
+            },
+            "economics": {
+              "name": "Economics",
+              "concepts": {
+                "goods_services": {
+                  "id": "ss_36_e_001",
+                  "name": "Goods and services",
+                  "definition": "Understand difference between goods (products) and services (actions people do for others)",
+                  "prerequisites": [],
+                  "grade_level": "3-6",
+                  "difficulty": 5,
+                  "examples": [
+                    "Goods: food, clothing, toys, books",
+                    "Services: haircut, teaching, medical care",
+                    "Producers and consumers"
+                  ],
+                  "common_misconceptions": [
+                    "Confusing goods and services",
+                    "Not understanding everyone is both producer and consumer"
+                  ],
+                  "learning_objectives": [
+                    "Distinguish goods from services",
+                    "Identify producers and consumers",
+                    "Understand economic interdependence"
+                  ]
+                },
+                "supply_demand": {
+                  "id": "ss_36_e_002",
+                  "name": "Supply and demand",
+                  "definition": "Understand basic concept that prices are affected by supply and demand",
+                  "prerequisites": ["ss_36_e_001"],
+                  "grade_level": "3-6",
+                  "difficulty": 7,
+                  "examples": [
+                    "High demand + low supply = higher prices",
+                    "Low demand + high supply = lower prices",
+                    "Example: toy in high demand before holidays"
+                  ],
+                  "common_misconceptions": [
+                    "Not understanding relationship between supply and demand",
+                    "Thinking prices are fixed"
+                  ],
+                  "learning_objectives": [
+                    "Define supply and demand",
+                    "Explain effect on prices",
+                    "Apply to real-world examples"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

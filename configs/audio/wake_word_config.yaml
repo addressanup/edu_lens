@@ -1,0 +1,217 @@
+# Wake Word Detection Configuration for EduLens
+# Optimized for "Hey EduLens" trigger phrase with children's voices (ages 6-12)
+
+# Audio Configuration
+audio:
+  sample_rate: 16000  # Hz - standard for speech recognition
+  channels: 1  # Mono audio
+  chunk_size: 1024  # Samples per frame
+  buffer_duration: 1.5  # Seconds of audio to buffer
+  format: int16  # 16-bit PCM
+
+# Detection Parameters
+detection:
+  wake_word: "Hey EduLens"
+
+  # Sensitivity settings (0.0 - 1.0)
+  # 0.0 = fewer false positives, more false negatives
+  # 0.5 = balanced
+  # 1.0 = fewer false negatives, more false positives
+  default_sensitivity: 0.5
+
+  # Detection thresholds
+  thresholds:
+    conservative: 0.85  # High confidence required
+    balanced: 0.60      # Balanced (recommended)
+    aggressive: 0.35    # Low confidence accepted
+
+  # Minimum time between detections (seconds)
+  min_detection_interval: 2.0
+
+  # Post-detection behavior
+  confirmation_window_ms: 500  # Time to confirm detection
+  cooldown_period_ms: 1500     # Cooldown after detection
+
+# Performance Targets
+performance:
+  target_true_positive_rate: 0.95  # 95%+ TPR
+  target_false_positive_rate: 0.02  # <2% FPR
+  max_latency_ms: 100               # <100ms detection latency
+
+  # Resource constraints for edge device
+  max_cpu_usage_percent: 15
+  max_memory_mb: 50
+
+# MFCC Feature Extraction
+mfcc:
+  n_mfcc: 13  # Number of MFCC coefficients
+  n_fft: 512  # FFT window size
+  hop_length: 160  # 10ms hop at 16kHz
+  n_mels: 40  # Number of mel bands
+
+  # Frequency range optimized for children's voices
+  fmin: 100.0   # Minimum frequency (Hz) - lower for children
+  fmax: 8000.0  # Maximum frequency (Hz)
+
+  # Window function
+  window: hamming
+
+  # Feature augmentation
+  include_delta: true       # Include delta (velocity) features
+  include_delta_delta: true # Include delta-delta (acceleration) features
+
+# Voice Activity Detection (VAD)
+vad:
+  frame_duration_ms: 30.0  # VAD frame duration
+
+  # Thresholds optimized for children's voices
+  energy_threshold: 0.05  # Lower threshold for children
+  zcr_threshold: 0.3      # Zero-crossing rate threshold
+
+  # Speech padding
+  speech_pad_ms: 300.0  # Padding around detected speech
+
+  # Minimum speech duration for processing
+  min_speech_duration_ms: 400.0
+
+# Noise Estimation & Reduction
+noise:
+  # Adaptive noise floor estimation
+  adaptation_rate: 0.1  # Rate of adaptation (0.0-1.0)
+  min_noise_floor: 0.001  # Minimum noise floor estimate
+
+  # Noise reduction
+  enable_noise_reduction: true
+  noise_reduction_strength: 0.5  # Strength (0.0-1.0)
+
+  # SNR thresholds
+  min_snr_db: 6.0  # Minimum SNR for processing
+  target_snr_db: 15.0  # Target SNR
+
+# Feature Normalization
+normalization:
+  enable: true
+  method: zscore  # zscore or minmax
+  momentum: 0.99  # Momentum for running statistics
+
+  # Per-utterance normalization
+  per_utterance: false
+
+# Child Voice Optimization
+child_voice:
+  # Age range
+  target_age_min: 6
+  target_age_max: 12
+
+  # Acoustic characteristics of children's voices
+  # Children have higher fundamental frequencies and formants
+  fundamental_freq_range: [200, 400]  # Hz
+  formant_shift_factor: 1.2  # Children's formants ~20% higher
+
+  # Voice variation handling
+  pitch_variation_tolerance: 0.25  # Allow 25% pitch variation
+  speed_variation_tolerance: 0.20  # Allow 20% speed variation
+
+  # Confidence adjustments for children
+  child_confidence_boost: 0.05  # Slight boost for child voice patterns
+
+# Model Configuration
+model:
+  # Model file paths (relative to project root)
+  model_path: models/wake_word/hey_edulens_v1.tflite
+
+  # Alternative models for different scenarios
+  models:
+    high_accuracy: models/wake_word/hey_edulens_accurate.tflite
+    low_latency: models/wake_word/hey_edulens_fast.tflite
+    child_optimized: models/wake_word/hey_edulens_child.tflite
+
+  # Model input shape
+  input_shape: [39, 150]  # [features, time_steps]
+
+  # Inference settings
+  num_threads: 2  # Number of CPU threads
+  use_gpu: false  # GPU acceleration (if available)
+
+  # Quantization (for edge deployment)
+  quantized: true
+  quantization_bits: 8
+
+# Logging & Monitoring
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR
+
+  # Log audio samples for debugging
+  log_detections: true
+  log_false_positives: true
+
+  # Save problematic audio for analysis
+  save_failed_detections: false
+  audio_log_dir: logs/audio
+
+# Testing & Validation
+testing:
+  # Test data paths
+  test_data_dir: tests/data/audio/wake_word
+
+  # Test categories
+  test_sets:
+    - name: children_6_8
+      path: tests/data/audio/ages_6_8
+    - name: children_9_12
+      path: tests/data/audio/ages_9_12
+    - name: background_noise
+      path: tests/data/audio/noise
+    - name: similar_phrases
+      path: tests/data/audio/false_triggers
+
+  # Performance benchmarking
+  benchmark:
+    num_iterations: 100
+    warm_up_iterations: 10
+    measure_latency: true
+    measure_cpu: true
+    measure_memory: true
+
+# Advanced Features
+advanced:
+  # Multi-stage detection
+  enable_two_stage: false  # Use lightweight first stage
+  first_stage_threshold: 0.3
+
+  # Context awareness
+  enable_context: false  # Consider conversation context
+
+  # Personalization
+  enable_speaker_adaptation: false  # Adapt to individual child
+  adaptation_rate: 0.01
+
+  # Feedback learning
+  enable_online_learning: false  # Learn from corrections
+
+  # Privacy
+  privacy_mode: true  # Don't store raw audio
+  anonymize_features: false
+
+# Hardware Profiles
+hardware_profiles:
+  # Profile for different edge devices
+  raspberry_pi_4:
+    max_cpu_usage: 20
+    max_memory_mb: 75
+    num_threads: 2
+
+  jetson_nano:
+    max_cpu_usage: 15
+    max_memory_mb: 100
+    num_threads: 4
+    use_gpu: true
+
+  smart_glasses:
+    max_cpu_usage: 10
+    max_memory_mb: 40
+    num_threads: 1
+    power_save_mode: true
+
+# Active Profile
+active_hardware_profile: smart_glasses

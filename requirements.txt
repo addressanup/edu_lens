@@ -1,0 +1,65 @@
+# EduLens - AI-Powered Smart Glasses for Elementary Learning
+# Core Dependencies
+
+# Vision Processing
+opencv-python>=4.8.0
+pillow>=10.0.0
+numpy>=1.24.0
+
+# OCR
+pytesseract>=0.3.10
+easyocr>=1.7.0
+
+# Machine Learning / AI
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.35.0
+onnxruntime>=1.16.0
+
+# Audio Processing
+sounddevice>=0.4.6
+librosa>=0.10.0
+webrtcvad>=2.0.10
+pydub>=0.25.1
+
+# Speech Recognition & TTS
+openai-whisper>=20231117
+
+# LLM / NLP
+sentence-transformers>=2.2.0
+
+# LLM Providers (install the one you need)
+anthropic>=0.39.0        # For Claude API
+openai>=1.50.0           # For OpenAI/Azure API
+google-generativeai>=0.8.0  # For Google Gemini API
+
+# Data Processing
+pydantic>=2.5.0
+pyyaml>=6.0.0
+
+# Async Support
+aiofiles>=23.2.0
+
+# API & Communication
+fastapi>=0.104.0
+uvicorn>=0.24.0
+httpx>=0.25.0
+websockets>=12.0
+python-multipart>=0.0.6
+
+# Database
+sqlalchemy>=2.0.0
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.9
+
+# Bluetooth (for companion app communication)
+bleak>=0.21.0
+
+# Security & Privacy
+cryptography>=41.0.0
+python-jose>=3.3.0
+
+# Utilities
+python-dotenv>=1.0.0
+loguru>=0.7.0
+tqdm>=4.66.0

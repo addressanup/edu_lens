@@ -1,0 +1,359 @@
+# EduLens Storage Configuration
+#
+# Configuration for local storage management, data minimization, and automatic deletion.
+# This configuration enforces COPPA compliance and privacy-by-design principles.
+#
+# Classification: SECURITY CRITICAL
+# Author: Security and Privacy Agent (SEC-001)
+# Task: SEC-001-T2 - On-Device Data Protection
+# Last Updated: 2025-12-10
+
+# =============================================================================
+# Storage Manager Configuration
+# =============================================================================
+
+storage_manager:
+  # Base directory for temporary storage
+  base_temp_dir: "/tmp/edulens_secure"
+
+  # Auto-purge settings
+  auto_purge:
+    enabled: true
+    interval_seconds: 60  # Check for expired containers every 60 seconds
+    secure_wipe: true     # Use secure wiping by default
+
+  # Default storage settings
+  defaults:
+    storage_type: "ephemeral"  # ephemeral, volatile_ram, encrypted_temp, secure_enclave
+    ttl_seconds: 300           # Default 5 minutes time-to-live
+    encrypt: true              # Encrypt data at rest by default
+    in_memory_only: false      # Force in-memory storage (no disk)
+
+  # Storage type specific settings
+  storage_types:
+    ephemeral:
+      description: "Temporary storage with auto-deletion"
+      max_ttl_seconds: 3600  # Maximum 1 hour
+      default_ttl_seconds: 300  # Default 5 minutes
+      encryption_required: true
+      secure_wipe_on_delete: true
+
+    volatile_ram:
+      description: "In-memory only, never touches disk (for sensitive data)"
+      max_ttl_seconds: 300   # Maximum 5 minutes
+      default_ttl_seconds: 60  # Default 1 minute
+      encryption_required: false  # Already in secure memory
+      secure_wipe_on_delete: true
+
+    encrypted_temp:
+      description: "Encrypted temporary storage"
+      max_ttl_seconds: 7200  # Maximum 2 hours
+      default_ttl_seconds: 600  # Default 10 minutes
+      encryption_required: true
+      secure_wipe_on_delete: true
+
+    secure_enclave:
+      description: "Hardware-backed secure storage (simulated)"
+      max_ttl_seconds: 300   # Maximum 5 minutes
+      default_ttl_seconds: 60  # Default 1 minute
+      encryption_required: false  # Hardware encrypted
+      secure_wipe_on_delete: true
+
+  # Encryption settings
+  encryption:
+    algorithm: "Fernet"  # Symmetric encryption using Fernet (AES-128-CBC)
+    key_rotation_enabled: false
+    key_storage: "memory"  # Store keys in memory only
+
+  # Security settings
+  security:
+    file_permissions: "0700"  # Owner read/write/execute only
+    verify_deletion: true     # Verify data is actually deleted
+    overwrite_passes: 3       # Number of overwrite passes for secure deletion
+
+# =============================================================================
+# Data Minimization Configuration
+# =============================================================================
+
+data_minimizer:
+  # Default minimization level
+  # Levels: NONE (0), BASIC (1), STANDARD (2), AGGRESSIVE (3), ABSOLUTE (4)
+  default_level: "STANDARD"
+
+  # Data type specific settings
+  data_types:
+    image:
+      minimization_level: "AGGRESSIVE"
+      store_raw: false  # NEVER store raw images
+      extract_features:
+        - "objects"     # Detected objects
+        - "text"        # OCR text
+        - "scene_type"  # Scene classification
+        - "quality"     # Quality metrics
+      create_digest: true
+      strip_pii: true
+      max_feature_size_bytes: 10240  # 10KB max for features
+
+    audio:
+      minimization_level: "AGGRESSIVE"
+      store_raw: false  # NEVER store raw audio
+      extract_features:
+        - "transcription"  # Speech-to-text
+        - "intent"         # Intent classification
+        - "keywords"       # Keyword extraction
+        - "language"       # Language detection
+      create_digest: true
+      strip_pii: true
+      max_feature_size_bytes: 5120  # 5KB max for features
+
+    text:
+      minimization_level: "STANDARD"
+      strip_pii: true
+      max_length: 10000  # Maximum text length
+
+    telemetry:
+      minimization_level: "AGGRESSIVE"
+      anonymize: true
+      aggregate_only: true
+      remove_fields:
+        - "user_id"
+        - "device_id"
+        - "ip_address"
+        - "precise_timestamp"
+
+    metadata:
+      minimization_level: "STANDARD"
+      essential_fields_only: true
+      allowed_fields:
+        - "timestamp_hour"  # Hour only, not precise timestamp
+        - "type"
+        - "classification"
+        - "subject_area"
+        - "duration_seconds"
+        - "language"
+        - "device_type"
+
+  # PII detection and removal
+  pii_detection:
+    enabled: true
+    patterns:
+      - "email"
+      - "phone"
+      - "ssn"
+      - "credit_card"
+      - "ip_address"
+      - "url_with_params"
+      - "potential_name"
+    replacement_text: "[REDACTED]"
+
+  # Learning data aggregation
+  learning_data:
+    aggregate_only: true     # Never store individual events
+    anonymize: true          # Hash session IDs
+    min_events_for_aggregate: 3  # Minimum events before creating aggregate
+    timestamp_precision: "hour"  # Only store hour, not precise time
+
+# =============================================================================
+# Auto-Deletion Configuration
+# =============================================================================
+
+auto_deletion:
+  # Background cleanup settings
+  background_cleanup:
+    enabled: true
+    interval_seconds: 60  # Check every 60 seconds
+
+  # Default deletion settings
+  defaults:
+    deletion_method: "secure_wipe"  # simple_delete, secure_wipe, crypto_erase, zero_fill
+    verify_deletion: true
+    log_all_deletions: true
+
+  # Retention policies for different data types
+  retention_policies:
+    sensitive_visual:
+      data_type: "image"
+      max_age_seconds: 0  # IMMEDIATE deletion after processing
+      deletion_method: "secure_wipe"
+      auto_delete: true
+      verify_deletion: true
+      description: "Images must be deleted immediately after feature extraction"
+
+    voice_data:
+      data_type: "audio"
+      max_age_seconds: 0  # IMMEDIATE deletion after processing
+      deletion_method: "secure_wipe"
+      auto_delete: true
+      verify_deletion: true
+      description: "Voice data must be deleted immediately after transcription"
+
+    session_context:
+      data_type: "session"
+      max_age_seconds: 3600  # 1 hour
+      deletion_method: "simple_delete"
+      auto_delete: true
+      verify_deletion: false
+      description: "Session context expires after 1 hour of inactivity"
+
+    ephemeral_storage:
+      data_type: "ephemeral"
+      max_age_seconds: 300  # 5 minutes default
+      deletion_method: "secure_wipe"
+      auto_delete: true
+      verify_deletion: true
+      description: "Ephemeral storage containers auto-delete after TTL"
+
+    learning_interaction:
+      data_type: "interaction"
+      max_age_seconds: 300  # 5 minutes
+      deletion_method: "simple_delete"
+      auto_delete: true
+      verify_deletion: false
+      description: "Individual interactions are minimized and deleted quickly"
+
+    consent_revoked:
+      data_type: "all"
+      max_age_seconds: 0  # IMMEDIATE deletion
+      deletion_method: "secure_wipe"
+      auto_delete: true
+      verify_deletion: true
+      description: "All data deleted immediately when consent is revoked"
+
+  # Deletion triggers
+  triggers:
+    time_based:
+      enabled: true
+      check_interval_seconds: 60
+
+    event_based:
+      enabled: true
+      events:
+        - "process_complete"
+        - "consent_revoked"
+        - "session_end"
+        - "device_sleep"
+
+    manual:
+      enabled: true
+      require_confirmation: false  # No user confirmation for auto-delete
+
+  # Secure deletion settings
+  secure_deletion:
+    overwrite_passes: 3  # DoD 5220.22-M standard (3 passes)
+    overwrite_pattern: "random"  # random, zeros, or alternate
+    verify_after_deletion: true
+    block_size: 4096  # Bytes per block for overwrite
+
+  # Audit logging
+  audit:
+    enabled: true
+    log_level: "INFO"
+    log_destination: "memory"  # memory, file, or cloud (if consented)
+    retention_days: 30  # How long to keep deletion audit logs
+
+# =============================================================================
+# COPPA Compliance Settings
+# =============================================================================
+
+coppa_compliance:
+  # Core principles
+  principles:
+    - "No persistent storage of images or audio"
+    - "Automatic deletion of sensitive data"
+    - "Data minimization by default"
+    - "Parental consent required for data collection"
+    - "Immediate response to consent revocation"
+
+  # Enforcement
+  enforcement:
+    strict_mode: true  # Fail operations that would violate policies
+    audit_all_access: true
+    verify_consent_before_storage: true
+
+  # Data classification requirements
+  data_classification:
+    SENSITIVE_VISUAL:
+      storage_location: ["VOLATILE_RAM", "SECURE_ENCLAVE"]
+      max_retention_seconds: 0
+      consent_required: true
+
+    VOICE_DATA:
+      storage_location: ["SECURE_ENCLAVE"]
+      max_retention_seconds: 0
+      consent_required: true
+
+    LEARNING_INTERACTION:
+      storage_location: ["VOLATILE_RAM", "EDGE_DEVICE"]
+      max_retention_seconds: 3600
+      consent_required: false
+
+# =============================================================================
+# Monitoring and Alerts
+# =============================================================================
+
+monitoring:
+  # Storage usage monitoring
+  storage_usage:
+    enabled: true
+    check_interval_seconds: 300  # Check every 5 minutes
+    alert_threshold_bytes: 104857600  # 100MB
+    max_total_bytes: 209715200  # 200MB hard limit
+
+  # Deletion monitoring
+  deletion_monitoring:
+    enabled: true
+    track_metrics:
+      - "deletion_count"
+      - "deletion_latency"
+      - "verification_failures"
+      - "policy_violations"
+
+  # Alerts
+  alerts:
+    enabled: true
+    channels:
+      - "log"  # Log alerts (email/SMS would require consent)
+    conditions:
+      - type: "retention_policy_violation"
+        severity: "CRITICAL"
+      - type: "deletion_verification_failed"
+        severity: "HIGH"
+      - type: "storage_limit_exceeded"
+        severity: "MEDIUM"
+
+# =============================================================================
+# Performance Tuning
+# =============================================================================
+
+performance:
+  # Threading
+  threading:
+    max_background_threads: 2
+    thread_priority: "normal"
+
+  # Caching
+  caching:
+    enabled: false  # Disable caching for sensitive data
+
+  # Batch operations
+  batch:
+    enabled: true
+    max_batch_size: 10
+    batch_timeout_seconds: 1
+
+# =============================================================================
+# Development and Testing
+# =============================================================================
+
+development:
+  # Development mode settings (NEVER use in production)
+  debug_mode: false
+  verbose_logging: false
+  disable_encryption: false  # NEVER disable in production
+  disable_secure_wipe: false  # NEVER disable in production
+
+  # Testing
+  testing:
+    allow_mock_storage: true
+    reduced_ttl: true  # Allow shorter TTLs for testing
+    fast_purge: true   # Faster purge intervals for testing
