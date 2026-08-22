@@ -151,13 +151,13 @@ Notes:
 
 ## 7. Ranked continuation backlog
 
-1. **Land the live-tutoring vertical on main** (S) — see `next-delivery-slice.md`.
+1. **Land the live-tutoring vertical on main** (S) — DONE 2026-08-22 (`75413e0`…`b9ff96e`); E2E smoke verified with real DeepSeek round-trip.
 2. **Child-safety filters pass their own suites** (M) — content, age-appropriateness, response validation.
 3. **Parent sees live-session activity** (L) — bridge `/ws/live` into parent endpoints + app monitor screen.
 4. **Persist live session summaries** (M) — DB records for parent review of past sessions.
 5. **API authentication (keys/JWT) for all non-demo endpoints** (L) — prerequisite for any shared deployment.
-6. **CI activation hygiene** (S) — realistic coverage gate, upgrade deprecated actions, decide GHCR publishing.
-7. **Audio/TTS path runnable and tested locally** (S) — install optional deps or vendor fallback.
+6. **CI activation hygiene** (S) — DONE 2026-08-22 (`a20ddda`…`52a3845`). Gates: lint, typecheck, unit×{3.11,3.12}, build — green. Advisory (known behavioral debt): safety (~27 failures, #2), integration (21 failures, #2/#7), audio, performance. Artifact uploads removed (org storage quota exhausted). Coverage floor = 5% over `src/` — raise as fixes land.
+7. **Audio/TTS path runnable and tested locally** (S) — install optional deps or vendor fallback; unblocks audio suites for the gate.
 8. **Quarantine legacy orchestration scaffold; correct README** (S).
 9. **Parent-app ↔ backend contract alignment** (M) — base URL/port, endpoint map.
 10. **Child profile from DB drives live-session personalization** (S) — name/age/language from `children` table.
