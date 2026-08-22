@@ -11,26 +11,27 @@ Task: SEC-001-T2 - On-Device Data Protection
 Last Updated: 2025-12-10
 """
 
+import hashlib
+import logging
 import os
+import secrets
 import shutil
 import tempfile
 import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, Any, Optional, List
-import logging
 from enum import Enum
-import secrets
-import hashlib
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Cryptography imports
 try:
     from cryptography.fernet import Fernet
+    from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
-    from cryptography.hazmat.backends import default_backend
+
     CRYPTO_AVAILABLE = True
 except ImportError:
     CRYPTO_AVAILABLE = False
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 
 class StorageType(Enum):
     """Types of storage available in the system."""
+
     EPHEMERAL = "ephemeral"  # Auto-deleting temporary storage
     VOLATILE_RAM = "volatile_ram"  # In-memory only, never touches disk
     ENCRYPTED_TEMP = "encrypted_temp"  # Encrypted temporary storage
@@ -51,6 +53,7 @@ class StorageType(Enum):
 
 class StorageStatus(Enum):
     """Status of storage container."""
+
     ACTIVE = "active"
     EXPIRED = "expired"
     PURGED = "purged"
@@ -60,6 +63,7 @@ class StorageStatus(Enum):
 @dataclass
 class StorageStats:
     """Statistics about storage usage."""
+
     container_id: str
     storage_type: StorageType
     size_bytes: int
@@ -88,6 +92,7 @@ class StorageStats:
 @dataclass
 class StorageContainer:
     """Represents a secure storage container for sensitive data."""
+
     container_id: str
     storage_type: StorageType
     created_at: datetime
@@ -121,7 +126,7 @@ class StorageContainer:
 
         # File-based data
         if self.storage_path and self.storage_path.exists():
-            for file_path in self.storage_path.rglob('*'):
+            for file_path in self.storage_path.rglob("*"):
                 if file_path.is_file():
                     total += file_path.stat().st_size
 
@@ -147,10 +152,12 @@ class LocalStorageManager:
     - Secure deletion with verification
     """
 
-    def __init__(self,
-                 base_temp_dir: Optional[Path] = None,
-                 auto_purge_interval: int = 60,
-                 enable_background_purge: bool = True):
+    def __init__(
+        self,
+        base_temp_dir: Optional[Path] = None,
+        auto_purge_interval: int = 60,
+        enable_background_purge: bool = True,
+    ):
         """
         Initialize the local storage manager.
 
@@ -176,12 +183,14 @@ class LocalStorageManager:
 
         logger.info(f"LocalStorageManager initialized: {self.base_temp_dir}")
 
-    def create_ephemeral_storage(self,
-                                 container_id: Optional[str] = None,
-                                 ttl_seconds: int = 300,
-                                 storage_type: StorageType = StorageType.EPHEMERAL,
-                                 encrypt: bool = True,
-                                 metadata: Optional[Dict[str, Any]] = None) -> str:
+    def create_ephemeral_storage(
+        self,
+        container_id: Optional[str] = None,
+        ttl_seconds: int = 300,
+        storage_type: StorageType = StorageType.EPHEMERAL,
+        encrypt: bool = True,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """
         Create an ephemeral storage container that auto-deletes after TTL.
 
@@ -245,11 +254,9 @@ class LocalStorageManager:
 
             return container_id
 
-    def store_encrypted(self,
-                       container_id: str,
-                       key: str,
-                       data: bytes,
-                       in_memory_only: bool = False) -> bool:
+    def store_encrypted(
+        self, container_id: str, key: str, data: bytes, in_memory_only: bool = False
+    ) -> bool:
         """
         Store data in an encrypted container.
 
@@ -302,10 +309,9 @@ class LocalStorageManager:
 
             return True
 
-    def retrieve_decrypted(self,
-                          container_id: str,
-                          key: str,
-                          auto_delete: bool = False) -> Optional[bytes]:
+    def retrieve_decrypted(
+        self, container_id: str, key: str, auto_delete: bool = False
+    ) -> Optional[bytes]:
         """
         Retrieve and decrypt data from a container.
 
@@ -525,7 +531,9 @@ class LocalStorageManager:
             raise ValueError(f"Container expired: {container_id}")
 
         if container.status != StorageStatus.ACTIVE:
-            raise ValueError(f"Container not active: {container_id} (status: {container.status.value})")
+            raise ValueError(
+                f"Container not active: {container_id} (status: {container.status.value})"
+            )
 
         return container
 
@@ -561,7 +569,7 @@ class LocalStorageManager:
 
             # Overwrite with random data (3 passes)
             for _ in range(3):
-                with open(file_path, 'wb') as f:
+                with open(file_path, "wb") as f:
                     f.write(secrets.token_bytes(size))
                     f.flush()
                     os.fsync(f.fileno())
@@ -584,7 +592,7 @@ class LocalStorageManager:
 
         try:
             # Secure delete all files
-            for file_path in dir_path.rglob('*'):
+            for file_path in dir_path.rglob("*"):
                 if file_path.is_file():
                     self._secure_delete_file(file_path)
 
@@ -596,6 +604,7 @@ class LocalStorageManager:
 
     def _start_background_purge(self) -> None:
         """Start background thread for automatic purging."""
+
         def purge_loop():
             while not self._stop_purge.is_set():
                 try:

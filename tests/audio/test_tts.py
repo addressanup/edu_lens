@@ -10,39 +10,41 @@ Comprehensive tests for text-to-speech functionality including:
 """
 
 import asyncio
-import pytest
-import numpy as np
-from pathlib import Path
-from typing import List, Tuple
-import tempfile
-import yaml
 
 # Import TTS components
 import sys
+import tempfile
+from pathlib import Path
+from typing import List, Tuple
+
+import numpy as np
+import pytest
+import yaml
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.audio.tts_engine import (
-    TTSEngine,
-    TTSConfig,
-    TTSBackend,
-    SpeakingRate,
-    EmphasisLevel,
-    AudioOutput
-)
-from src.audio.voice_persona import (
-    VoicePersona,
-    VoiceCharacteristics,
-    EmotionalTone,
-    AgeGroup,
-    VoiceGender,
-    VoicePersonaLibrary,
-    PersonaManager
-)
 from src.audio.pronunciation_rules import (
     MathPronunciationEngine,
-    SciencePronunciationEngine,
     PhoneticOverrideEngine,
-    PronunciationRulesEngine
+    PronunciationRulesEngine,
+    SciencePronunciationEngine,
+)
+from src.audio.tts_engine import (
+    AudioOutput,
+    EmphasisLevel,
+    SpeakingRate,
+    TTSBackend,
+    TTSConfig,
+    TTSEngine,
+)
+from src.audio.voice_persona import (
+    AgeGroup,
+    EmotionalTone,
+    PersonaManager,
+    VoiceCharacteristics,
+    VoiceGender,
+    VoicePersona,
+    VoicePersonaLibrary,
 )
 
 
@@ -58,7 +60,7 @@ class TestTTSEngine:
             pitch=1.0,
             volume=0.85,
             use_ssml=True,
-            cache_enabled=True
+            cache_enabled=True,
         )
 
     @pytest.fixture
@@ -122,8 +124,8 @@ class TestTTSEngine:
 
         assert isinstance(voices, list)
         assert len(voices) > 0
-        assert all('id' in voice for voice in voices)
-        assert all('name' in voice for voice in voices)
+        assert all("id" in voice for voice in voices)
+        assert all("name" in voice for voice in voices)
 
     @pytest.mark.asyncio
     async def test_text_preprocessing(self, tts_engine):
@@ -172,12 +174,7 @@ class TestVoicePersona:
     def voice_characteristics(self):
         """Create test voice characteristics"""
         return VoiceCharacteristics(
-            pitch=1.0,
-            rate=1.0,
-            volume=0.85,
-            warmth=0.75,
-            energy=0.70,
-            clarity=0.95
+            pitch=1.0, rate=1.0, volume=0.85, warmth=0.75, energy=0.70, clarity=0.95
         )
 
     @pytest.fixture
@@ -188,21 +185,23 @@ class TestVoicePersona:
             description="Test voice for unit testing",
             base_characteristics=voice_characteristics,
             age_group=AgeGroup.ALL_AGES,
-            gender=VoiceGender.NEUTRAL
+            gender=VoiceGender.NEUTRAL,
         )
 
     def test_voice_characteristics_validation(self):
         """Test voice characteristics validation"""
         valid_chars = VoiceCharacteristics(
-            pitch=1.0, rate=1.0, volume=0.85,
-            warmth=0.75, energy=0.70, clarity=0.95
+            pitch=1.0, rate=1.0, volume=0.85, warmth=0.75, energy=0.70, clarity=0.95
         )
         assert valid_chars.validate() is True
 
         invalid_chars = VoiceCharacteristics(
             pitch=3.0,  # Invalid: > 2.0
-            rate=1.0, volume=0.85,
-            warmth=0.75, energy=0.70, clarity=0.95
+            rate=1.0,
+            volume=0.85,
+            warmth=0.75,
+            energy=0.70,
+            clarity=0.95,
         )
         assert invalid_chars.validate() is False
 
@@ -226,15 +225,9 @@ class TestVoicePersona:
 
     def test_emphasis_detection(self, voice_persona):
         """Test word emphasis detection"""
-        assert voice_persona.should_emphasize(
-            "great",
-            EmotionalTone.ENCOURAGING
-        ) is True
+        assert voice_persona.should_emphasize("great", EmotionalTone.ENCOURAGING) is True
 
-        assert voice_persona.should_emphasize(
-            "random",
-            EmotionalTone.ENCOURAGING
-        ) is False
+        assert voice_persona.should_emphasize("random", EmotionalTone.ENCOURAGING) is False
 
     def test_context_adjustment(self, voice_persona):
         """Test context-based voice adjustment"""
@@ -280,8 +273,7 @@ class TestVoicePersonaLibrary:
         """Test filtering personas by age group"""
         early_elem = library.list_personas(age_group=AgeGroup.EARLY_ELEMENTARY)
         assert all(
-            p.age_group in [AgeGroup.EARLY_ELEMENTARY, AgeGroup.ALL_AGES]
-            for p in early_elem
+            p.age_group in [AgeGroup.EARLY_ELEMENTARY, AgeGroup.ALL_AGES] for p in early_elem
         )
 
     def test_list_personas_by_tags(self, library):
@@ -297,7 +289,7 @@ class TestVoicePersonaLibrary:
             description="Custom test voice",
             base_characteristics=VoiceCharacteristics(),
             age_group=AgeGroup.ALL_AGES,
-            gender=VoiceGender.NEUTRAL
+            gender=VoiceGender.NEUTRAL,
         )
 
         library.add_persona(custom)
@@ -311,7 +303,7 @@ class TestVoicePersonaLibrary:
             description="Temporary test voice",
             base_characteristics=VoiceCharacteristics(),
             age_group=AgeGroup.ALL_AGES,
-            gender=VoiceGender.NEUTRAL
+            gender=VoiceGender.NEUTRAL,
         )
         library.add_persona(custom)
 
@@ -370,10 +362,7 @@ class TestPersonaManager:
         assert tone == EmotionalTone.ENCOURAGING
 
         # Struggling -> patient
-        tone = manager.adapt_to_performance(
-            correct_rate=0.60,
-            struggle_indicators=4
-        )
+        tone = manager.adapt_to_performance(correct_rate=0.60, struggle_indicators=4)
         assert tone == EmotionalTone.PATIENT
 
 
@@ -464,10 +453,10 @@ class TestSciencePronunciation:
 
     def test_element_pronunciation(self, science_engine):
         """Test element symbol pronunciation"""
-        assert science_engine.element_names['H'] == 'Hydrogen'
-        assert science_engine.element_names['O'] == 'Oxygen'
-        assert science_engine.element_names['C'] == 'Carbon'
-        assert science_engine.element_names['Au'] == 'Gold'
+        assert science_engine.element_names["H"] == "Hydrogen"
+        assert science_engine.element_names["O"] == "Oxygen"
+        assert science_engine.element_names["C"] == "Carbon"
+        assert science_engine.element_names["Au"] == "Gold"
 
     def test_scientific_notation(self, science_engine):
         """Test scientific notation pronunciation"""
@@ -484,10 +473,10 @@ class TestSciencePronunciation:
 
     def test_unit_pronunciations(self, science_engine):
         """Test unit abbreviation pronunciations"""
-        assert science_engine.unit_pronunciations['m'] == 'meters'
-        assert science_engine.unit_pronunciations['kg'] == 'kilograms'
-        assert science_engine.unit_pronunciations['L'] == 'liters'
-        assert science_engine.unit_pronunciations['°C'] == 'degrees Celsius'
+        assert science_engine.unit_pronunciations["m"] == "meters"
+        assert science_engine.unit_pronunciations["kg"] == "kilograms"
+        assert science_engine.unit_pronunciations["L"] == "liters"
+        assert science_engine.unit_pronunciations["°C"] == "degrees Celsius"
 
 
 class TestPhoneticOverrides:
@@ -569,8 +558,12 @@ class TestVoiceQuality:
         """Test pronunciation accuracy target (98%+)"""
         # Test set of words with known pronunciations
         test_words = [
-            "algorithm", "mathematics", "photosynthesis",
-            "velocity", "fraction", "multiplication"
+            "algorithm",
+            "mathematics",
+            "photosynthesis",
+            "velocity",
+            "fraction",
+            "multiplication",
         ]
 
         for word in test_words:
@@ -607,14 +600,14 @@ class TestVoiceQuality:
             description="Test persona for children",
             base_characteristics=VoiceCharacteristics(
                 pitch=1.05,  # Slightly higher pitch
-                rate=0.95,   # Slightly slower
+                rate=0.95,  # Slightly slower
                 volume=0.85,
                 warmth=0.85,
                 energy=0.75,
-                clarity=0.95
+                clarity=0.95,
             ),
             age_group=AgeGroup.EARLY_ELEMENTARY,
-            gender=VoiceGender.FEMALE
+            gender=VoiceGender.FEMALE,
         )
 
         # Verify characteristics are child-appropriate

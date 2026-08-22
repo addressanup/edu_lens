@@ -20,12 +20,12 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .data_handler import (
-    DataHandler,
-    DataClassification,
-    ConsentStatus,
-    ProcessingLocation,
     ConsentRecord,
+    ConsentStatus,
+    DataClassification,
+    DataHandler,
     DataItem,
+    ProcessingLocation,
 )
 
 # Configure logging
@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class ComplianceLevel(Enum):
     """Compliance assessment levels."""
+
     COMPLIANT = "compliant"
     WARNING = "warning"
     VIOLATION = "violation"
@@ -43,6 +44,7 @@ class ComplianceLevel(Enum):
 
 class ComplianceCategory(Enum):
     """COPPA compliance categories per 16 CFR Part 312."""
+
     NOTICE = "notice"  # 312.4 - Notice requirements
     CONSENT = "consent"  # 312.5 - Parental consent
     PARENTAL_ACCESS = "parental_access"  # 312.6 - Parent rights
@@ -55,6 +57,7 @@ class ComplianceCategory(Enum):
 @dataclass
 class ComplianceIssue:
     """Represents a compliance issue or violation."""
+
     category: ComplianceCategory
     level: ComplianceLevel
     title: str
@@ -81,6 +84,7 @@ class ComplianceIssue:
 @dataclass
 class ComplianceReport:
     """Comprehensive COPPA compliance report."""
+
     report_id: str
     generated_at: datetime
     overall_status: ComplianceLevel
@@ -155,8 +159,7 @@ class COPPAValidator:
         logger.info("COPPAValidator initialized")
 
     def validate_data_collection(
-        self,
-        data_items: Optional[List[DataItem]] = None
+        self, data_items: Optional[List[DataItem]] = None
     ) -> Tuple[ComplianceLevel, List[ComplianceIssue]]:
         """
         Validate data collection practices for COPPA compliance.
@@ -190,17 +193,19 @@ class COPPAValidator:
                 if item.classification.is_never_stored():
                     if item.processing_location not in [
                         ProcessingLocation.VOLATILE_RAM,
-                        ProcessingLocation.SECURE_ENCLAVE
+                        ProcessingLocation.SECURE_ENCLAVE,
                     ]:
-                        issues.append(ComplianceIssue(
-                            category=ComplianceCategory.DATA_SECURITY,
-                            level=ComplianceLevel.CRITICAL,
-                            title="Sensitive data in prohibited location",
-                            description=f"Data classified as {item.classification.name} must NEVER be stored, but found in {item.processing_location.value}",
-                            regulation="16 CFR 312.8 - Data Security",
-                            recommendation="Immediately move to volatile RAM or secure enclave, and schedule immediate deletion",
-                            affected_items=[item.data_id]
-                        ))
+                        issues.append(
+                            ComplianceIssue(
+                                category=ComplianceCategory.DATA_SECURITY,
+                                level=ComplianceLevel.CRITICAL,
+                                title="Sensitive data in prohibited location",
+                                description=f"Data classified as {item.classification.name} must NEVER be stored, but found in {item.processing_location.value}",
+                                regulation="16 CFR 312.8 - Data Security",
+                                recommendation="Immediately move to volatile RAM or secure enclave, and schedule immediate deletion",
+                                affected_items=[item.data_id],
+                            )
+                        )
         else:
             self.checks_passed += 1
 
@@ -213,42 +218,50 @@ class COPPAValidator:
         if policy_check:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_RETENTION,
-                level=ComplianceLevel.WARNING,
-                title="Data retention policies incomplete",
-                description="Some data classifications lack retention policies",
-                regulation="16 CFR 312.10 - Data Retention and Deletion",
-                recommendation="Ensure all data classifications have defined retention policies"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_RETENTION,
+                    level=ComplianceLevel.WARNING,
+                    title="Data retention policies incomplete",
+                    description="Some data classifications lack retention policies",
+                    regulation="16 CFR 312.10 - Data Retention and Deletion",
+                    recommendation="Ensure all data classifications have defined retention policies",
+                )
+            )
 
         # Check 3: Sensitive visual data never persisted
-        sensitive_visual_policy = self.data_handler.policies.get(DataClassification.SENSITIVE_VISUAL)
+        sensitive_visual_policy = self.data_handler.policies.get(
+            DataClassification.SENSITIVE_VISUAL
+        )
         if sensitive_visual_policy and sensitive_visual_policy.retention.max_retention_days == 0:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_SECURITY,
-                level=ComplianceLevel.CRITICAL,
-                title="Camera image retention policy violation",
-                description="Camera images must have ZERO retention (immediate deletion)",
-                regulation="16 CFR 312.8 - Data Security",
-                recommendation="Set SENSITIVE_VISUAL retention to 0 seconds with immediate auto-deletion"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_SECURITY,
+                    level=ComplianceLevel.CRITICAL,
+                    title="Camera image retention policy violation",
+                    description="Camera images must have ZERO retention (immediate deletion)",
+                    regulation="16 CFR 312.8 - Data Security",
+                    recommendation="Set SENSITIVE_VISUAL retention to 0 seconds with immediate auto-deletion",
+                )
+            )
 
         # Check 4: Voice data never persisted
         voice_data_policy = self.data_handler.policies.get(DataClassification.VOICE_DATA)
         if voice_data_policy and voice_data_policy.retention.max_retention_days == 0:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_SECURITY,
-                level=ComplianceLevel.CRITICAL,
-                title="Voice data retention policy violation",
-                description="Voice recordings must have ZERO retention (immediate deletion)",
-                regulation="16 CFR 312.8 - Data Security",
-                recommendation="Set VOICE_DATA retention to 0 seconds with immediate auto-deletion"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_SECURITY,
+                    level=ComplianceLevel.CRITICAL,
+                    title="Voice data retention policy violation",
+                    description="Voice recordings must have ZERO retention (immediate deletion)",
+                    regulation="16 CFR 312.8 - Data Security",
+                    recommendation="Set VOICE_DATA retention to 0 seconds with immediate auto-deletion",
+                )
+            )
 
         # Check 5: Consent required for appropriate categories
         consent_categories = [
@@ -267,14 +280,16 @@ class COPPAValidator:
         if consent_properly_required:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.CONSENT,
-                level=ComplianceLevel.VIOLATION,
-                title="Consent requirements not properly configured",
-                description="Some data categories that require consent are not marked as such",
-                regulation="16 CFR 312.5 - Parental Consent",
-                recommendation="Review and update consent requirements for all data classifications"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.CONSENT,
+                    level=ComplianceLevel.VIOLATION,
+                    title="Consent requirements not properly configured",
+                    description="Some data categories that require consent are not marked as such",
+                    regulation="16 CFR 312.5 - Parental Consent",
+                    recommendation="Review and update consent requirements for all data classifications",
+                )
+            )
 
         # Determine overall compliance level
         if any(issue.level == ComplianceLevel.CRITICAL for issue in issues):
@@ -293,7 +308,7 @@ class COPPAValidator:
         self,
         parent_account_id: str,
         child_pseudonym: str,
-        required_categories: Optional[List[DataClassification]] = None
+        required_categories: Optional[List[DataClassification]] = None,
     ) -> Tuple[ComplianceLevel, List[ComplianceIssue]]:
         """
         Validate parental consent compliance.
@@ -339,15 +354,17 @@ class COPPAValidator:
         if not missing_consents:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.CONSENT,
-                level=ComplianceLevel.CRITICAL,
-                title="Missing required parental consent",
-                description=f"Consent not obtained for required categories: {[c.name for c in missing_consents]}",
-                regulation="16 CFR 312.5 - Parental Consent",
-                recommendation="Obtain verifiable parental consent before collecting data from children",
-                affected_items=[c.name for c in missing_consents]
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.CONSENT,
+                    level=ComplianceLevel.CRITICAL,
+                    title="Missing required parental consent",
+                    description=f"Consent not obtained for required categories: {[c.name for c in missing_consents]}",
+                    regulation="16 CFR 312.5 - Parental Consent",
+                    recommendation="Obtain verifiable parental consent before collecting data from children",
+                    affected_items=[c.name for c in missing_consents],
+                )
+            )
 
         # Check 2: Consent is valid (not expired or revoked)
         invalid_consents = []
@@ -361,15 +378,17 @@ class COPPAValidator:
         if not invalid_consents:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.CONSENT,
-                level=ComplianceLevel.VIOLATION,
-                title="Invalid or expired consent",
-                description=f"Consent exists but is not valid: {[(c.name, s.value) for c, s in invalid_consents]}",
-                regulation="16 CFR 312.5 - Parental Consent",
-                recommendation="Request consent renewal or stop data collection until valid consent obtained",
-                affected_items=[c.name for c, s in invalid_consents]
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.CONSENT,
+                    level=ComplianceLevel.VIOLATION,
+                    title="Invalid or expired consent",
+                    description=f"Consent exists but is not valid: {[(c.name, s.value) for c, s in invalid_consents]}",
+                    regulation="16 CFR 312.5 - Parental Consent",
+                    recommendation="Request consent renewal or stop data collection until valid consent obtained",
+                    affected_items=[c.name for c, s in invalid_consents],
+                )
+            )
 
         # Check 3: Consent verification method is COPPA-compliant
         approved_methods = ["CREDIT_CARD", "MFA_EMAIL_SMS", "VIDEO_CONFERENCE", "NOTARIZED"]
@@ -385,14 +404,16 @@ class COPPAValidator:
         if not unapproved_methods:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.CONSENT,
-                level=ComplianceLevel.VIOLATION,
-                title="Non-compliant consent verification method",
-                description=f"Consent obtained using non-FTC-approved methods: {unapproved_methods}",
-                regulation="16 CFR 312.5(b) - Verifiable Parental Consent Methods",
-                recommendation="Use only FTC-approved verification methods (credit card, government ID, etc.)"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.CONSENT,
+                    level=ComplianceLevel.VIOLATION,
+                    title="Non-compliant consent verification method",
+                    description=f"Consent obtained using non-FTC-approved methods: {unapproved_methods}",
+                    regulation="16 CFR 312.5(b) - Verifiable Parental Consent Methods",
+                    recommendation="Use only FTC-approved verification methods (credit card, government ID, etc.)",
+                )
+            )
 
         # Check 4: Consent has not exceeded retention period
         # Consent should be renewed annually
@@ -407,15 +428,17 @@ class COPPAValidator:
         if not expired_consent_records:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.CONSENT,
-                level=ComplianceLevel.WARNING,
-                title="Consent expired - renewal needed",
-                description=f"Consent has expired for categories: {[c.name for c in expired_consent_records]}",
-                regulation="16 CFR 312.5 - Parental Consent (annual renewal best practice)",
-                recommendation="Request parental consent renewal (annual best practice)",
-                affected_items=[c.name for c in expired_consent_records]
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.CONSENT,
+                    level=ComplianceLevel.WARNING,
+                    title="Consent expired - renewal needed",
+                    description=f"Consent has expired for categories: {[c.name for c in expired_consent_records]}",
+                    regulation="16 CFR 312.5 - Parental Consent (annual renewal best practice)",
+                    recommendation="Request parental consent renewal (annual best practice)",
+                    affected_items=[c.name for c in expired_consent_records],
+                )
+            )
 
         # Check 5: Consent records properly documented
         consent_records_complete = True
@@ -424,26 +447,30 @@ class COPPAValidator:
             if consent_key in self.data_handler.consent_records:
                 consent = self.data_handler.consent_records[consent_key]
                 # Verify all required fields present
-                if not all([
-                    consent.consent_id,
-                    consent.timestamp,
-                    consent.consent_method,
-                    consent.verification_method
-                ]):
+                if not all(
+                    [
+                        consent.consent_id,
+                        consent.timestamp,
+                        consent.consent_method,
+                        consent.verification_method,
+                    ]
+                ):
                     consent_records_complete = False
                     break
 
         if consent_records_complete:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.CONSENT,
-                level=ComplianceLevel.WARNING,
-                title="Incomplete consent records",
-                description="Some consent records are missing required fields",
-                regulation="16 CFR 312.5 - Parental Consent",
-                recommendation="Ensure all consent records include verification method and timestamp"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.CONSENT,
+                    level=ComplianceLevel.WARNING,
+                    title="Incomplete consent records",
+                    description="Some consent records are missing required fields",
+                    regulation="16 CFR 312.5 - Parental Consent",
+                    recommendation="Ensure all consent records include verification method and timestamp",
+                )
+            )
 
         # Determine overall compliance level
         if any(issue.level == ComplianceLevel.CRITICAL for issue in issues):
@@ -459,8 +486,7 @@ class COPPAValidator:
         return level, issues
 
     def validate_retention(
-        self,
-        data_items: Optional[List[DataItem]] = None
+        self, data_items: Optional[List[DataItem]] = None
     ) -> Tuple[ComplianceLevel, List[ComplianceIssue]]:
         """
         Validate data retention policy compliance.
@@ -488,21 +514,22 @@ class COPPAValidator:
         # Check 1: All classifications have retention policies
         all_classifications = list(DataClassification)
         missing_policies = [
-            cls for cls in all_classifications
-            if cls not in self.data_handler.policies
+            cls for cls in all_classifications if cls not in self.data_handler.policies
         ]
 
         if not missing_policies:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_RETENTION,
-                level=ComplianceLevel.WARNING,
-                title="Missing retention policies",
-                description=f"No retention policies defined for: {[c.name for c in missing_policies]}",
-                regulation="16 CFR 312.10 - Data Retention and Deletion",
-                recommendation="Define retention policies for all data classifications"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_RETENTION,
+                    level=ComplianceLevel.WARNING,
+                    title="Missing retention policies",
+                    description=f"No retention policies defined for: {[c.name for c in missing_policies]}",
+                    regulation="16 CFR 312.10 - Data Retention and Deletion",
+                    recommendation="Define retention policies for all data classifications",
+                )
+            )
 
         # Check 2: No data exceeding retention limits
         if data_items:
@@ -515,15 +542,17 @@ class COPPAValidator:
             if not expired_items:
                 self.checks_passed += 1
             else:
-                issues.append(ComplianceIssue(
-                    category=ComplianceCategory.DATA_RETENTION,
-                    level=ComplianceLevel.CRITICAL,
-                    title="Data exceeding retention limits",
-                    description=f"Found {len(expired_items)} items exceeding retention policy",
-                    regulation="16 CFR 312.10 - Data Retention and Deletion",
-                    recommendation="Immediately delete data exceeding retention limits",
-                    affected_items=expired_items
-                ))
+                issues.append(
+                    ComplianceIssue(
+                        category=ComplianceCategory.DATA_RETENTION,
+                        level=ComplianceLevel.CRITICAL,
+                        title="Data exceeding retention limits",
+                        description=f"Found {len(expired_items)} items exceeding retention policy",
+                        regulation="16 CFR 312.10 - Data Retention and Deletion",
+                        recommendation="Immediately delete data exceeding retention limits",
+                        affected_items=expired_items,
+                    )
+                )
         else:
             self.checks_passed += 1
 
@@ -543,15 +572,17 @@ class COPPAValidator:
         if not auto_delete_violations:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_RETENTION,
-                level=ComplianceLevel.CRITICAL,
-                title="Auto-deletion not enabled for sensitive data",
-                description=f"Auto-purge disabled for: {[c.name for c in auto_delete_violations]}",
-                regulation="16 CFR 312.8 - Data Security",
-                recommendation="Enable automatic deletion for all sensitive data classifications",
-                affected_items=[c.name for c in auto_delete_violations]
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_RETENTION,
+                    level=ComplianceLevel.CRITICAL,
+                    title="Auto-deletion not enabled for sensitive data",
+                    description=f"Auto-purge disabled for: {[c.name for c in auto_delete_violations]}",
+                    regulation="16 CFR 312.8 - Data Security",
+                    recommendation="Enable automatic deletion for all sensitive data classifications",
+                    affected_items=[c.name for c in auto_delete_violations],
+                )
+            )
 
         # Check 4: Retention periods appropriate
         max_retention_violations = []
@@ -563,14 +594,16 @@ class COPPAValidator:
         if not max_retention_violations:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_RETENTION,
-                level=ComplianceLevel.WARNING,
-                title="Retention periods too long for sensitive data",
-                description=f"Sensitive data with excessive retention: {[(c.name, days) for c, days in max_retention_violations]}",
-                regulation="16 CFR 312.10 - Data Retention and Deletion",
-                recommendation="Reduce retention periods for sensitive data to absolute minimum"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_RETENTION,
+                    level=ComplianceLevel.WARNING,
+                    title="Retention periods too long for sensitive data",
+                    description=f"Sensitive data with excessive retention: {[(c.name, days) for c, days in max_retention_violations]}",
+                    regulation="16 CFR 312.10 - Data Retention and Deletion",
+                    recommendation="Reduce retention periods for sensitive data to absolute minimum",
+                )
+            )
 
         # Check 5: Immediate deletion for never-stored categories
         never_stored = [
@@ -587,14 +620,16 @@ class COPPAValidator:
         if not immediate_deletion_violations:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_SECURITY,
-                level=ComplianceLevel.CRITICAL,
-                title="Images/audio must be deleted immediately",
-                description=f"Retention not set to immediate deletion: {[c.name for c in immediate_deletion_violations]}",
-                regulation="16 CFR 312.8 - Data Security (COPPA best practice)",
-                recommendation="Set retention to 0 seconds for camera images and voice recordings"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_SECURITY,
+                    level=ComplianceLevel.CRITICAL,
+                    title="Images/audio must be deleted immediately",
+                    description=f"Retention not set to immediate deletion: {[c.name for c in immediate_deletion_violations]}",
+                    regulation="16 CFR 312.8 - Data Security (COPPA best practice)",
+                    recommendation="Set retention to 0 seconds for camera images and voice recordings",
+                )
+            )
 
         # Determine overall compliance level
         if any(issue.level == ComplianceLevel.CRITICAL for issue in issues):
@@ -610,8 +645,7 @@ class COPPAValidator:
         return level, issues
 
     def validate_third_party(
-        self,
-        third_party_processors: Optional[List[Dict[str, Any]]] = None
+        self, third_party_processors: Optional[List[Dict[str, Any]]] = None
     ) -> Tuple[ComplianceLevel, List[ComplianceIssue]]:
         """
         Validate third-party data sharing compliance.
@@ -654,20 +688,23 @@ class COPPAValidator:
         for processor in third_party_processors:
             data_shared = processor.get("data_shared", [])
             violations = [
-                data for data in data_shared
+                data
+                for data in data_shared
                 if any(cls.name == data for cls in prohibited_child_data)
             ]
 
             if violations:
-                issues.append(ComplianceIssue(
-                    category=ComplianceCategory.THIRD_PARTY,
-                    level=ComplianceLevel.CRITICAL,
-                    title="Child data shared with third party",
-                    description=f"Processor '{processor.get('name')}' receives prohibited child data: {violations}",
-                    regulation="16 CFR 312.5(c)(7) - Service Provider Exception",
-                    recommendation="IMMEDIATELY stop sharing child data with third parties or obtain explicit consent",
-                    affected_items=[processor.get("name")]
-                ))
+                issues.append(
+                    ComplianceIssue(
+                        category=ComplianceCategory.THIRD_PARTY,
+                        level=ComplianceLevel.CRITICAL,
+                        title="Child data shared with third party",
+                        description=f"Processor '{processor.get('name')}' receives prohibited child data: {violations}",
+                        regulation="16 CFR 312.5(c)(7) - Service Provider Exception",
+                        recommendation="IMMEDIATELY stop sharing child data with third parties or obtain explicit consent",
+                        affected_items=[processor.get("name")],
+                    )
+                )
 
         if not any(issue.level == ComplianceLevel.CRITICAL for issue in issues):
             self.checks_passed += 1
@@ -682,14 +719,16 @@ class COPPAValidator:
         if not missing_dpa:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.THIRD_PARTY,
-                level=ComplianceLevel.VIOLATION,
-                title="Missing Data Processing Agreements",
-                description=f"Processors without DPA: {missing_dpa}",
-                regulation="16 CFR 312.5(c)(7) - Service Provider Exception",
-                recommendation="Execute DPAs with all service providers handling personal data"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.THIRD_PARTY,
+                    level=ComplianceLevel.VIOLATION,
+                    title="Missing Data Processing Agreements",
+                    description=f"Processors without DPA: {missing_dpa}",
+                    regulation="16 CFR 312.5(c)(7) - Service Provider Exception",
+                    recommendation="Execute DPAs with all service providers handling personal data",
+                )
+            )
 
         # Check 3: Third parties use data only for specified purposes
         unauthorized_use = [
@@ -701,14 +740,16 @@ class COPPAValidator:
         if not unauthorized_use:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.THIRD_PARTY,
-                level=ComplianceLevel.VIOLATION,
-                title="Third party unauthorized data use",
-                description=f"Processors with secondary use rights: {unauthorized_use}",
-                regulation="16 CFR 312.5(c)(7) - Service Provider Exception",
-                recommendation="Contractually prohibit any use beyond specified service provision"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.THIRD_PARTY,
+                    level=ComplianceLevel.VIOLATION,
+                    title="Third party unauthorized data use",
+                    description=f"Processors with secondary use rights: {unauthorized_use}",
+                    regulation="16 CFR 312.5(c)(7) - Service Provider Exception",
+                    recommendation="Contractually prohibit any use beyond specified service provision",
+                )
+            )
 
         # Check 4: Data minimization with third parties
         excessive_sharing = []
@@ -723,14 +764,16 @@ class COPPAValidator:
         if not excessive_sharing:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.THIRD_PARTY,
-                level=ComplianceLevel.WARNING,
-                title="Excessive data sharing with third parties",
-                description=f"Processors receiving many data types: {excessive_sharing}",
-                regulation="16 CFR 312.8 - Data Security (minimization principle)",
-                recommendation="Share only minimum necessary data with each service provider"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.THIRD_PARTY,
+                    level=ComplianceLevel.WARNING,
+                    title="Excessive data sharing with third parties",
+                    description=f"Processors receiving many data types: {excessive_sharing}",
+                    regulation="16 CFR 312.8 - Data Security (minimization principle)",
+                    recommendation="Share only minimum necessary data with each service provider",
+                )
+            )
 
         # Check 5: Third-party security controls
         inadequate_security = [
@@ -742,14 +785,16 @@ class COPPAValidator:
         if not inadequate_security:
             self.checks_passed += 1
         else:
-            issues.append(ComplianceIssue(
-                category=ComplianceCategory.DATA_SECURITY,
-                level=ComplianceLevel.WARNING,
-                title="Third-party security not verified",
-                description=f"Processors without security audits: {inadequate_security}",
-                regulation="16 CFR 312.8 - Data Security",
-                recommendation="Require annual security audits (SOC 2, ISO 27001) from all service providers"
-            ))
+            issues.append(
+                ComplianceIssue(
+                    category=ComplianceCategory.DATA_SECURITY,
+                    level=ComplianceLevel.WARNING,
+                    title="Third-party security not verified",
+                    description=f"Processors without security audits: {inadequate_security}",
+                    regulation="16 CFR 312.8 - Data Security",
+                    recommendation="Require annual security audits (SOC 2, ISO 27001) from all service providers",
+                )
+            )
 
         # Determine overall compliance level
         if any(issue.level == ComplianceLevel.CRITICAL for issue in issues):
@@ -769,7 +814,7 @@ class COPPAValidator:
         parent_account_id: Optional[str] = None,
         child_pseudonym: Optional[str] = None,
         data_items: Optional[List[DataItem]] = None,
-        third_party_processors: Optional[List[Dict[str, Any]]] = None
+        third_party_processors: Optional[List[Dict[str, Any]]] = None,
     ) -> ComplianceReport:
         """
         Generate comprehensive COPPA compliance audit report.
@@ -855,13 +900,19 @@ class COPPAValidator:
             "warnings": warnings,
             "checks_passed": self.checks_passed,
             "checks_failed": self.checks_performed - self.checks_passed,
-            "pass_rate": f"{(self.checks_passed / self.checks_performed * 100):.1f}%" if self.checks_performed > 0 else "N/A",
+            "pass_rate": (
+                f"{(self.checks_passed / self.checks_performed * 100):.1f}%"
+                if self.checks_performed > 0
+                else "N/A"
+            ),
             "categories_assessed": [cat.value for cat in categories_assessed],
             "assessment_date": datetime.utcnow().isoformat(),
         }
 
         # Generate report ID
-        report_id = f"coppa_audit_{hashlib.sha256(str(datetime.utcnow()).encode()).hexdigest()[:16]}"
+        report_id = (
+            f"coppa_audit_{hashlib.sha256(str(datetime.utcnow()).encode()).hexdigest()[:16]}"
+        )
 
         # Create report
         report = ComplianceReport(

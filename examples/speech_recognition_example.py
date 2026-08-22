@@ -6,17 +6,18 @@ adaptations and educational vocabulary boosting.
 """
 
 import asyncio
-import numpy as np
 from pathlib import Path
 
+import numpy as np
+
 from src.audio import (
-    SpeechRecognizer,
-    SpeechConfig,
-    ChildSpeechAdapter,
     AgeGroup,
+    ChildSpeechAdapter,
     EducationalVocabulary,
-    VocabularyContextManager,
+    SpeechConfig,
+    SpeechRecognizer,
     Subject,
+    VocabularyContextManager,
 )
 
 
@@ -119,8 +120,7 @@ async def educational_vocabulary_example():
 
     # Create vocabulary boost prompt
     prompt = vocab_manager.create_boost_prompt(
-        subjects=[Subject.MATHEMATICS, Subject.SCIENCE],
-        max_terms=30
+        subjects=[Subject.MATHEMATICS, Subject.SCIENCE], max_terms=30
     )
     print(f"\nVocabulary boost prompt:")
     print(prompt[:200] + "...")
@@ -312,6 +312,7 @@ async def main():
     except Exception as e:
         print(f"\nError running examples: {e}")
         import traceback
+
         traceback.print_exc()
 
 

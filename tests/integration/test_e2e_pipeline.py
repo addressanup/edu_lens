@@ -9,35 +9,32 @@ Version: 1.0.0
 """
 
 import asyncio
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from src.core.event_bus import Event, EventType, get_event_bus
+from src.integration.vision_to_ai_bridge import ContentType, SubjectArea, VisualContext
 from src.pipeline.edulens_pipeline import (
     EduLensPipeline,
     PipelineConfig,
     PipelineMode,
-    create_pipeline
-)
-from src.pipeline.pipeline_coordinator import (
-    PipelineCoordinator,
-    TaskPriority,
-    create_coordinator
+    create_pipeline,
 )
 from src.pipeline.error_handler import (
-    ErrorHandler,
     ErrorCategory,
+    ErrorHandler,
     RecoveryConfig,
-    create_error_handler
+    create_error_handler,
 )
 from src.pipeline.health_checker import (
-    HealthChecker,
     HealthCheckConfig,
+    HealthChecker,
     HealthStatus,
-    create_health_checker
+    create_health_checker,
 )
-from src.core.event_bus import EventType, Event, get_event_bus
-from src.integration.vision_to_ai_bridge import VisualContext, ContentType, SubjectArea
+from src.pipeline.pipeline_coordinator import PipelineCoordinator, TaskPriority, create_coordinator
 
 
 class TestEduLensPipeline:
@@ -51,7 +48,7 @@ class TestEduLensPipeline:
             student_age=8,
             student_grade="3",
             enable_vision=True,
-            enable_audio=False  # Disable audio for unit tests
+            enable_audio=False,  # Disable audio for unit tests
         )
 
         pipeline = EduLensPipeline(config=config)
@@ -96,15 +93,9 @@ class TestEduLensPipeline:
         await pipeline.start_session()
 
         # Mock OCR result
-        ocr_result = {
-            "full_text": "What is 5 + 3?",
-            "average_confidence": 0.95
-        }
+        ocr_result = {"full_text": "What is 5 + 3?", "average_confidence": 0.95}
 
-        visual_context = await pipeline.process_frame(
-            frame_data=None,
-            ocr_result=ocr_result
-        )
+        visual_context = await pipeline.process_frame(frame_data=None, ocr_result=ocr_result)
 
         assert visual_context is not None
         assert visual_context.full_text == "What is 5 + 3?"
@@ -116,9 +107,7 @@ class TestEduLensPipeline:
         await pipeline.start()
         await pipeline.start_session()
 
-        response = await pipeline.generate_response(
-            student_query="What is 5 + 3?"
-        )
+        response = await pipeline.generate_response(student_query="What is 5 + 3?")
 
         assert response is not None
         assert "response" in response
@@ -168,10 +157,7 @@ class TestPipelineCoordinator:
     @pytest.fixture
     async def coordinator(self):
         """Create coordinator for testing."""
-        coord = await create_coordinator(
-            max_concurrent_tasks=3,
-            max_queue_size=10
-        )
+        coord = await create_coordinator(max_concurrent_tasks=3, max_queue_size=10)
 
         yield coord
 
@@ -188,14 +174,13 @@ class TestPipelineCoordinator:
     @pytest.mark.asyncio
     async def test_schedule_task(self, coordinator):
         """Test scheduling a task."""
+
         async def test_task():
             await asyncio.sleep(0.1)
             return "task_result"
 
         task_id = await coordinator.schedule_task(
-            task_type="test_task",
-            coroutine=test_task(),
-            priority=TaskPriority.NORMAL
+            task_type="test_task", coroutine=test_task(), priority=TaskPriority.NORMAL
         )
 
         assert task_id is not None
@@ -208,6 +193,7 @@ class TestPipelineCoordinator:
     @pytest.mark.asyncio
     async def test_concurrent_tasks(self, coordinator):
         """Test multiple concurrent tasks."""
+
         async def test_task(delay: float):
             await asyncio.sleep(delay)
             return f"result_{delay}"
@@ -217,7 +203,7 @@ class TestPipelineCoordinator:
             task_id = await coordinator.schedule_task(
                 task_type=f"test_task_{i}",
                 coroutine=test_task(0.1 * i),
-                priority=TaskPriority.NORMAL
+                priority=TaskPriority.NORMAL,
             )
             task_ids.append(task_id)
 
@@ -241,21 +227,17 @@ class TestPipelineCoordinator:
 
         # Schedule tasks with different priorities
         await coordinator.schedule_task(
-            task_type="low",
-            coroutine=priority_task("low"),
-            priority=TaskPriority.LOW
+            task_type="low", coroutine=priority_task("low"), priority=TaskPriority.LOW
         )
 
         await coordinator.schedule_task(
             task_type="critical",
             coroutine=priority_task("critical"),
-            priority=TaskPriority.CRITICAL
+            priority=TaskPriority.CRITICAL,
         )
 
         await coordinator.schedule_task(
-            task_type="high",
-            coroutine=priority_task("high"),
-            priority=TaskPriority.HIGH
+            task_type="high", coroutine=priority_task("high"), priority=TaskPriority.HIGH
         )
 
         # Wait for completion
@@ -271,10 +253,7 @@ class TestErrorHandler:
     @pytest.fixture
     def error_handler(self):
         """Create error handler for testing."""
-        config = RecoveryConfig(
-            max_retries=2,
-            retry_delay_seconds=0.1
-        )
+        config = RecoveryConfig(max_retries=2, retry_delay_seconds=0.1)
         return create_error_handler(config=config)
 
     @pytest.mark.asyncio
@@ -283,9 +262,7 @@ class TestErrorHandler:
         error = Exception("Camera connection failed")
 
         success, result = await error_handler.handle_vision_error(
-            error=error,
-            component="camera_module",
-            context={"frame_id": 123}
+            error=error, component="camera_module", context={"frame_id": 123}
         )
 
         assert error_handler._stats.total_errors == 1
@@ -297,9 +274,7 @@ class TestErrorHandler:
         error = Exception("Microphone unavailable")
 
         success, result = await error_handler.handle_audio_error(
-            error=error,
-            component="microphone",
-            context={}
+            error=error, component="microphone", context={}
         )
 
         assert error_handler._stats.total_errors == 1
@@ -311,9 +286,7 @@ class TestErrorHandler:
         error = Exception("Model inference timeout")
 
         success, result = await error_handler.handle_ai_error(
-            error=error,
-            component="tutor_engine",
-            context={}
+            error=error, component="tutor_engine", context={}
         )
 
         assert error_handler._stats.total_errors == 1
@@ -322,20 +295,17 @@ class TestErrorHandler:
     @pytest.mark.asyncio
     async def test_error_recovery(self, error_handler):
         """Test error recovery mechanism."""
+
         async def recovery_function():
             return "recovered"
 
         error = Exception("Test error")
         error_record = error_handler._create_error_record(
-            category=ErrorCategory.VISION,
-            error=error,
-            component="test_component",
-            context={}
+            category=ErrorCategory.VISION, error=error, component="test_component", context={}
         )
 
         success, result = await error_handler.recover(
-            error_record=error_record,
-            recovery_fn=recovery_function
+            error_record=error_record, recovery_fn=recovery_function
         )
 
         assert success
@@ -347,16 +317,10 @@ class TestErrorHandler:
         """Test error escalation."""
         error = Exception("Critical failure")
         error_record = error_handler._create_error_record(
-            category=ErrorCategory.HARDWARE,
-            error=error,
-            component="hardware",
-            context={}
+            category=ErrorCategory.HARDWARE, error=error, component="hardware", context={}
         )
 
-        await error_handler.escalate(
-            error_record=error_record,
-            reason="Critical hardware failure"
-        )
+        await error_handler.escalate(error_record=error_record, reason="Critical hardware failure")
 
         assert error_handler._stats.escalations == 1
 
@@ -384,9 +348,7 @@ class TestHealthChecker:
     @pytest.fixture
     async def health_checker(self):
         """Create health checker for testing."""
-        config = HealthCheckConfig(
-            check_interval_seconds=1.0
-        )
+        config = HealthCheckConfig(check_interval_seconds=1.0)
         return create_health_checker(config=config)
 
     @pytest.mark.asyncio
@@ -400,7 +362,7 @@ class TestHealthChecker:
         health_checker.register_component(
             component_name="test_component",
             component_type=ComponentType.VISION,
-            component=mock_component
+            component=mock_component,
         )
 
         assert "test_component" in health_checker._components
@@ -416,7 +378,7 @@ class TestHealthChecker:
         health_checker.register_component(
             component_name="test_component",
             component_type=ComponentType.VISION,
-            component=mock_component
+            component=mock_component,
         )
 
         health = await health_checker.get_component_status("test_component")
@@ -437,7 +399,7 @@ class TestHealthChecker:
             health_checker.register_component(
                 component_name=f"component_{i}",
                 component_type=ComponentType.PIPELINE,
-                component=mock_component
+                component=mock_component,
             )
 
         system_health = await health_checker.check_all_components()
@@ -457,13 +419,13 @@ class TestHealthChecker:
         health_checker.register_component(
             component_name="test_component",
             component_type=ComponentType.AI,
-            component=mock_component
+            component=mock_component,
         )
 
         results = await health_checker.run_diagnostics()
 
         assert len(results) > 0
-        assert all(hasattr(r, 'passed') for r in results)
+        assert all(hasattr(r, "passed") for r in results)
 
     @pytest.mark.asyncio
     async def test_health_monitoring(self, health_checker):
@@ -476,7 +438,7 @@ class TestHealthChecker:
         health_checker.register_component(
             component_name="monitored_component",
             component_type=ComponentType.AUDIO,
-            component=mock_component
+            component=mock_component,
         )
 
         # Start monitoring
@@ -501,11 +463,7 @@ class TestE2EIntegration:
     async def test_complete_tutoring_flow(self):
         """Test complete tutoring flow: vision → AI → response."""
         # Create pipeline
-        config = PipelineConfig(
-            mode=PipelineMode.FULL,
-            enable_vision=True,
-            enable_audio=False
-        )
+        config = PipelineConfig(mode=PipelineMode.FULL, enable_vision=True, enable_audio=False)
 
         pipeline = EduLensPipeline(config=config)
         await pipeline.initialize()
@@ -515,22 +473,15 @@ class TestE2EIntegration:
         session_id = await pipeline.start_session(student_id="test_student")
 
         # Process frame
-        ocr_result = {
-            "full_text": "Solve: 12 + 8 = ?",
-            "average_confidence": 0.92
-        }
+        ocr_result = {"full_text": "Solve: 12 + 8 = ?", "average_confidence": 0.92}
 
-        visual_context = await pipeline.process_frame(
-            frame_data=None,
-            ocr_result=ocr_result
-        )
+        visual_context = await pipeline.process_frame(frame_data=None, ocr_result=ocr_result)
 
         assert visual_context is not None
 
         # Generate response
         response = await pipeline.generate_response(
-            student_query="How do I solve this?",
-            visual_context=visual_context
+            student_query="How do I solve this?", visual_context=visual_context
         )
 
         assert response is not None
@@ -554,9 +505,7 @@ class TestE2EIntegration:
             raise Exception("Simulated vision error")
         except Exception as e:
             success, _ = await error_handler.handle_vision_error(
-                error=e,
-                component="vision_pipeline",
-                context={}
+                error=e, component="vision_pipeline", context={}
             )
 
         # Pipeline should still be operational
@@ -580,7 +529,7 @@ class TestE2EIntegration:
             task_id = await coordinator.schedule_task(
                 task_type=f"operation_{i}",
                 coroutine=mock_operation(i),
-                priority=TaskPriority.NORMAL
+                priority=TaskPriority.NORMAL,
             )
             task_ids.append(task_id)
 

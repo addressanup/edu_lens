@@ -15,18 +15,19 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, AsyncIterator, Union
+from typing import AsyncIterator, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
 import whisper
-from whisper.audio import SAMPLE_RATE, N_FRAMES, HOP_LENGTH, log_mel_spectrogram
+from whisper.audio import HOP_LENGTH, N_FRAMES, SAMPLE_RATE, log_mel_spectrogram
 
 logger = logging.getLogger(__name__)
 
 
 class TranscriptionMode(Enum):
     """Transcription processing modes."""
+
     BATCH = "batch"  # Process complete audio files
     STREAMING = "streaming"  # Real-time streaming transcription
     BUFFERED = "buffered"  # Buffered streaming with context
@@ -34,13 +35,14 @@ class TranscriptionMode(Enum):
 
 class LanguageHint(Enum):
     """Language hints for transcription."""
+
     ENGLISH = "en"
     SPANISH = "es"
     FRENCH = "fr"
     GERMAN = "de"
     CHINESE = "zh"
-    HINDI = "hi"       # Hindi for India market
-    NEPALESE = "ne"    # Nepalese/Nepali
+    HINDI = "hi"  # Hindi for India market
+    NEPALESE = "ne"  # Nepalese/Nepali
     AUTO = None  # Auto-detect language
 
 
@@ -51,6 +53,7 @@ SUPPORTED_LANGUAGES = {"en", "es", "fr", "de", "zh", "hi", "ne"}
 @dataclass
 class WordTimestamp:
     """Word-level timestamp information."""
+
     word: str
     start: float  # Start time in seconds
     end: float  # End time in seconds
@@ -65,6 +68,7 @@ class WordTimestamp:
 @dataclass
 class TranscriptionResult:
     """Result from speech recognition."""
+
     text: str  # Transcribed text
     confidence: float  # Overall confidence score
     language: str  # Detected/specified language
@@ -88,6 +92,7 @@ class TranscriptionResult:
 @dataclass
 class SpeechConfig:
     """Configuration for speech recognition."""
+
     # Model settings
     model_size: str = "base"  # tiny, base, small, medium, large
     device: str = "cpu"  # cpu, cuda
@@ -160,9 +165,7 @@ class SpeechRecognizer:
             # Load Whisper model
             logger.info(f"Loading Whisper model: {self.config.model_size}")
             self.model = await asyncio.to_thread(
-                whisper.load_model,
-                self.config.model_size,
-                device=self.config.device
+                whisper.load_model, self.config.model_size, device=self.config.device
             )
 
             # Set number of threads for CPU inference
@@ -248,11 +251,7 @@ class SpeechRecognizer:
                 options["initial_prompt"] = self._vocabulary_prompt
 
             # Transcribe
-            result = await asyncio.to_thread(
-                self.model.transcribe,
-                audio,
-                **options
-            )
+            result = await asyncio.to_thread(self.model.transcribe, audio, **options)
 
             # Extract word timestamps
             word_timestamps = self._extract_word_timestamps(result)
@@ -271,7 +270,7 @@ class SpeechRecognizer:
                 metadata={
                     "segments": result.get("segments", []),
                     "no_speech_prob": result.get("no_speech_prob", 0.0),
-                }
+                },
             )
 
         except Exception as e:
@@ -312,7 +311,7 @@ class SpeechRecognizer:
                 chunk = buffer[:chunk_samples]
 
                 # Keep overlap for next iteration
-                buffer = buffer[chunk_samples - overlap_samples:]
+                buffer = buffer[chunk_samples - overlap_samples :]
 
                 # Transcribe chunk
                 try:
@@ -348,12 +347,14 @@ class SpeechRecognizer:
             for segment in result["segments"]:
                 if "words" in segment:
                     for word_info in segment["words"]:
-                        word_timestamps.append(WordTimestamp(
-                            word=word_info.get("word", "").strip(),
-                            start=word_info.get("start", 0.0),
-                            end=word_info.get("end", 0.0),
-                            confidence=word_info.get("probability", 1.0),
-                        ))
+                        word_timestamps.append(
+                            WordTimestamp(
+                                word=word_info.get("word", "").strip(),
+                                start=word_info.get("start", 0.0),
+                                end=word_info.get("end", 0.0),
+                                confidence=word_info.get("probability", 1.0),
+                            )
+                        )
 
         return word_timestamps
 
@@ -414,10 +415,7 @@ class SpeechRecognizer:
         Returns:
             Dictionary mapping words to confidence scores
         """
-        return {
-            wt.word: wt.confidence
-            for wt in result.word_timestamps
-        }
+        return {wt.word: wt.confidence for wt in result.word_timestamps}
 
     def set_vocabulary_boost(self, vocabulary: List[str]) -> None:
         """
@@ -527,17 +525,14 @@ class StreamingTranscriber:
         while not stop_event.is_set():
             try:
                 # Get audio from queue with timeout
-                audio_chunk = await asyncio.wait_for(
-                    audio_queue.get(),
-                    timeout=0.1
-                )
+                audio_chunk = await asyncio.wait_for(audio_queue.get(), timeout=0.1)
 
                 buffer = np.append(buffer, audio_chunk)
 
                 # Process when buffer is large enough
                 if len(buffer) >= chunk_samples:
                     chunk = buffer[:chunk_samples]
-                    buffer = buffer[chunk_samples - overlap_samples:]
+                    buffer = buffer[chunk_samples - overlap_samples :]
 
                     # Transcribe
                     result = await self.recognizer.transcribe(chunk)

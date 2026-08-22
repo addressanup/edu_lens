@@ -8,15 +8,17 @@ Author: Vision Processing Agent (VIS-001)
 Task: VIS-001-T3
 """
 
-import numpy as np
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import numpy as np
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     import cv2
+
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
@@ -24,11 +26,11 @@ except ImportError:
 
 from src.vision import (
     LayoutAnalyzer,
+    ProblemFormat,
     ProblemSegmenter,
     RegionType,
-    ProblemFormat,
+    get_problems_by_format,
     segment_worksheet,
-    get_problems_by_format
 )
 
 
@@ -42,43 +44,55 @@ def create_sample_worksheet():
     image = np.ones((1000, 800, 3), dtype=np.uint8) * 255
 
     # Add header
-    cv2.putText(image, "Math Worksheet - Grade 3", (50, 50),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 2)
+    cv2.putText(
+        image, "Math Worksheet - Grade 3", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 2
+    )
 
     # Add instructions
-    cv2.putText(image, "Directions: Solve the following problems.", (50, 100),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 0), 1)
+    cv2.putText(
+        image,
+        "Directions: Solve the following problems.",
+        (50, 100),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.6,
+        (0, 0, 0),
+        1,
+    )
 
     # Problem 1 - Simple calculation
-    cv2.putText(image, "1. What is 5 + 3?", (50, 160),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
+    cv2.putText(image, "1. What is 5 + 3?", (50, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
     cv2.rectangle(image, (50, 180), (300, 220), (200, 200, 200), 2)
 
     # Problem 2 - Multiple choice
-    cv2.putText(image, "2. Which is larger?", (50, 280),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-    cv2.putText(image, "A. 5", (80, 320),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1)
-    cv2.putText(image, "B. 8", (80, 360),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1)
-    cv2.putText(image, "C. 3", (80, 400),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1)
+    cv2.putText(
+        image, "2. Which is larger?", (50, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2
+    )
+    cv2.putText(image, "A. 5", (80, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1)
+    cv2.putText(image, "B. 8", (80, 360), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1)
+    cv2.putText(image, "C. 3", (80, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1)
 
     # Problem 3 - Fill in blank
-    cv2.putText(image, "3. The capital of France is ______.", (50, 480),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
+    cv2.putText(
+        image,
+        "3. The capital of France is ______.",
+        (50, 480),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.8,
+        (0, 0, 0),
+        2,
+    )
 
     # Problem 4 - With diagram
-    cv2.putText(image, "4. Count the shapes:", (50, 580),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
+    cv2.putText(
+        image, "4. Count the shapes:", (50, 580), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2
+    )
     # Draw simple shapes
     cv2.circle(image, (150, 650), 30, (0, 0, 0), 2)
     cv2.rectangle(image, (220, 620), (280, 680), (0, 0, 0), 2)
     cv2.circle(image, (350, 650), 30, (0, 0, 0), 2)
 
     # Footer
-    cv2.putText(image, "Page 1", (370, 950),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (100, 100, 100), 1)
+    cv2.putText(image, "Page 1", (370, 950), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (100, 100, 100), 1)
 
     return image
 
@@ -103,11 +117,7 @@ def demo_layout_analysis():
 
     # Initialize layout analyzer
     print("2. Initializing LayoutAnalyzer...")
-    analyzer = LayoutAnalyzer(
-        min_region_size=100,
-        merge_threshold=0.5,
-        whitespace_threshold=20
-    )
+    analyzer = LayoutAnalyzer(min_region_size=100, merge_threshold=0.5, whitespace_threshold=20)
     print("   LayoutAnalyzer ready")
     print()
 
@@ -255,12 +265,12 @@ def demo_visualization(worksheet_image, structure):
 
     # Draw bounding boxes for each region type with different colors
     colors = {
-        RegionType.HEADER: (255, 0, 0),      # Blue
-        RegionType.QUESTION: (0, 255, 0),    # Green
-        RegionType.ANSWER_SPACE: (0, 0, 255), # Red
-        RegionType.MULTIPLE_CHOICE: (255, 255, 0), # Cyan
-        RegionType.DIAGRAM: (255, 0, 255),   # Magenta
-        RegionType.INSTRUCTION: (0, 255, 255), # Yellow
+        RegionType.HEADER: (255, 0, 0),  # Blue
+        RegionType.QUESTION: (0, 255, 0),  # Green
+        RegionType.ANSWER_SPACE: (0, 0, 255),  # Red
+        RegionType.MULTIPLE_CHOICE: (255, 255, 0),  # Cyan
+        RegionType.DIAGRAM: (255, 0, 255),  # Magenta
+        RegionType.INSTRUCTION: (0, 255, 255),  # Yellow
     }
 
     for region in structure.regions:
@@ -270,8 +280,7 @@ def demo_visualization(worksheet_image, structure):
 
         # Add label
         label = region.region_type.value
-        cv2.putText(vis_image, label, (x1, y1 - 5),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+        cv2.putText(vis_image, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
     print("Visualization created with colored bounding boxes:")
     for region_type, color in colors.items():
@@ -328,6 +337,7 @@ def main():
     except Exception as e:
         print(f"Error during demo: {e}")
         import traceback
+
         traceback.print_exc()
 
 

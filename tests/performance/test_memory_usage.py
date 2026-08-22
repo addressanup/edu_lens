@@ -16,7 +16,7 @@ import sys
 import time
 import tracemalloc
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import numpy as np
 import pytest
@@ -28,10 +28,10 @@ except ImportError:
     psutil = None
 
 try:
-    from src.vision.ocr_engine import OCREngine, OCRBackend
-    from src.audio.speech_recognizer import SpeechRecognizer, SpeechConfig
-    from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
     from src.audio.audio_pipeline import AudioPipeline, PipelineConfig
+    from src.audio.speech_recognizer import SpeechConfig, SpeechRecognizer
+    from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
+    from src.vision.ocr_engine import OCRBackend, OCREngine
 except ImportError:
     OCREngine = None
     SpeechRecognizer = None
@@ -209,8 +209,9 @@ class TestPeakMemory:
                 result = ocr_engine.extract_structured_content(image)
 
         peak_memory = profiler.get_peak_memory()
-        assert peak_memory < MEMORY_LIMITS["ocr_peak_mb"], \
-            f"OCR peak memory {peak_memory:.1f}MB exceeds limit {MEMORY_LIMITS['ocr_peak_mb']}MB"
+        assert (
+            peak_memory < MEMORY_LIMITS["ocr_peak_mb"]
+        ), f"OCR peak memory {peak_memory:.1f}MB exceeds limit {MEMORY_LIMITS['ocr_peak_mb']}MB"
 
     @pytest.mark.asyncio
     async def test_asr_peak_memory(self, sample_audio_data):
@@ -231,8 +232,9 @@ class TestPeakMemory:
 
         await recognizer.close()
 
-        assert peak_memory < MEMORY_LIMITS["asr_peak_mb"], \
-            f"ASR peak memory {peak_memory:.1f}MB exceeds limit {MEMORY_LIMITS['asr_peak_mb']}MB"
+        assert (
+            peak_memory < MEMORY_LIMITS["asr_peak_mb"]
+        ), f"ASR peak memory {peak_memory:.1f}MB exceeds limit {MEMORY_LIMITS['asr_peak_mb']}MB"
 
     @pytest.mark.asyncio
     async def test_tts_peak_memory(self):
@@ -251,8 +253,9 @@ class TestPeakMemory:
 
         peak_memory = profiler.get_peak_memory()
 
-        assert peak_memory < MEMORY_LIMITS["tts_peak_mb"], \
-            f"TTS peak memory {peak_memory:.1f}MB exceeds limit {MEMORY_LIMITS['tts_peak_mb']}MB"
+        assert (
+            peak_memory < MEMORY_LIMITS["tts_peak_mb"]
+        ), f"TTS peak memory {peak_memory:.1f}MB exceeds limit {MEMORY_LIMITS['tts_peak_mb']}MB"
 
     def test_large_image_peak_memory(self, temp_dir):
         """Test OCR peak memory with large image."""
@@ -262,10 +265,11 @@ class TestPeakMemory:
         import cv2
 
         # Create large image (4K resolution)
-        img = Image.new('RGB', (3840, 2160), color='white')
+        img = Image.new("RGB", (3840, 2160), color="white")
         from PIL import ImageDraw
+
         draw = ImageDraw.Draw(img)
-        draw.text((100, 100), "Large resolution test", fill='black')
+        draw.text((100, 100), "Large resolution test", fill="black")
 
         path = temp_dir / "large_image.jpg"
         img.save(path)
@@ -345,8 +349,9 @@ class TestMemoryLeaks:
         memory_growth = final_memory - initial_memory
         growth_per_1000 = (memory_growth / iterations) * 1000
 
-        assert growth_per_1000 < MEMORY_LIMITS["leak_tolerance_mb"], \
-            f"Memory leak detected: {growth_per_1000:.1f}MB per 1000 operations"
+        assert (
+            growth_per_1000 < MEMORY_LIMITS["leak_tolerance_mb"]
+        ), f"Memory leak detected: {growth_per_1000:.1f}MB per 1000 operations"
 
     @pytest.mark.asyncio
     async def test_asr_memory_leak(self, sample_audio_data):
@@ -662,13 +667,14 @@ def test_memory_profiling_report(tmp_path):
                 "ocr_5min_growth": 12,
                 "asr_5min_growth": 15,
                 "mixed_5min_growth": 25,
-            }
-        }
+            },
+        },
     }
 
     import json
+
     report_file = tmp_path / "memory_report.json"
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     assert report_file.exists()

@@ -87,7 +87,7 @@ def _parse_json_loose(text: str) -> Optional[Dict[str, Any]]:
     if cleaned.startswith("```"):
         first_newline = cleaned.find("\n")
         if first_newline != -1:
-            cleaned = cleaned[first_newline + 1:]
+            cleaned = cleaned[first_newline + 1 :]
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3]
         cleaned = cleaned.strip()
@@ -99,7 +99,7 @@ def _parse_json_loose(text: str) -> Optional[Dict[str, Any]]:
         start, end = cleaned.find("{"), cleaned.rfind("}")
         if start != -1 and end > start:
             try:
-                obj = json.loads(cleaned[start:end + 1])
+                obj = json.loads(cleaned[start : end + 1])
                 return obj if isinstance(obj, dict) else None
             except json.JSONDecodeError:
                 return None
@@ -110,9 +110,11 @@ def _parse_json_loose(text: str) -> Optional[Dict[str, Any]]:
 # Session configuration
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class LiveTutorConfig:
     """Tunables for a live tutoring session."""
+
     observation_interval_s: float = field(
         default_factory=lambda: float(os.getenv("EDULENS_OBSERVATION_INTERVAL", "12"))
     )
@@ -130,6 +132,7 @@ class LiveTutorConfig:
 @dataclass
 class LiveFrame:
     """A single received camera frame."""
+
     data_b64: str
     received_at: float
     width: Optional[int] = None
@@ -142,6 +145,7 @@ class LiveFrame:
 # ---------------------------------------------------------------------------
 # Live tutor session
 # ---------------------------------------------------------------------------
+
 
 class LiveTutorSession:
     """
@@ -194,7 +198,8 @@ class LiveTutorSession:
         self._observation_task = asyncio.create_task(self._observation_loop())
         logger.info(
             "Live tutor session %s started (interval=%.1fs)",
-            self.session_id, self.config.observation_interval_s,
+            self.session_id,
+            self.config.observation_interval_s,
         )
 
     async def stop(self) -> None:
@@ -216,8 +221,9 @@ class LiveTutorSession:
     # Ingestion
     # ------------------------------------------------------------------
 
-    async def ingest_frame(self, data_b64: str, width: Optional[int] = None,
-                           height: Optional[int] = None) -> Dict[str, Any]:
+    async def ingest_frame(
+        self, data_b64: str, width: Optional[int] = None, height: Optional[int] = None
+    ) -> Dict[str, Any]:
         """
         Store an incoming base64 JPEG frame. Returns a small ack payload.
 
@@ -245,15 +251,17 @@ class LiveTutorSession:
         """
         text = (text or "").strip()
         if not text:
-            await self.emit({
-                "type": "error",
-                "payload": {"message": "Empty question."},
-            })
+            await self.emit(
+                {
+                    "type": "error",
+                    "payload": {"message": "Empty question."},
+                }
+            )
             return {"answered": False}
 
         prompt = (
             f"The child ({self.config.child_name}, age {self.config.child_age}) "
-            f"asks: \"{text}\"\n\n"
+            f'asks: "{text}"\n\n'
             "Look at the attached image of their homework and answer following "
             "your tutoring guidelines."
         )
@@ -262,26 +270,31 @@ class LiveTutorSession:
             response = await self._vision_call(prompt, speak_friendly=True)
         except Exception as exc:  # noqa: BLE001 - surfaced to client
             logger.error("Query failed in session %s: %s", self.session_id, exc)
-            await self.emit({
-                "type": "error",
-                "payload": {"message": "I had trouble seeing that. Please try again."},
-            })
+            await self.emit(
+                {
+                    "type": "error",
+                    "payload": {"message": "I had trouble seeing that. Please try again."},
+                }
+            )
             return {"answered": False}
 
         answer = response.content.strip()
         self.queries_answered += 1
-        self._append_history(LLMMessage(role="user", content=text),
-                             LLMMessage(role="assistant", content=answer))
+        self._append_history(
+            LLMMessage(role="user", content=text), LLMMessage(role="assistant", content=answer)
+        )
 
-        await self.emit({
-            "type": "tutor_response",
-            "payload": {
-                "question": text,
-                "text": answer,
-                "model": response.model,
-                "usage": response.usage,
-            },
-        })
+        await self.emit(
+            {
+                "type": "tutor_response",
+                "payload": {
+                    "question": text,
+                    "text": answer,
+                    "model": response.model,
+                    "usage": response.usage,
+                },
+            }
+        )
         return {"answered": True}
 
     # ------------------------------------------------------------------
@@ -304,9 +317,7 @@ class LiveTutorSession:
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 - keep loop alive
-                logger.error(
-                    "Observation error in session %s: %s", self.session_id, exc
-                )
+                logger.error("Observation error in session %s: %s", self.session_id, exc)
                 await asyncio.sleep(2.0)
 
     async def _run_observation(self) -> None:
@@ -315,7 +326,8 @@ class LiveTutorSession:
         self.observations_run += 1
 
         response = await self._vision_call(
-            OBSERVER_SYSTEM_PROMPT, speak_friendly=False,
+            OBSERVER_SYSTEM_PROMPT,
+            speak_friendly=False,
             system="You are a precise classroom observer. Output strict JSON only.",
         )
         assessment = _parse_json_loose(response.content)
@@ -323,7 +335,8 @@ class LiveTutorSession:
         if assessment is None:
             logger.warning(
                 "Session %s: unparseable observation response: %.200s",
-                self.session_id, response.content,
+                self.session_id,
+                response.content,
             )
             return
 
@@ -336,8 +349,7 @@ class LiveTutorSession:
             and confidence >= self.config.min_struggle_confidence
             and isinstance(message, str)
             and message.strip() != ""
-            and (time.time() - self._last_intervention_at)
-            >= self.config.intervention_cooldown_s
+            and (time.time() - self._last_intervention_at) >= self.config.intervention_cooldown_s
         )
 
         event: Dict[str, Any] = {
@@ -360,15 +372,16 @@ class LiveTutorSession:
             self.interventions_sent += 1
             logger.info(
                 "Session %s: intervention #%d sent (conf=%.2f)",
-                self.session_id, self.interventions_sent, confidence,
+                self.session_id,
+                self.interventions_sent,
+                confidence,
             )
 
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
 
-    async def _vision_call(self, prompt: str, speak_friendly: bool,
-                           system: Optional[str] = None):
+    async def _vision_call(self, prompt: str, speak_friendly: bool, system: Optional[str] = None):
         """Call the vision model with the latest frame + conversation history.
 
         Falls back to a text-only call when no frame is buffered (e.g. camera

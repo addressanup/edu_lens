@@ -48,7 +48,9 @@ async def run(server: str) -> None:
         print(f"[{greeting['type']}] vision_model={greeting['payload'].get('vision_model')}")
 
         # Configure child profile
-        await ws.send(json.dumps({"type": "config", "config": {"child_name": "TestChild", "child_age": 9}}))
+        await ws.send(
+            json.dumps({"type": "config", "config": {"child_name": "TestChild", "child_age": 9}})
+        )
         event = json.loads(await ws.recv())
         print(f"[{event['type']}] {event['payload']}")
 

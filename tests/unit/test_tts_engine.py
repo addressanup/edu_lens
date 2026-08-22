@@ -11,19 +11,20 @@ Tests TTS functionality including:
 Author: Testing Agent (TST-001)
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 
 from src.audio.tts_engine import (
-    TTSEngine,
-    TTSBackend,
-    TTSConfig,
     AudioOutput,
     EmphasisLevel,
-    SpeakingRate,
     Pyttsx3Backend,
+    SpeakingRate,
+    TTSBackend,
+    TTSConfig,
+    TTSEngine,
 )
 
 
@@ -35,10 +36,7 @@ class TestAudioOutput:
         audio_data = b"test audio data"
 
         output = AudioOutput(
-            audio_data=audio_data,
-            sample_rate=22050,
-            duration_ms=1000.0,
-            format="wav"
+            audio_data=audio_data, sample_rate=22050, duration_ms=1000.0, format="wav"
         )
 
         assert output.audio_data == audio_data
@@ -54,11 +52,7 @@ class TestAudioOutput:
         audio_array = np.array([0, 100, -100, 200], dtype=np.int16)
         audio_bytes = audio_array.tobytes()
 
-        output = AudioOutput(
-            audio_data=audio_bytes,
-            sample_rate=16000,
-            duration_ms=100.0
-        )
+        output = AudioOutput(audio_data=audio_bytes, sample_rate=16000, duration_ms=100.0)
 
         numpy_array = output.to_numpy()
 
@@ -82,11 +76,7 @@ class TestTTSConfig:
     def test_custom_config(self):
         """Test custom configuration."""
         config = TTSConfig(
-            backend=TTSBackend.EDGE_TTS,
-            speaking_rate=1.2,
-            pitch=1.1,
-            volume=0.9,
-            use_ssml=False
+            backend=TTSBackend.EDGE_TTS, speaking_rate=1.2, pitch=1.1, volume=0.9, use_ssml=False
         )
 
         assert config.backend == TTSBackend.EDGE_TTS
@@ -119,11 +109,7 @@ class TestTTSEngine:
 
     def test_engine_with_config(self):
         """Test engine with custom configuration."""
-        config = TTSConfig(
-            speaking_rate=1.5,
-            pitch=1.2,
-            volume=0.8
-        )
+        config = TTSConfig(speaking_rate=1.5, pitch=1.2, volume=0.8)
 
         engine = TTSEngine(config=config)
 
@@ -133,11 +119,9 @@ class TestTTSEngine:
     @pytest.mark.asyncio
     async def test_synthesize_text(self, tts_engine, sample_text):
         """Test basic text synthesis."""
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio data",
-                sample_rate=22050,
-                duration_ms=1000.0
+                audio_data=b"audio data", sample_rate=22050, duration_ms=1000.0
             )
 
             result = await tts_engine.synthesize(sample_text)
@@ -148,13 +132,9 @@ class TestTTSEngine:
     @pytest.mark.asyncio
     async def test_synthesize_with_cache(self, tts_engine, sample_text):
         """Test synthesis with caching."""
-        mock_output = AudioOutput(
-            audio_data=b"cached audio",
-            sample_rate=22050,
-            duration_ms=1000.0
-        )
+        mock_output = AudioOutput(audio_data=b"cached audio", sample_rate=22050, duration_ms=1000.0)
 
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = mock_output
 
             # First call
@@ -170,13 +150,9 @@ class TestTTSEngine:
     @pytest.mark.asyncio
     async def test_synthesize_no_cache(self, tts_engine, sample_text):
         """Test synthesis without caching."""
-        mock_output = AudioOutput(
-            audio_data=b"audio",
-            sample_rate=22050,
-            duration_ms=1000.0
-        )
+        mock_output = AudioOutput(audio_data=b"audio", sample_rate=22050, duration_ms=1000.0)
 
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = mock_output
 
             result1 = await tts_engine.synthesize(sample_text, use_cache=False)
@@ -188,12 +164,13 @@ class TestTTSEngine:
     @pytest.mark.asyncio
     async def test_synthesize_streaming(self, tts_engine, sample_text):
         """Test streaming synthesis."""
+
         async def mock_stream():
             yield b"chunk1"
             yield b"chunk2"
             yield b"chunk3"
 
-        with patch.object(tts_engine.backend, 'synthesize_streaming', return_value=mock_stream()):
+        with patch.object(tts_engine.backend, "synthesize_streaming", return_value=mock_stream()):
             chunks = []
             async for chunk in tts_engine.synthesize_streaming(sample_text):
                 chunks.append(chunk)
@@ -203,7 +180,7 @@ class TestTTSEngine:
 
     def test_set_voice(self, tts_engine):
         """Test setting voice."""
-        with patch.object(tts_engine.backend, 'set_voice') as mock_set:
+        with patch.object(tts_engine.backend, "set_voice") as mock_set:
             tts_engine.set_voice("en-US-AriaNeural")
 
             mock_set.assert_called_once_with("en-US-AriaNeural")
@@ -239,15 +216,15 @@ class TestTTSEngine:
     def test_list_voices(self, tts_engine):
         """Test listing available voices."""
         mock_voices = [
-            {'id': 'voice1', 'name': 'Voice 1', 'gender': 'Female'},
-            {'id': 'voice2', 'name': 'Voice 2', 'gender': 'Male'}
+            {"id": "voice1", "name": "Voice 1", "gender": "Female"},
+            {"id": "voice2", "name": "Voice 2", "gender": "Male"},
         ]
 
-        with patch.object(tts_engine.backend, 'list_voices', return_value=mock_voices):
+        with patch.object(tts_engine.backend, "list_voices", return_value=mock_voices):
             voices = tts_engine.list_voices()
 
             assert len(voices) == 2
-            assert voices[0]['id'] == 'voice1'
+            assert voices[0]["id"] == "voice1"
 
     def test_clear_cache(self, tts_engine):
         """Test clearing cache."""
@@ -294,11 +271,14 @@ class TestTextPreprocessing:
         assert "five" in processed
         assert "ten" in processed
 
-    @pytest.mark.parametrize("input_text,expected_contains", [
-        ("Test 1 2 3", "one"),
-        ("Count to 5", "five"),
-        ("Number 10", "ten"),
-    ])
+    @pytest.mark.parametrize(
+        "input_text,expected_contains",
+        [
+            ("Test 1 2 3", "one"),
+            ("Count to 5", "five"),
+            ("Number 10", "ten"),
+        ],
+    )
     def test_number_expansion_cases(self, tts_engine, input_text, expected_contains):
         """Test various number expansion cases."""
         processed = tts_engine._preprocess_text(input_text)
@@ -318,11 +298,9 @@ class TestMathExpressions:
         """Test speaking simple math expression."""
         expression = "2 + 3 = 5"
 
-        with patch.object(tts_engine, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio",
-                sample_rate=22050,
-                duration_ms=1000.0
+                audio_data=b"audio", sample_rate=22050, duration_ms=1000.0
             )
 
             result = await tts_engine.speak_math(expression)
@@ -335,11 +313,9 @@ class TestMathExpressions:
         """Test speaking math with pedagogical pauses."""
         expression = "5 × 3 = 15"
 
-        with patch.object(tts_engine, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio",
-                sample_rate=22050,
-                duration_ms=1500.0
+                audio_data=b"audio", sample_rate=22050, duration_ms=1500.0
             )
 
             result = await tts_engine.speak_math(expression, explain=True)
@@ -380,17 +356,13 @@ class TestSSMLSupport:
         text = "Hello world test"
         pause_points = [5, 11]  # After "Hello" and "world"
 
-        with patch.object(tts_engine, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio",
-                sample_rate=22050,
-                duration_ms=1500.0
+                audio_data=b"audio", sample_rate=22050, duration_ms=1500.0
             )
 
             result = await tts_engine.speak_with_pauses(
-                text,
-                pause_points=pause_points,
-                pause_duration_ms=500
+                text, pause_points=pause_points, pause_duration_ms=500
             )
 
             assert isinstance(result, AudioOutput)
@@ -414,19 +386,22 @@ class TestVoicePersonas:
 
     def test_child_friendly_voice(self, tts_engine):
         """Test using child-friendly voice."""
-        with patch.object(tts_engine.backend, 'set_voice') as mock_set:
+        with patch.object(tts_engine.backend, "set_voice") as mock_set:
             tts_engine.set_voice("en-US-JennyNeural")  # Child-friendly voice
 
             mock_set.assert_called_once()
 
-    @pytest.mark.parametrize("voice_id", [
-        "en-US-AriaNeural",
-        "en-US-GuyNeural",
-        "en-GB-SoniaNeural",
-    ])
+    @pytest.mark.parametrize(
+        "voice_id",
+        [
+            "en-US-AriaNeural",
+            "en-US-GuyNeural",
+            "en-GB-SoniaNeural",
+        ],
+    )
     def test_different_voices(self, tts_engine, voice_id):
         """Test setting different voice personas."""
-        with patch.object(tts_engine.backend, 'set_voice') as mock_set:
+        with patch.object(tts_engine.backend, "set_voice") as mock_set:
             tts_engine.set_voice(voice_id)
 
             mock_set.assert_called_with(voice_id)
@@ -438,7 +413,7 @@ class TestPyttsx3Backend:
     @pytest.mark.asyncio
     async def test_pyttsx3_initialization(self):
         """Test Pyttsx3 backend initialization."""
-        with patch('pyttsx3.init') as mock_init:
+        with patch("pyttsx3.init") as mock_init:
             mock_engine = Mock()
             mock_init.return_value = mock_engine
 
@@ -450,15 +425,15 @@ class TestPyttsx3Backend:
     @pytest.mark.asyncio
     async def test_pyttsx3_synthesize(self):
         """Test Pyttsx3 synthesis."""
-        with patch('pyttsx3.init') as mock_init:
+        with patch("pyttsx3.init") as mock_init:
             mock_engine = Mock()
             mock_init.return_value = mock_engine
 
             config = TTSConfig()
             backend = Pyttsx3Backend(config)
 
-            with patch('tempfile.NamedTemporaryFile') as mock_temp:
-                with patch('builtins.open', create=True) as mock_open:
+            with patch("tempfile.NamedTemporaryFile") as mock_temp:
+                with patch("builtins.open", create=True) as mock_open:
                     mock_open.return_value.__enter__.return_value.read.return_value = b"audio data"
 
                     result = await backend.synthesize("Test text")
@@ -468,7 +443,7 @@ class TestPyttsx3Backend:
 
     def test_pyttsx3_list_voices(self):
         """Test listing Pyttsx3 voices."""
-        with patch('pyttsx3.init') as mock_init:
+        with patch("pyttsx3.init") as mock_init:
             mock_engine = Mock()
             mock_voice = Mock()
             mock_voice.id = "voice1"
@@ -486,7 +461,7 @@ class TestPyttsx3Backend:
 
     def test_pyttsx3_set_voice(self):
         """Test setting Pyttsx3 voice."""
-        with patch('pyttsx3.init') as mock_init:
+        with patch("pyttsx3.init") as mock_init:
             mock_engine = Mock()
             mock_init.return_value = mock_engine
 
@@ -508,11 +483,9 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_empty_text(self, tts_engine):
         """Test synthesizing empty text."""
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"",
-                sample_rate=22050,
-                duration_ms=0.0
+                audio_data=b"", sample_rate=22050, duration_ms=0.0
             )
 
             result = await tts_engine.synthesize("")
@@ -524,11 +497,9 @@ class TestEdgeCases:
         """Test synthesizing very long text."""
         long_text = "This is a test sentence. " * 100
 
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio",
-                sample_rate=22050,
-                duration_ms=30000.0
+                audio_data=b"audio", sample_rate=22050, duration_ms=30000.0
             )
 
             result = await tts_engine.synthesize(long_text)
@@ -540,11 +511,9 @@ class TestEdgeCases:
         """Test with special characters."""
         text = "Test @#$% special &*() characters!"
 
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio",
-                sample_rate=22050,
-                duration_ms=1000.0
+                audio_data=b"audio", sample_rate=22050, duration_ms=1000.0
             )
 
             result = await tts_engine.synthesize(text)
@@ -556,11 +525,9 @@ class TestEdgeCases:
         """Test with unicode characters."""
         text = "Hello 你好 مرحبا"
 
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio",
-                sample_rate=22050,
-                duration_ms=1000.0
+                audio_data=b"audio", sample_rate=22050, duration_ms=1000.0
             )
 
             result = await tts_engine.synthesize(text)
@@ -570,7 +537,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_synthesis_error_handling(self, tts_engine):
         """Test error handling during synthesis."""
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.side_effect = Exception("Synthesis error")
 
             with pytest.raises(Exception):
@@ -595,11 +562,9 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_multiple_concurrent_synthesis(self, tts_engine):
         """Test multiple concurrent synthesis requests."""
-        with patch.object(tts_engine.backend, 'synthesize', new_callable=AsyncMock) as mock_synth:
+        with patch.object(tts_engine.backend, "synthesize", new_callable=AsyncMock) as mock_synth:
             mock_synth.return_value = AudioOutput(
-                audio_data=b"audio",
-                sample_rate=22050,
-                duration_ms=1000.0
+                audio_data=b"audio", sample_rate=22050, duration_ms=1000.0
             )
 
             # Run multiple synthesis concurrently

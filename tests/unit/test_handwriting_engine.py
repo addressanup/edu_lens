@@ -11,19 +11,20 @@ Tests handwriting recognition including:
 Author: Testing Agent (TST-001)
 """
 
-import pytest
-import numpy as np
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
+import numpy as np
+import pytest
+
+from src.vision.character_segmenter import Segment, SegmentationResult
 from src.vision.handwriting_engine import (
-    HandwritingRecognizer,
-    HandwritingStyle,
     AgeGroup,
     HandwritingCharacter,
-    HandwritingWord,
+    HandwritingRecognizer,
     HandwritingResult,
+    HandwritingStyle,
+    HandwritingWord,
 )
-from src.vision.character_segmenter import Segment, SegmentationResult
 
 
 class TestHandwritingDataClasses:
@@ -32,36 +33,32 @@ class TestHandwritingDataClasses:
     def test_handwriting_character_creation(self):
         """Test creating a handwriting character."""
         char = HandwritingCharacter(
-            character='A',
+            character="A",
             confidence=0.92,
             bounding_box=(10, 20, 50, 70),
-            style=HandwritingStyle.PRINTED
+            style=HandwritingStyle.PRINTED,
         )
 
-        assert char.character == 'A'
+        assert char.character == "A"
         assert char.confidence == 0.92
         assert char.style == HandwritingStyle.PRINTED
 
     def test_character_to_dict(self):
         """Test converting character to dictionary."""
         char = HandwritingCharacter(
-            character='B',
+            character="B",
             confidence=0.88,
             bounding_box=(10, 20, 50, 70),
-            alternate_predictions=[('8', 0.75), ('6', 0.65)]
+            alternate_predictions=[("8", 0.75), ("6", 0.65)],
         )
 
         char_dict = char.to_dict()
-        assert char_dict['character'] == 'B'
-        assert len(char_dict['alternate_predictions']) == 2
+        assert char_dict["character"] == "B"
+        assert len(char_dict["alternate_predictions"]) == 2
 
     def test_handwriting_word_creation(self):
         """Test creating a handwriting word."""
-        word = HandwritingWord(
-            text="Hello",
-            confidence=0.90,
-            bounding_box=(10, 20, 100, 70)
-        )
+        word = HandwritingWord(text="Hello", confidence=0.90, bounding_box=(10, 20, 100, 70))
 
         assert word.text == "Hello"
         assert word.confidence == 0.90
@@ -69,19 +66,16 @@ class TestHandwritingDataClasses:
     def test_word_with_characters(self):
         """Test word with character breakdown."""
         chars = [
-            HandwritingCharacter('H', 0.95, (10, 20, 30, 70)),
-            HandwritingCharacter('i', 0.90, (35, 20, 50, 70))
+            HandwritingCharacter("H", 0.95, (10, 20, 30, 70)),
+            HandwritingCharacter("i", 0.90, (35, 20, 50, 70)),
         ]
 
         word = HandwritingWord(
-            text="Hi",
-            confidence=0.925,
-            bounding_box=(10, 20, 50, 70),
-            characters=chars
+            text="Hi", confidence=0.925, bounding_box=(10, 20, 50, 70), characters=chars
         )
 
         assert len(word.characters) == 2
-        assert word.characters[0].character == 'H'
+        assert word.characters[0].character == "H"
 
     def test_handwriting_result_empty(self):
         """Test empty handwriting result."""
@@ -99,7 +93,7 @@ class TestHandwritingDataClasses:
             words=[word],
             full_text="Test",
             average_confidence=0.9,
-            dominant_style=HandwritingStyle.PRINTED
+            dominant_style=HandwritingStyle.PRINTED,
         )
 
         assert len(result.words) == 1
@@ -137,11 +131,7 @@ class TestHandwritingRecognizer:
 
     def test_recognizer_with_config(self):
         """Test recognizer with custom configuration."""
-        config = {
-            "char_width": 32,
-            "char_height": 32,
-            "min_confidence": 0.7
-        }
+        config = {"char_width": 32, "char_height": 32, "min_confidence": 0.7}
 
         recognizer = HandwritingRecognizer(config=config)
 
@@ -149,11 +139,14 @@ class TestHandwritingRecognizer:
         assert recognizer.char_height == 32
         assert recognizer.min_confidence == 0.7
 
-    @pytest.mark.parametrize("age_group", [
-        AgeGroup.EARLY_ELEMENTARY,
-        AgeGroup.MID_ELEMENTARY,
-        AgeGroup.LATE_ELEMENTARY,
-    ])
+    @pytest.mark.parametrize(
+        "age_group",
+        [
+            AgeGroup.EARLY_ELEMENTARY,
+            AgeGroup.MID_ELEMENTARY,
+            AgeGroup.LATE_ELEMENTARY,
+        ],
+    )
     def test_configure_for_children(self, recognizer, age_group):
         """Test configuration for different age groups."""
         recognizer.configure_for_children(age_group=age_group)
@@ -203,18 +196,16 @@ class TestHandwritingRecognizer:
         with pytest.raises(ValueError):
             recognizer.preprocess_handwriting(empty_img)
 
-    @patch('src.vision.character_segmenter.CharacterSegmenter.segment_all')
+    @patch("src.vision.character_segmenter.CharacterSegmenter.segment_all")
     def test_segment_characters(self, mock_segment, recognizer, sample_handwriting_image):
         """Test character segmentation."""
         # Mock segmentation result
         mock_segment.return_value = SegmentationResult(
             characters=[
                 Segment(x=20, y=20, width=30, height=40),
-                Segment(x=60, y=20, width=35, height=40)
+                Segment(x=60, y=20, width=35, height=40),
             ],
-            words=[
-                Segment(x=20, y=20, width=75, height=40)
-            ]
+            words=[Segment(x=20, y=20, width=75, height=40)],
         )
 
         result = recognizer.segment_characters(sample_handwriting_image)
@@ -223,7 +214,7 @@ class TestHandwritingRecognizer:
         assert len(result.characters) == 2
         assert len(result.words) == 1
 
-    @patch('src.vision.character_segmenter.CharacterSegmenter.segment_all')
+    @patch("src.vision.character_segmenter.CharacterSegmenter.segment_all")
     def test_recognize_handwriting(self, mock_segment, recognizer, sample_handwriting_image):
         """Test complete handwriting recognition."""
         # Mock segmentation
@@ -231,10 +222,7 @@ class TestHandwritingRecognizer:
         char2 = Segment(x=60, y=20, width=30, height=40)
         word = Segment(x=20, y=20, width=70, height=40)
 
-        mock_segment.return_value = SegmentationResult(
-            characters=[char1, char2],
-            words=[word]
-        )
+        mock_segment.return_value = SegmentationResult(characters=[char1, char2], words=[word])
 
         result = recognizer.recognize_handwriting(sample_handwriting_image)
 
@@ -242,24 +230,20 @@ class TestHandwritingRecognizer:
         assert result.processing_time_ms > 0
         assert "metadata" in result.to_dict()
 
-    @patch('src.vision.character_segmenter.CharacterSegmenter.segment_all')
+    @patch("src.vision.character_segmenter.CharacterSegmenter.segment_all")
     def test_recognize_no_preprocessing(self, mock_segment, recognizer, sample_handwriting_image):
         """Test recognition without preprocessing."""
         mock_segment.return_value = SegmentationResult()
 
-        result = recognizer.recognize_handwriting(
-            sample_handwriting_image,
-            preprocess=False
-        )
+        result = recognizer.recognize_handwriting(sample_handwriting_image, preprocess=False)
 
         assert isinstance(result, HandwritingResult)
 
     def test_recognize_math_handwriting(self, recognizer, sample_handwriting_image):
         """Test mathematical expression recognition."""
-        with patch.object(recognizer, 'recognize_handwriting') as mock_recognize:
+        with patch.object(recognizer, "recognize_handwriting") as mock_recognize:
             mock_recognize.return_value = HandwritingResult(
-                full_text="2 + 3 = 5",
-                average_confidence=0.85
+                full_text="2 + 3 = 5", average_confidence=0.85
             )
 
             result = recognizer.recognize_math_handwriting(sample_handwriting_image)
@@ -270,27 +254,20 @@ class TestHandwritingRecognizer:
 
     def test_get_confidence_scores(self, recognizer):
         """Test getting detailed confidence scores."""
-        char1 = HandwritingCharacter('A', 0.95, (10, 20, 30, 40))
-        char2 = HandwritingCharacter('B', 0.75, (35, 20, 55, 40))
+        char1 = HandwritingCharacter("A", 0.95, (10, 20, 30, 40))
+        char2 = HandwritingCharacter("B", 0.75, (35, 20, 55, 40))
 
         word = HandwritingWord(
-            text="AB",
-            confidence=0.85,
-            bounding_box=(10, 20, 55, 40),
-            characters=[char1, char2]
+            text="AB", confidence=0.85, bounding_box=(10, 20, 55, 40), characters=[char1, char2]
         )
 
-        result = HandwritingResult(
-            words=[word],
-            full_text="AB",
-            average_confidence=0.85
-        )
+        result = HandwritingResult(words=[word], full_text="AB", average_confidence=0.85)
 
         scores = recognizer.get_confidence_scores(result)
 
-        assert scores['overall'] == 0.85
-        assert len(scores['per_character']) == 2
-        assert scores['total_characters'] == 2
+        assert scores["overall"] == 0.85
+        assert len(scores["per_character"]) == 2
+        assert scores["total_characters"] == 2
 
     def test_get_confidence_empty_result(self, recognizer):
         """Test confidence scores for empty result."""
@@ -298,8 +275,8 @@ class TestHandwritingRecognizer:
 
         scores = recognizer.get_confidence_scores(result)
 
-        assert scores['overall'] == 0.0
-        assert scores['total_characters'] == 0
+        assert scores["overall"] == 0.0
+        assert scores["total_characters"] == 0
 
     def test_load_model(self, recognizer, tmp_path):
         """Test loading a trained model."""
@@ -356,9 +333,7 @@ class TestCharacterRecognition:
         char_img = np.random.rand(28, 28).astype(np.float32)
 
         predictions = recognizer._get_character_predictions(
-            char_img,
-            recognizer.text_charset,
-            top_k=5
+            char_img, recognizer.text_charset, top_k=5
         )
 
         assert len(predictions) <= 5
@@ -370,29 +345,29 @@ class TestCharacterRecognition:
         charset = recognizer._get_math_charset()
 
         # Should include digits
-        assert '0' in charset
-        assert '9' in charset
+        assert "0" in charset
+        assert "9" in charset
 
         # Should include operators
-        assert '+' in charset
-        assert '-' in charset
-        assert '×' in charset
-        assert '÷' in charset
+        assert "+" in charset
+        assert "-" in charset
+        assert "×" in charset
+        assert "÷" in charset
 
     def test_text_charset(self, recognizer):
         """Test text character set."""
         charset = recognizer._get_text_charset()
 
         # Should include letters
-        assert 'A' in charset
-        assert 'z' in charset
+        assert "A" in charset
+        assert "z" in charset
 
         # Should include digits
-        assert '0' in charset
+        assert "0" in charset
 
         # Should include common punctuation
-        assert '.' in charset
-        assert ',' in charset
+        assert "." in charset
+        assert "," in charset
 
 
 class TestHandwritingEdgeCases:
@@ -409,7 +384,7 @@ class TestHandwritingEdgeCases:
 
         recognizer.configure_for_children(AgeGroup.EARLY_ELEMENTARY)
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             mock.return_value = SegmentationResult()
 
             result = recognizer.recognize_handwriting(img)
@@ -424,11 +399,9 @@ class TestHandwritingEdgeCases:
         img[40:60, 50:70] = 0
         img[40:60, 65:85] = 0
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             mock.return_value = SegmentationResult(
-                characters=[
-                    Segment(x=50, y=40, width=35, height=20)
-                ]
+                characters=[Segment(x=50, y=40, width=35, height=20)]
             )
 
             result = recognizer.recognize_handwriting(img)
@@ -439,12 +412,12 @@ class TestHandwritingEdgeCases:
         """Test mixed handwriting styles."""
         img = np.ones((100, 300), dtype=np.uint8) * 255
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             # Simulate segmentation finding both styles
             mock.return_value = SegmentationResult(
                 characters=[
                     Segment(x=20, y=20, width=30, height=40),
-                    Segment(x=100, y=20, width=50, height=40)  # Wider for cursive
+                    Segment(x=100, y=20, width=50, height=40),  # Wider for cursive
                 ]
             )
 
@@ -458,7 +431,7 @@ class TestHandwritingEdgeCases:
         img = np.ones((30, 80), dtype=np.uint8) * 255
         img[10:20, 10:25] = 0
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             mock.return_value = SegmentationResult(
                 characters=[Segment(x=10, y=10, width=15, height=10)]
             )
@@ -473,7 +446,7 @@ class TestHandwritingEdgeCases:
         img = np.ones((400, 800), dtype=np.uint8) * 255
         img[100:300, 100:250] = 0
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             mock.return_value = SegmentationResult(
                 characters=[Segment(x=100, y=100, width=150, height=200)]
             )
@@ -484,15 +457,18 @@ class TestHandwritingEdgeCases:
 
     def test_missing_dependencies(self):
         """Test handling of missing dependencies."""
-        with patch('src.vision.handwriting_engine.cv2', None):
+        with patch("src.vision.handwriting_engine.cv2", None):
             with pytest.raises(ImportError, match="OpenCV"):
                 HandwritingRecognizer()
 
-    @pytest.mark.parametrize("age,expected_threshold", [
-        (6, 0.60),  # Early elementary
-        (9, 0.70),  # Mid elementary
-        (11, 0.75),  # Late elementary
-    ])
+    @pytest.mark.parametrize(
+        "age,expected_threshold",
+        [
+            (6, 0.60),  # Early elementary
+            (9, 0.70),  # Mid elementary
+            (11, 0.75),  # Late elementary
+        ],
+    )
     def test_age_appropriate_thresholds(self, recognizer, age, expected_threshold):
         """Test age-appropriate confidence thresholds."""
         if age <= 8:
@@ -512,22 +488,18 @@ class TestHandwritingEdgeCases:
         word1 = HandwritingWord("x", 0.8, (10, 20, 30, 40))
         word2 = HandwritingWord("2", 0.85, (35, 20, 55, 40))
 
-        result = HandwritingResult(
-            words=[word1, word2],
-            full_text="x 2",
-            average_confidence=0.825
-        )
+        result = HandwritingResult(words=[word1, word2], full_text="x 2", average_confidence=0.825)
 
         processed = recognizer._postprocess_math_expression(result)
 
         # 'x' should be converted to '×'
-        assert '×' in processed.full_text or 'x' in processed.full_text
+        assert "×" in processed.full_text or "x" in processed.full_text
 
     def test_no_text_found(self, recognizer):
         """Test handling when no text is found."""
         blank_img = np.ones((100, 200), dtype=np.uint8) * 255
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             mock.return_value = SegmentationResult()  # No segments
 
             result = recognizer.recognize_handwriting(blank_img)
@@ -540,7 +512,7 @@ class TestHandwritingEdgeCases:
         img = np.ones((50, 50), dtype=np.uint8) * 255
         img[15:35, 20:30] = 0
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             mock.return_value = SegmentationResult(
                 characters=[Segment(x=20, y=15, width=10, height=20)]
             )
@@ -553,10 +525,10 @@ class TestHandwritingEdgeCases:
         """Test word segmentation without character segmentation."""
         img = np.ones((100, 200), dtype=np.uint8) * 255
 
-        with patch('src.vision.character_segmenter.CharacterSegmenter.segment_all') as mock:
+        with patch("src.vision.character_segmenter.CharacterSegmenter.segment_all") as mock:
             mock.return_value = SegmentationResult(
                 words=[Segment(x=20, y=20, width=100, height=40)],
-                characters=[]  # No character segmentation
+                characters=[],  # No character segmentation
             )
 
             result = recognizer.recognize_handwriting(img)

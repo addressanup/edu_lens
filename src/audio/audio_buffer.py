@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BufferConfig:
     """Audio buffer configuration."""
+
     max_duration: float = 30.0  # Maximum buffer duration (seconds)
     sample_rate: int = 16000  # Sample rate (Hz)
     silence_threshold: float = 0.02  # RMS threshold for silence
@@ -34,6 +35,7 @@ class BufferConfig:
 @dataclass
 class SpeechSegment:
     """Extracted speech segment with metadata."""
+
     audio_data: np.ndarray
     start_time: float
     end_time: float
@@ -163,8 +165,16 @@ class AudioBuffer:
 
         # Calculate timestamps
         if self.timestamps:
-            start_time = self.timestamps[padded_start] if padded_start < len(self.timestamps) else time.time()
-            end_time = self.timestamps[padded_end - 1] if padded_end <= len(self.timestamps) else time.time()
+            start_time = (
+                self.timestamps[padded_start]
+                if padded_start < len(self.timestamps)
+                else time.time()
+            )
+            end_time = (
+                self.timestamps[padded_end - 1]
+                if padded_end <= len(self.timestamps)
+                else time.time()
+            )
         else:
             start_time = time.time()
             end_time = start_time
@@ -178,7 +188,7 @@ class AudioBuffer:
             end_time=end_time,
             duration=(padded_end - padded_start) / self.config.sample_rate,
             rms_level=rms_level,
-            is_speech=True
+            is_speech=True,
         )
 
     def get_latest(self, duration: float) -> np.ndarray:
@@ -260,7 +270,7 @@ class AudioBuffer:
         if len(self.buffer) < self.silence_samples:
             return False
 
-        audio_data = np.array(list(self.buffer)[-self.silence_samples:], dtype=np.float32)
+        audio_data = np.array(list(self.buffer)[-self.silence_samples :], dtype=np.float32)
         rms = self._calculate_rms(audio_data)
         return rms >= self.config.silence_threshold
 
@@ -282,10 +292,7 @@ class AudioBuffer:
         """
         return len(self.buffer) / self.max_samples
 
-    def _detect_speech_boundaries(
-        self,
-        audio_data: np.ndarray
-    ) -> Tuple[int, Optional[int], bool]:
+    def _detect_speech_boundaries(self, audio_data: np.ndarray) -> Tuple[int, Optional[int], bool]:
         """
         Detect speech start and end boundaries.
 
@@ -306,7 +313,7 @@ class AudioBuffer:
         # Calculate frame energies
         energies = []
         for i in range(0, len(audio_data) - frame_length, hop_length):
-            frame = audio_data[i:i + frame_length]
+            frame = audio_data[i : i + frame_length]
             rms = self._calculate_rms(frame)
             energies.append(rms)
 
@@ -333,7 +340,7 @@ class AudioBuffer:
 
         if frames_after >= silence_frames_needed:
             # Check if trailing frames are silent
-            trailing_energies = energies[end_frame + 1:end_frame + 1 + silence_frames_needed]
+            trailing_energies = energies[end_frame + 1 : end_frame + 1 + silence_frames_needed]
             if np.all(trailing_energies < self.config.silence_threshold):
                 # Speech has ended
                 return start_idx, end_idx, True
@@ -354,7 +361,7 @@ class AudioBuffer:
         if len(samples) == 0:
             return 0.0
 
-        return float(np.sqrt(np.mean(samples ** 2)))
+        return float(np.sqrt(np.mean(samples**2)))
 
     def _update_statistics(self, samples: np.ndarray) -> None:
         """
@@ -385,7 +392,7 @@ class AudioBuffer:
             "is_silent": self.is_silent(),
             "has_speech": self.has_speech(),
             "total_samples": self.total_samples_received,
-            "uptime": time.time() - self._start_time
+            "uptime": time.time() - self._start_time,
         }
 
     def reset_peak_level(self) -> None:
@@ -445,10 +452,7 @@ class AsyncAudioBuffer:
             SpeechSegment if available, None on timeout
         """
         try:
-            segment = await asyncio.wait_for(
-                self._segment_queue.get(),
-                timeout=timeout
-            )
+            segment = await asyncio.wait_for(self._segment_queue.get(), timeout=timeout)
             return segment
         except asyncio.TimeoutError:
             return None
@@ -464,9 +468,7 @@ class AsyncAudioBuffer:
             return
 
         self._monitoring = True
-        self._monitor_task = asyncio.create_task(
-            self._monitor_speech(check_interval)
-        )
+        self._monitor_task = asyncio.create_task(self._monitor_speech(check_interval))
         logger.info("Started audio buffer monitoring")
 
     async def stop_monitoring(self) -> None:
@@ -495,10 +497,7 @@ class AsyncAudioBuffer:
         while self._monitoring:
             try:
                 # Check for speech segment
-                segment = await asyncio.to_thread(
-                    self.buffer.get_speech_segment,
-                    timeout=0.0
-                )
+                segment = await asyncio.to_thread(self.buffer.get_speech_segment, timeout=0.0)
 
                 if segment:
                     await self._segment_queue.put(segment)

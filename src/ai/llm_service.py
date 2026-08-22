@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class LLMProvider(Enum):
     """Supported LLM providers."""
+
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
     GOOGLE = "google"
@@ -39,6 +40,7 @@ class LLMProvider(Enum):
 @dataclass
 class LLMConfig:
     """Configuration for LLM service."""
+
     provider: LLMProvider = LLMProvider.ANTHROPIC
     model: str = "claude-sonnet-4-20250514"
     api_key: Optional[str] = None
@@ -85,6 +87,7 @@ class LLMMessage:
         ]
     Images are only valid in "user" role messages.
     """
+
     role: str  # "system", "user", "assistant"
     content: Union[str, List[Dict[str, Any]]]
     name: Optional[str] = None
@@ -112,14 +115,14 @@ class LLMMessage:
         if not isinstance(self.content, list):
             return False
         return any(
-            isinstance(block, dict) and block.get("type") == "image_url"
-            for block in self.content
+            isinstance(block, dict) and block.get("type") == "image_url" for block in self.content
         )
 
 
 @dataclass
 class LLMResponse:
     """Response from LLM."""
+
     content: str
     model: str
     provider: LLMProvider
@@ -135,19 +138,13 @@ class BaseLLMProvider(ABC):
         self.config = config
 
     @abstractmethod
-    async def generate(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
-    ) -> LLMResponse:
+    async def generate(self, messages: List[LLMMessage], **kwargs) -> LLMResponse:
         """Generate a response from the LLM."""
         pass
 
     @abstractmethod
     async def generate_stream(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
+        self, messages: List[LLMMessage], **kwargs
     ) -> AsyncGenerator[str, None]:
         """Generate a streaming response from the LLM."""
         pass
@@ -179,6 +176,7 @@ class BaseLLMProvider(ABC):
         if child_profile:
             try:
                 from src.ai.prompt_builder import build_prompt_from_db_child
+
                 system_content = build_prompt_from_db_child(
                     child_data=child_profile,
                     context=context,
@@ -235,16 +233,13 @@ class AnthropicProvider(BaseLLMProvider):
         if self._client is None:
             try:
                 import anthropic
+
                 self._client = anthropic.Anthropic(api_key=self.config.api_key)
             except ImportError:
                 raise ImportError("anthropic package required. Install with: pip install anthropic")
         return self._client
 
-    async def generate(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
-    ) -> LLMResponse:
+    async def generate(self, messages: List[LLMMessage], **kwargs) -> LLMResponse:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
@@ -262,7 +257,7 @@ class AnthropicProvider(BaseLLMProvider):
             max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
             temperature=kwargs.get("temperature", self.config.temperature),
             system=system_content.strip() if system_content else None,
-            messages=conversation
+            messages=conversation,
         )
 
         return LLMResponse(
@@ -271,15 +266,13 @@ class AnthropicProvider(BaseLLMProvider):
             provider=LLMProvider.ANTHROPIC,
             usage={
                 "input_tokens": response.usage.input_tokens,
-                "output_tokens": response.usage.output_tokens
+                "output_tokens": response.usage.output_tokens,
             },
-            finish_reason=response.stop_reason
+            finish_reason=response.stop_reason,
         )
 
     async def generate_stream(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
+        self, messages: List[LLMMessage], **kwargs
     ) -> AsyncGenerator[str, None]:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
@@ -297,7 +290,7 @@ class AnthropicProvider(BaseLLMProvider):
             max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
             temperature=kwargs.get("temperature", self.config.temperature),
             system=system_content.strip() if system_content else None,
-            messages=conversation
+            messages=conversation,
         ) as stream:
             for text in stream.text_stream:
                 yield text
@@ -314,19 +307,13 @@ class OpenAIProvider(BaseLLMProvider):
         if self._client is None:
             try:
                 from openai import OpenAI
-                self._client = OpenAI(
-                    api_key=self.config.api_key,
-                    base_url=self.config.base_url
-                )
+
+                self._client = OpenAI(api_key=self.config.api_key, base_url=self.config.base_url)
             except ImportError:
                 raise ImportError("openai package required. Install with: pip install openai")
         return self._client
 
-    async def generate(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
-    ) -> LLMResponse:
+    async def generate(self, messages: List[LLMMessage], **kwargs) -> LLMResponse:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
@@ -336,7 +323,7 @@ class OpenAIProvider(BaseLLMProvider):
             model=kwargs.get("model", self.config.model),
             max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
             temperature=kwargs.get("temperature", self.config.temperature),
-            messages=openai_messages
+            messages=openai_messages,
         )
 
         return LLMResponse(
@@ -345,15 +332,13 @@ class OpenAIProvider(BaseLLMProvider):
             provider=LLMProvider.OPENAI,
             usage={
                 "input_tokens": response.usage.prompt_tokens,
-                "output_tokens": response.usage.completion_tokens
+                "output_tokens": response.usage.completion_tokens,
             },
-            finish_reason=response.choices[0].finish_reason
+            finish_reason=response.choices[0].finish_reason,
         )
 
     async def generate_stream(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
+        self, messages: List[LLMMessage], **kwargs
     ) -> AsyncGenerator[str, None]:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
@@ -365,7 +350,7 @@ class OpenAIProvider(BaseLLMProvider):
             max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
             temperature=kwargs.get("temperature", self.config.temperature),
             messages=openai_messages,
-            stream=True
+            stream=True,
         )
 
         for chunk in stream:
@@ -394,19 +379,18 @@ class DeepSeekProvider(BaseLLMProvider):
         if self._client is None:
             try:
                 from openai import OpenAI
+
                 self._client = OpenAI(
                     api_key=self.config.api_key,
-                    base_url=self.config.base_url or self.DEEPSEEK_BASE_URL
+                    base_url=self.config.base_url or self.DEEPSEEK_BASE_URL,
                 )
             except ImportError:
-                raise ImportError("openai package required for DeepSeek. Install with: pip install openai")
+                raise ImportError(
+                    "openai package required for DeepSeek. Install with: pip install openai"
+                )
         return self._client
 
-    async def generate(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
-    ) -> LLMResponse:
+    async def generate(self, messages: List[LLMMessage], **kwargs) -> LLMResponse:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
@@ -416,7 +400,7 @@ class DeepSeekProvider(BaseLLMProvider):
             model=kwargs.get("model", self.config.model),
             max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
             temperature=kwargs.get("temperature", self.config.temperature),
-            messages=openai_messages
+            messages=openai_messages,
         )
 
         return LLMResponse(
@@ -425,15 +409,13 @@ class DeepSeekProvider(BaseLLMProvider):
             provider=LLMProvider.DEEPSEEK,
             usage={
                 "input_tokens": response.usage.prompt_tokens,
-                "output_tokens": response.usage.completion_tokens
+                "output_tokens": response.usage.completion_tokens,
             },
-            finish_reason=response.choices[0].finish_reason
+            finish_reason=response.choices[0].finish_reason,
         )
 
     async def generate_stream(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
+        self, messages: List[LLMMessage], **kwargs
     ) -> AsyncGenerator[str, None]:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
@@ -445,7 +427,7 @@ class DeepSeekProvider(BaseLLMProvider):
             max_tokens=kwargs.get("max_tokens", self.config.max_tokens),
             temperature=kwargs.get("temperature", self.config.temperature),
             messages=openai_messages,
-            stream=True
+            stream=True,
         )
 
         for chunk in stream:
@@ -464,17 +446,16 @@ class GoogleProvider(BaseLLMProvider):
         if self._client is None:
             try:
                 import google.generativeai as genai
+
                 genai.configure(api_key=self.config.api_key)
                 self._client = genai.GenerativeModel(self.config.model)
             except ImportError:
-                raise ImportError("google-generativeai package required. Install with: pip install google-generativeai")
+                raise ImportError(
+                    "google-generativeai package required. Install with: pip install google-generativeai"
+                )
         return self._client
 
-    async def generate(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
-    ) -> LLMResponse:
+    async def generate(self, messages: List[LLMMessage], **kwargs) -> LLMResponse:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
@@ -503,7 +484,7 @@ class GoogleProvider(BaseLLMProvider):
             generation_config={
                 "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens),
                 "temperature": kwargs.get("temperature", self.config.temperature),
-            }
+            },
         )
 
         return LLMResponse(
@@ -511,13 +492,11 @@ class GoogleProvider(BaseLLMProvider):
             model=self.config.model,
             provider=LLMProvider.GOOGLE,
             usage={},
-            finish_reason="stop"
+            finish_reason="stop",
         )
 
     async def generate_stream(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
+        self, messages: List[LLMMessage], **kwargs
     ) -> AsyncGenerator[str, None]:
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
@@ -544,7 +523,7 @@ class GoogleProvider(BaseLLMProvider):
                 "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens),
                 "temperature": kwargs.get("temperature", self.config.temperature),
             },
-            stream=True
+            stream=True,
         )
 
         for chunk in response:
@@ -559,19 +538,12 @@ class OllamaProvider(BaseLLMProvider):
         super().__init__(config)
         self.base_url = config.base_url or "http://localhost:11434"
 
-    async def generate(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
-    ) -> LLMResponse:
+    async def generate(self, messages: List[LLMMessage], **kwargs) -> LLMResponse:
         import httpx
 
         messages = self._apply_safety_filter(messages)
 
-        ollama_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        ollama_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -583,9 +555,9 @@ class OllamaProvider(BaseLLMProvider):
                     "options": {
                         "temperature": kwargs.get("temperature", self.config.temperature),
                         "num_predict": kwargs.get("max_tokens", self.config.max_tokens),
-                    }
+                    },
                 },
-                timeout=self.config.timeout
+                timeout=self.config.timeout,
             )
             data = response.json()
 
@@ -595,24 +567,19 @@ class OllamaProvider(BaseLLMProvider):
             provider=LLMProvider.OLLAMA,
             usage={
                 "input_tokens": data.get("prompt_eval_count", 0),
-                "output_tokens": data.get("eval_count", 0)
+                "output_tokens": data.get("eval_count", 0),
             },
-            finish_reason="stop"
+            finish_reason="stop",
         )
 
     async def generate_stream(
-        self,
-        messages: List[LLMMessage],
-        **kwargs
+        self, messages: List[LLMMessage], **kwargs
     ) -> AsyncGenerator[str, None]:
         import httpx
 
         messages = self._apply_safety_filter(messages)
 
-        ollama_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        ollama_messages = [{"role": msg.role, "content": msg.content} for msg in messages]
 
         async with httpx.AsyncClient() as client:
             async with client.stream(
@@ -625,11 +592,12 @@ class OllamaProvider(BaseLLMProvider):
                     "options": {
                         "temperature": kwargs.get("temperature", self.config.temperature),
                         "num_predict": kwargs.get("max_tokens", self.config.max_tokens),
-                    }
+                    },
                 },
-                timeout=self.config.timeout
+                timeout=self.config.timeout,
             ) as response:
                 import json
+
                 async for line in response.aiter_lines():
                     if line:
                         data = json.loads(line)
@@ -674,7 +642,7 @@ class LLMService:
         provider: Optional[str] = None,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize LLM service.
@@ -694,7 +662,7 @@ class LLMService:
                 provider=provider_enum,
                 model=model or self._default_model(provider_enum),
                 api_key=api_key,
-                **kwargs
+                **kwargs,
             )
 
         provider_class = self.PROVIDER_MAP.get(self.config.provider)
@@ -702,7 +670,9 @@ class LLMService:
             raise ValueError(f"Unsupported provider: {self.config.provider}")
 
         self._provider = provider_class(self.config)
-        logger.info(f"Initialized LLM service with {self.config.provider.value}/{self.config.model}")
+        logger.info(
+            f"Initialized LLM service with {self.config.provider.value}/{self.config.model}"
+        )
 
     def _default_model(self, provider: LLMProvider) -> str:
         """Get default model for provider."""
@@ -716,9 +686,7 @@ class LLMService:
         return defaults.get(provider, "default")
 
     async def generate(
-        self,
-        messages: Union[List[LLMMessage], List[Dict[str, str]], str],
-        **kwargs
+        self, messages: Union[List[LLMMessage], List[Dict[str, str]], str], **kwargs
     ) -> LLMResponse:
         """
         Generate a response from the LLM.
@@ -742,9 +710,7 @@ class LLMService:
         return await self._provider.generate(messages, **kwargs)
 
     async def generate_stream(
-        self,
-        messages: Union[List[LLMMessage], List[Dict[str, str]], str],
-        **kwargs
+        self, messages: Union[List[LLMMessage], List[Dict[str, str]], str], **kwargs
     ) -> AsyncGenerator[str, None]:
         """Generate a streaming response."""
         if isinstance(messages, str):
@@ -763,7 +729,7 @@ class LLMService:
         history: Optional[List[LLMMessage]] = None,
         system: Optional[str] = None,
         detail: str = "low",
-        **kwargs
+        **kwargs,
     ) -> LLMResponse:
         """
         Generate a response that sees an image (vision models only).
@@ -811,9 +777,7 @@ class LLMService:
         return await self.generate(messages, model=vision_model, **kwargs)
 
     def generate_sync(
-        self,
-        messages: Union[List[LLMMessage], List[Dict[str, str]], str],
-        **kwargs
+        self, messages: Union[List[LLMMessage], List[Dict[str, str]], str], **kwargs
     ) -> LLMResponse:
         """Synchronous wrapper for generate()."""
         return asyncio.run(self.generate(messages, **kwargs))
@@ -836,10 +800,7 @@ class LLMService:
 
 # Convenience function for quick usage
 async def generate_response(
-    prompt: str,
-    provider: str = "anthropic",
-    model: Optional[str] = None,
-    **kwargs
+    prompt: str, provider: str = "anthropic", model: Optional[str] = None, **kwargs
 ) -> str:
     """
     Quick function to generate a response.

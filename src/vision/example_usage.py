@@ -7,11 +7,12 @@ educational materials.
 Author: Vision Processing Agent (VIS-001)
 """
 
-import cv2
-import numpy as np
 from pathlib import Path
 
-from src.vision.ocr_engine import OCREngine, OCRBackend, DocumentType
+import cv2
+import numpy as np
+
+from src.vision.ocr_engine import DocumentType, OCRBackend, OCREngine
 from src.vision.preprocessing import ImagePreprocessor
 
 
@@ -34,7 +35,7 @@ def example_basic_ocr():
         1.0,
         (0, 0, 0),
         2,
-        cv2.LINE_AA
+        cv2.LINE_AA,
     )
 
     # Extract text
@@ -59,9 +60,7 @@ def example_educational_mode():
 
     # Configure for educational content
     engine.configure_for_education(
-        document_type=DocumentType.WORKSHEET,
-        enable_math_symbols=True,
-        enable_layout_analysis=True
+        document_type=DocumentType.WORKSHEET, enable_math_symbols=True, enable_layout_analysis=True
     )
 
     # Create worksheet-like image
@@ -75,7 +74,7 @@ def example_educational_mode():
     questions = [
         "1. What is 2 + 2?",
         "2. How many apples are there?",
-        "3. Circle the correct answer"
+        "3. Circle the correct answer",
     ]
 
     y_offset = 30
@@ -88,7 +87,7 @@ def example_educational_mode():
             0.7,
             (0, 0, 0),
             2,
-            cv2.LINE_AA
+            cv2.LINE_AA,
         )
         y_offset += 80
 
@@ -116,7 +115,7 @@ def example_preprocessing():
         "contrast_method": "clahe",
         "binarization_method": "adaptive",
         "adaptive_block_size": 11,
-        "adaptive_c": 2
+        "adaptive_c": 2,
     }
 
     preprocessor = ImagePreprocessor(config=config)
@@ -131,7 +130,7 @@ def example_preprocessing():
         1.5,
         (0, 0, 0),
         2,
-        cv2.LINE_AA
+        cv2.LINE_AA,
     )
 
     # Add noise
@@ -168,20 +167,11 @@ def example_structured_output():
         ("Title: Animals", (50, 50)),
         ("Dogs are friendly animals", (50, 120)),
         ("Cats are independent", (50, 180)),
-        ("Birds can fly", (50, 240))
+        ("Birds can fly", (50, 240)),
     ]
 
     for text, (x, y) in texts:
-        cv2.putText(
-            image,
-            text,
-            (x, y),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.8,
-            (0, 0, 0),
-            2,
-            cv2.LINE_AA
-        )
+        cv2.putText(image, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, cv2.LINE_AA)
 
     # Extract structured content
     result = engine.extract_structured_content(image)
@@ -206,11 +196,7 @@ def example_document_types():
     engine = OCREngine()
 
     # Create sample images for different document types
-    document_types = [
-        DocumentType.TEXTBOOK,
-        DocumentType.WORKSHEET,
-        DocumentType.FLASHCARD
-    ]
+    document_types = [DocumentType.TEXTBOOK, DocumentType.WORKSHEET, DocumentType.FLASHCARD]
 
     for doc_type in document_types:
         # Configure for document type
@@ -226,7 +212,7 @@ def example_document_types():
             1.0,
             (0, 0, 0),
             2,
-            cv2.LINE_AA
+            cv2.LINE_AA,
         )
 
         # Process
@@ -254,7 +240,7 @@ def example_accuracy_measurement():
         "The cat sat on the mat",
         "1 2 3 4 5 6 7 8 9 10",
         "What is your name?",
-        "Red blue green yellow"
+        "Red blue green yellow",
     ]
 
     total_accuracy = 0.0
@@ -263,24 +249,14 @@ def example_accuracy_measurement():
         # Create test image
         image = np.ones((150, 800, 3), dtype=np.uint8) * 255
         cv2.putText(
-            image,
-            ground_truth,
-            (50, 80),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1.2,
-            (0, 0, 0),
-            2,
-            cv2.LINE_AA
+            image, ground_truth, (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 0), 2, cv2.LINE_AA
         )
 
         # Recognize
         result = engine.extract_structured_content(image)
 
         # Calculate accuracy
-        accuracy = metrics.calculate_character_accuracy(
-            ground_truth,
-            result.full_text
-        )
+        accuracy = metrics.calculate_character_accuracy(ground_truth, result.full_text)
 
         total_accuracy += accuracy
 

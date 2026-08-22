@@ -22,23 +22,26 @@ logger = logging.getLogger(__name__)
 
 class ActivityState(Enum):
     """Child's activity state."""
-    ACTIVE = "active"      # Writing/working
-    IDLE = "idle"          # No activity detected
-    ERASING = "erasing"    # Erasing motion detected
+
+    ACTIVE = "active"  # Writing/working
+    IDLE = "idle"  # No activity detected
+    ERASING = "erasing"  # Erasing motion detected
     UNKNOWN = "unknown"
 
 
 class ProblemStatus(Enum):
     """Status of a problem."""
-    ACTIVE = "active"          # Currently being worked on
-    COMPLETED = "completed"    # Finished correctly
-    SKIPPED = "skipped"        # Moved on without completing
-    ABANDONED = "abandoned"    # No longer working on it
+
+    ACTIVE = "active"  # Currently being worked on
+    COMPLETED = "completed"  # Finished correctly
+    SKIPPED = "skipped"  # Moved on without completing
+    ABANDONED = "abandoned"  # No longer working on it
 
 
 @dataclass
 class Problem:
     """A tracked homework problem."""
+
     id: str
     text: str
     problem_type: str  # "equation", "text", "multiple_choice"
@@ -66,6 +69,7 @@ class Problem:
 @dataclass
 class TrackingResult:
     """Result of problem tracking."""
+
     new_problem: bool = False
     problem: Optional[Dict[str, Any]] = None
     activity: str = ActivityState.UNKNOWN.value
@@ -126,11 +130,7 @@ class ProblemTracker:
         # Focus region tracking
         self._last_focus_region: Optional[Tuple[int, int, int, int]] = None
 
-    async def track(
-        self,
-        frame: Any,
-        current_problem: Optional[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    async def track(self, frame: Any, current_problem: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Track problem engagement from a frame.
 
@@ -184,16 +184,19 @@ class ProblemTracker:
                 )
 
                 # Record activity event
-                self._current_problem.activity_events.append({
-                    "timestamp": time.time(),
-                    "activity": activity.value,
-                    "motion_score": motion_score,
-                })
+                self._current_problem.activity_events.append(
+                    {
+                        "timestamp": time.time(),
+                        "activity": activity.value,
+                        "motion_score": motion_score,
+                    }
+                )
 
                 # Limit event history
                 if len(self._current_problem.activity_events) > 100:
-                    self._current_problem.activity_events = \
-                        self._current_problem.activity_events[-50:]
+                    self._current_problem.activity_events = self._current_problem.activity_events[
+                        -50:
+                    ]
 
             # Store frame for next comparison
             self._last_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -208,17 +211,16 @@ class ProblemTracker:
                 focus_changed=new_problem,
                 metadata={
                     "idle_time": time.time() - self._last_activity_time,
-                    "problem_count": len(self._problem_history) + (1 if self._current_problem else 0),
-                }
+                    "problem_count": len(self._problem_history)
+                    + (1 if self._current_problem else 0),
+                },
             )
 
             return result.to_dict()
 
         except Exception as e:
             logger.error(f"Problem tracking error: {e}")
-            return TrackingResult(
-                metadata={"error": str(e)}
-            ).to_dict()
+            return TrackingResult(metadata={"error": str(e)}).to_dict()
 
     def _decode_frame(self, jpeg_data: bytes) -> Optional[np.ndarray]:
         """Decode JPEG bytes to numpy array."""
@@ -277,9 +279,7 @@ class ProblemTracker:
             logger.debug(f"Motion calculation error: {e}")
             return 0.0
 
-    def _classify_activity(
-        self, motion_score: float, img: np.ndarray
-    ) -> ActivityState:
+    def _classify_activity(self, motion_score: float, img: np.ndarray) -> ActivityState:
         """
         Classify activity state based on motion and patterns.
 

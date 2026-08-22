@@ -19,14 +19,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from .student_model import StudentModel, MasteryLevel
-
+from .student_model import MasteryLevel, StudentModel
 
 logger = logging.getLogger(__name__)
 
 
 class AttemptOutcome(Enum):
     """Outcome of a problem attempt."""
+
     CORRECT_FIRST_TRY = "correct_first_try"
     CORRECT_WITH_HINTS = "correct_with_hints"
     CORRECT_AFTER_RETRY = "correct_after_retry"
@@ -37,6 +37,7 @@ class AttemptOutcome(Enum):
 @dataclass
 class ProblemAttempt:
     """Record of a single problem attempt."""
+
     timestamp: float
     concept_id: str
     problem_id: str
@@ -49,20 +50,21 @@ class ProblemAttempt:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'timestamp': self.timestamp,
-            'concept_id': self.concept_id,
-            'problem_id': self.problem_id,
-            'outcome': self.outcome.value,
-            'time_spent': self.time_spent,
-            'hints_used': self.hints_used,
-            'difficulty': self.difficulty,
-            'correct': self.correct
+            "timestamp": self.timestamp,
+            "concept_id": self.concept_id,
+            "problem_id": self.problem_id,
+            "outcome": self.outcome.value,
+            "time_spent": self.time_spent,
+            "hints_used": self.hints_used,
+            "difficulty": self.difficulty,
+            "correct": self.correct,
         }
 
 
 @dataclass
 class ConceptProgress:
     """Progress tracking for a single concept."""
+
     concept_id: str
     first_attempt: Optional[float] = None
     last_practice: Optional[float] = None
@@ -114,8 +116,7 @@ class ConceptProgress:
 
         # Update easiness factor
         self.easiness_factor = max(
-            1.3,
-            self.easiness_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
+            1.3, self.easiness_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
         )
 
         # Set next review date
@@ -139,25 +140,25 @@ class ConceptProgress:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'concept_id': self.concept_id,
-            'first_attempt': self.first_attempt,
-            'last_practice': self.last_practice,
-            'total_attempts': self.total_attempts,
-            'successful_attempts': self.successful_attempts,
-            'failed_attempts': self.failed_attempts,
-            'easiness_factor': self.easiness_factor,
-            'interval': self.interval,
-            'repetitions': self.repetitions,
-            'next_review_date': self.next_review_date,
-            'mastery_score': self.mastery_score,
-            'mastery_level': self.mastery_level,
-            'average_time': self.average_time,
-            'best_time': self.best_time,
-            'average_difficulty': self.average_difficulty
+            "concept_id": self.concept_id,
+            "first_attempt": self.first_attempt,
+            "last_practice": self.last_practice,
+            "total_attempts": self.total_attempts,
+            "successful_attempts": self.successful_attempts,
+            "failed_attempts": self.failed_attempts,
+            "easiness_factor": self.easiness_factor,
+            "interval": self.interval,
+            "repetitions": self.repetitions,
+            "next_review_date": self.next_review_date,
+            "mastery_score": self.mastery_score,
+            "mastery_level": self.mastery_level,
+            "average_time": self.average_time,
+            "best_time": self.best_time,
+            "average_difficulty": self.average_difficulty,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ConceptProgress':
+    def from_dict(cls, data: Dict[str, Any]) -> "ConceptProgress":
         """Create from dictionary."""
         return cls(**data)
 
@@ -165,6 +166,7 @@ class ConceptProgress:
 @dataclass
 class ProgressReport:
     """Comprehensive progress report."""
+
     student_id: str
     report_date: float
     total_concepts: int
@@ -196,23 +198,23 @@ class ProgressReport:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'student_id': self.student_id,
-            'report_date': self.report_date,
-            'total_concepts': self.total_concepts,
-            'mastered_concepts': self.mastered_concepts,
-            'in_progress_concepts': self.in_progress_concepts,
-            'concepts_needing_review': self.concepts_needing_review,
-            'overall_accuracy': self.overall_accuracy,
-            'average_time_per_problem': self.average_time_per_problem,
-            'problems_solved_today': self.problems_solved_today,
-            'problems_solved_this_week': self.problems_solved_this_week,
-            'mastery_distribution': self.mastery_distribution,
-            'top_strengths': self.top_strengths,
-            'areas_for_improvement': self.areas_for_improvement,
-            'concepts_mastered_this_week': self.concepts_mastered_this_week,
-            'concepts_mastered_this_month': self.concepts_mastered_this_month,
-            'recommended_practice': self.recommended_practice,
-            'recommended_review': self.recommended_review
+            "student_id": self.student_id,
+            "report_date": self.report_date,
+            "total_concepts": self.total_concepts,
+            "mastered_concepts": self.mastered_concepts,
+            "in_progress_concepts": self.in_progress_concepts,
+            "concepts_needing_review": self.concepts_needing_review,
+            "overall_accuracy": self.overall_accuracy,
+            "average_time_per_problem": self.average_time_per_problem,
+            "problems_solved_today": self.problems_solved_today,
+            "problems_solved_this_week": self.problems_solved_this_week,
+            "mastery_distribution": self.mastery_distribution,
+            "top_strengths": self.top_strengths,
+            "areas_for_improvement": self.areas_for_improvement,
+            "concepts_mastered_this_week": self.concepts_mastered_this_week,
+            "concepts_mastered_this_month": self.concepts_mastered_this_month,
+            "recommended_practice": self.recommended_practice,
+            "recommended_review": self.recommended_review,
         }
 
 
@@ -224,11 +226,7 @@ class ProgressTracker:
     suggests reviews, and generates progress reports.
     """
 
-    def __init__(
-        self,
-        student_model: StudentModel,
-        storage_path: Optional[str] = None
-    ):
+    def __init__(self, student_model: StudentModel, storage_path: Optional[str] = None):
         """
         Initialize ProgressTracker.
 
@@ -246,7 +244,7 @@ class ProgressTracker:
 
         # Statistics
         self.daily_stats: Dict[str, Dict[str, int]] = defaultdict(
-            lambda: {'attempts': 0, 'correct': 0, 'time_spent': 0}
+            lambda: {"attempts": 0, "correct": 0, "time_spent": 0}
         )
 
         logger.info(f"ProgressTracker initialized for student {student_model.student_id}")
@@ -259,7 +257,7 @@ class ProgressTracker:
         time_spent: float,
         hints_used: int,
         difficulty: int,
-        attempts_on_problem: int = 1
+        attempts_on_problem: int = 1,
     ) -> Dict[str, Any]:
         """
         Record a problem attempt and update progress.
@@ -296,7 +294,7 @@ class ProgressTracker:
             time_spent=time_spent,
             hints_used=hints_used,
             difficulty=difficulty,
-            correct=correct
+            correct=correct,
         )
 
         # Add to history (maintain size limit)
@@ -337,7 +335,9 @@ class ProgressTracker:
         if progress.average_difficulty == 0:
             progress.average_difficulty = difficulty
         else:
-            progress.average_difficulty = alpha * difficulty + (1 - alpha) * progress.average_difficulty
+            progress.average_difficulty = (
+                alpha * difficulty + (1 - alpha) * progress.average_difficulty
+            )
 
         # Update spaced repetition schedule
         quality = self._calculate_recall_quality(outcome, hints_used, attempts_on_problem)
@@ -348,11 +348,11 @@ class ProgressTracker:
         progress.mastery_level = self.student_model.get_mastery_level(concept_id).name
 
         # Update daily stats
-        today = datetime.now().strftime('%Y-%m-%d')
-        self.daily_stats[today]['attempts'] += 1
+        today = datetime.now().strftime("%Y-%m-%d")
+        self.daily_stats[today]["attempts"] += 1
         if correct:
-            self.daily_stats[today]['correct'] += 1
-        self.daily_stats[today]['time_spent'] += int(time_spent)
+            self.daily_stats[today]["correct"] += 1
+        self.daily_stats[today]["time_spent"] += int(time_spent)
 
         logger.debug(
             f"Recorded attempt for {concept_id}: {outcome.value}, "
@@ -360,11 +360,11 @@ class ProgressTracker:
         )
 
         return {
-            'mastery_score': progress.mastery_score,
-            'mastery_level': progress.mastery_level,
-            'next_review_days': progress.days_until_review(),
-            'total_attempts': progress.total_attempts,
-            'success_rate': progress.successful_attempts / max(progress.total_attempts, 1)
+            "mastery_score": progress.mastery_score,
+            "mastery_level": progress.mastery_level,
+            "next_review_days": progress.days_until_review(),
+            "total_attempts": progress.total_attempts,
+            "success_rate": progress.successful_attempts / max(progress.total_attempts, 1),
         }
 
     def calculate_mastery(self, concept_id: str) -> float:
@@ -391,10 +391,7 @@ class ProgressTracker:
         success_component = success_rate * 0.4
 
         # 2. Recent performance (30%)
-        recent_attempts = [
-            a for a in self.attempt_history[-20:]
-            if a.concept_id == concept_id
-        ]
+        recent_attempts = [a for a in self.attempt_history[-20:] if a.concept_id == concept_id]
         if recent_attempts:
             recent_success = sum(1 for a in recent_attempts if a.correct) / len(recent_attempts)
             recent_component = recent_success * 0.3
@@ -410,18 +407,12 @@ class ProgressTracker:
         difficulty_component = difficulty_normalized * 0.1
 
         mastery_score = (
-            success_component +
-            recent_component +
-            consistency_component +
-            difficulty_component
+            success_component + recent_component + consistency_component + difficulty_component
         )
 
         return min(1.0, mastery_score)
 
-    def identify_gaps(
-        self,
-        subject: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def identify_gaps(self, subject: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Identify knowledge gaps that need attention.
 
@@ -450,27 +441,26 @@ class ProgressTracker:
             if success_rate < 0.6 or mastery_score < 0.5:
                 severity = 1.0 - min(success_rate, mastery_score)
 
-                gaps.append({
-                    'concept_id': concept_id,
-                    'severity': severity,
-                    'success_rate': success_rate,
-                    'mastery_score': mastery_score,
-                    'attempts': progress.total_attempts,
-                    'last_practice': progress.last_practice,
-                    'recommendation': self._generate_gap_recommendation(progress)
-                })
+                gaps.append(
+                    {
+                        "concept_id": concept_id,
+                        "severity": severity,
+                        "success_rate": success_rate,
+                        "mastery_score": mastery_score,
+                        "attempts": progress.total_attempts,
+                        "last_practice": progress.last_practice,
+                        "recommendation": self._generate_gap_recommendation(progress),
+                    }
+                )
 
         # Sort by severity (descending)
-        gaps.sort(key=lambda x: x['severity'], reverse=True)
+        gaps.sort(key=lambda x: x["severity"], reverse=True)
 
         logger.info(f"Identified {len(gaps)} knowledge gaps")
 
         return gaps
 
-    def suggest_review(
-        self,
-        max_suggestions: int = 5
-    ) -> List[Dict[str, Any]]:
+    def suggest_review(self, max_suggestions: int = 5) -> List[Dict[str, Any]]:
         """
         Suggest concepts for review based on spaced repetition.
 
@@ -491,17 +481,19 @@ class ProgressTracker:
             if progress.is_due_for_review():
                 days_overdue = -progress.days_until_review() if progress.days_until_review() else 0
 
-                suggestions.append({
-                    'concept_id': concept_id,
-                    'priority': max(1, days_overdue),  # Higher priority if overdue
-                    'last_practice': progress.last_practice,
-                    'mastery_score': progress.mastery_score,
-                    'interval': progress.interval,
-                    'repetitions': progress.repetitions
-                })
+                suggestions.append(
+                    {
+                        "concept_id": concept_id,
+                        "priority": max(1, days_overdue),  # Higher priority if overdue
+                        "last_practice": progress.last_practice,
+                        "mastery_score": progress.mastery_score,
+                        "interval": progress.interval,
+                        "repetitions": progress.repetitions,
+                    }
+                )
 
         # Sort by priority (descending)
-        suggestions.sort(key=lambda x: x['priority'], reverse=True)
+        suggestions.sort(key=lambda x: x["priority"], reverse=True)
 
         logger.info(f"Generated {len(suggestions)} review suggestions")
 
@@ -515,7 +507,7 @@ class ProgressTracker:
             ProgressReport instance
         """
         now = time.time()
-        today = datetime.now().strftime('%Y-%m-%d')
+        today = datetime.now().strftime("%Y-%m-%d")
 
         # Count concepts by mastery
         mastery_counts = defaultdict(int)
@@ -526,21 +518,20 @@ class ProgressTracker:
 
         # Calculate mastered concepts
         mastered = sum(
-            1 for p in self.concept_progress.values()
+            1
+            for p in self.concept_progress.values()
             if p.mastery_score >= 0.8 and p.total_attempts > 0
         )
 
         # Calculate in-progress concepts
         in_progress = sum(
-            1 for p in self.concept_progress.values()
+            1
+            for p in self.concept_progress.values()
             if 0 < p.mastery_score < 0.8 and p.total_attempts > 0
         )
 
         # Calculate concepts needing review
-        needing_review = sum(
-            1 for p in self.concept_progress.values()
-            if p.is_due_for_review()
-        )
+        needing_review = sum(1 for p in self.concept_progress.values() if p.is_due_for_review())
 
         # Overall accuracy
         total_attempts = sum(p.total_attempts for p in self.concept_progress.values())
@@ -552,7 +543,7 @@ class ProgressTracker:
         avg_time = sum(all_times) / max(len(all_times), 1)
 
         # Daily/weekly stats
-        problems_today = self.daily_stats[today]['attempts']
+        problems_today = self.daily_stats[today]["attempts"]
         problems_week = self._count_problems_last_n_days(7)
 
         # Strengths and weaknesses
@@ -565,7 +556,7 @@ class ProgressTracker:
 
         # Recommendations
         recommended_practice = self._generate_practice_recommendations(3)
-        recommended_review = [s['concept_id'] for s in self.suggest_review(3)]
+        recommended_review = [s["concept_id"] for s in self.suggest_review(3)]
 
         report = ProgressReport(
             student_id=self.student_model.student_id,
@@ -584,7 +575,7 @@ class ProgressTracker:
             concepts_mastered_this_week=mastered_week,
             concepts_mastered_this_month=mastered_month,
             recommended_practice=recommended_practice,
-            recommended_review=recommended_review
+            recommended_review=recommended_review,
         )
 
         logger.info(f"Generated progress report: {mastered} mastered, {in_progress} in progress")
@@ -608,19 +599,18 @@ class ProgressTracker:
 
         try:
             save_data = {
-                'student_id': self.student_model.student_id,
-                'concept_progress': {
-                    cid: progress.to_dict()
-                    for cid, progress in self.concept_progress.items()
+                "student_id": self.student_model.student_id,
+                "concept_progress": {
+                    cid: progress.to_dict() for cid, progress in self.concept_progress.items()
                 },
-                'daily_stats': dict(self.daily_stats),
-                'last_updated': time.time()
+                "daily_stats": dict(self.daily_stats),
+                "last_updated": time.time(),
             }
 
             path_obj = Path(save_path)
             path_obj.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(path_obj, 'w') as f:
+            with open(path_obj, "w") as f:
                 json.dump(save_data, f, indent=2)
 
             logger.info(f"Saved progress data to {save_path}")
@@ -631,11 +621,7 @@ class ProgressTracker:
             return False
 
     @classmethod
-    def load(
-        cls,
-        student_model: StudentModel,
-        path: str
-    ) -> Optional['ProgressTracker']:
+    def load(cls, student_model: StudentModel, path: str) -> Optional["ProgressTracker"]:
         """
         Load progress data from disk.
 
@@ -647,19 +633,18 @@ class ProgressTracker:
             ProgressTracker instance or None if failed
         """
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 data = json.load(f)
 
             tracker = cls(student_model, storage_path=path)
 
             # Restore concept progress
-            for cid, progress_data in data.get('concept_progress', {}).items():
+            for cid, progress_data in data.get("concept_progress", {}).items():
                 tracker.concept_progress[cid] = ConceptProgress.from_dict(progress_data)
 
             # Restore daily stats
             tracker.daily_stats = defaultdict(
-                lambda: {'attempts': 0, 'correct': 0, 'time_spent': 0},
-                data.get('daily_stats', {})
+                lambda: {"attempts": 0, "correct": 0, "time_spent": 0}, data.get("daily_stats", {})
             )
 
             logger.info(f"Loaded progress data from {path}")
@@ -672,10 +657,7 @@ class ProgressTracker:
     # Private helper methods
 
     def _calculate_recall_quality(
-        self,
-        outcome: AttemptOutcome,
-        hints_used: int,
-        attempts: int
+        self, outcome: AttemptOutcome, hints_used: int, attempts: int
     ) -> int:
         """Calculate recall quality (0-5) for spaced repetition."""
         if outcome == AttemptOutcome.CORRECT_FIRST_TRY and hints_used == 0:
@@ -702,12 +684,12 @@ class ProgressTracker:
 
     def _count_problems_last_n_days(self, days: int) -> int:
         """Count problems solved in last N days."""
-        cutoff = (datetime.now() - timedelta(days=days)).strftime('%Y-%m-%d')
+        cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
         count = 0
 
         for date, stats in self.daily_stats.items():
             if date >= cutoff:
-                count += stats['attempts']
+                count += stats["attempts"]
 
         return count
 
@@ -717,9 +699,11 @@ class ProgressTracker:
         count = 0
 
         for progress in self.concept_progress.values():
-            if (progress.mastery_score >= 0.8 and
-                progress.last_practice and
-                progress.last_practice >= cutoff_time):
+            if (
+                progress.mastery_score >= 0.8
+                and progress.last_practice
+                and progress.last_practice >= cutoff_time
+            ):
                 count += 1
 
         return count
@@ -737,8 +721,7 @@ class ProgressTracker:
 
 
 def create_progress_tracker(
-    student_model: StudentModel,
-    storage_path: Optional[str] = None
+    student_model: StudentModel, storage_path: Optional[str] = None
 ) -> ProgressTracker:
     """
     Create a ProgressTracker instance.
@@ -775,7 +758,7 @@ if __name__ == "__main__":
             time_spent=30.0 + i * 10,
             hints_used=i % 2,
             difficulty=2 + (i % 3),
-            attempts_on_problem=1
+            attempts_on_problem=1,
         )
         print(f"Attempt {i+1}: {concept} - Mastery: {result['mastery_score']:.2f}")
 

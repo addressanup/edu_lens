@@ -28,14 +28,15 @@ from typing import (
 import numpy as np
 import numpy.typing as npt
 
-
 # ============================================================================
 # Core Data Types
 # ============================================================================
 
+
 @dataclass(frozen=True)
 class Timestamp:
     """Immutable timestamp with nanosecond precision"""
+
     value: float  # Unix epoch time with fractional seconds
 
     @classmethod
@@ -52,9 +53,11 @@ class Timestamp:
 # Vision Pipeline Interfaces
 # ============================================================================
 
+
 @dataclass
 class Frame:
     """Represents a single camera frame with metadata"""
+
     data: npt.NDArray[np.uint8]  # Image data (H, W, C)
     timestamp: Timestamp
     frame_id: int
@@ -79,6 +82,7 @@ class Frame:
 @dataclass
 class BoundingBox:
     """Normalized bounding box coordinates (0-1 range)"""
+
     x1: float  # Top-left x
     y1: float  # Top-left y
     x2: float  # Bottom-right x
@@ -117,6 +121,7 @@ class BoundingBox:
 @dataclass
 class Detection:
     """Object detection result"""
+
     class_name: str
     confidence: float
     bbox: BoundingBox
@@ -128,6 +133,7 @@ class Detection:
 @dataclass
 class TextRegion:
     """Detected text region with OCR results"""
+
     text: str
     bbox: BoundingBox
     confidence: float
@@ -137,6 +143,7 @@ class TextRegion:
 
 class SceneType(Enum):
     """Types of scenes that can be detected"""
+
     CLASSROOM = "classroom"
     LABORATORY = "laboratory"
     OUTDOOR = "outdoor"
@@ -150,6 +157,7 @@ class SceneType(Enum):
 @dataclass
 class SceneAnalysis:
     """Comprehensive scene understanding results"""
+
     scene_type: SceneType
     confidence: float
     objects: list[Detection]
@@ -161,6 +169,7 @@ class SceneAnalysis:
 
 class ColorSpace(Enum):
     """Supported color spaces for image processing"""
+
     RGB = "rgb"
     BGR = "bgr"
     GRAYSCALE = "grayscale"
@@ -171,6 +180,7 @@ class ColorSpace(Enum):
 @dataclass
 class PreprocessingConfig:
     """Configuration for image preprocessing"""
+
     target_size: Optional[tuple[int, int]] = None  # (width, height)
     color_space: ColorSpace = ColorSpace.RGB
     normalize: bool = True
@@ -184,9 +194,7 @@ class IFrameCapture(ABC):
 
     @abstractmethod
     async def start_capture(
-        self,
-        fps: int = 30,
-        resolution: tuple[int, int] = (1920, 1080)
+        self, fps: int = 30, resolution: tuple[int, int] = (1920, 1080)
     ) -> None:
         """
         Start capturing frames from camera
@@ -239,9 +247,7 @@ class IImagePreprocessor(ABC):
 
     @abstractmethod
     async def preprocess(
-        self,
-        frame: Frame,
-        config: PreprocessingConfig
+        self, frame: Frame, config: PreprocessingConfig
     ) -> npt.NDArray[np.float32]:
         """
         Preprocess frame for model inference
@@ -257,9 +263,7 @@ class IImagePreprocessor(ABC):
 
     @abstractmethod
     async def batch_preprocess(
-        self,
-        frames: list[Frame],
-        config: PreprocessingConfig
+        self, frames: list[Frame], config: PreprocessingConfig
     ) -> npt.NDArray[np.float32]:
         """
         Preprocess multiple frames in batch
@@ -282,7 +286,7 @@ class IObjectDetector(ABC):
         self,
         image: npt.NDArray[np.uint8],
         confidence_threshold: float = 0.5,
-        nms_threshold: float = 0.4
+        nms_threshold: float = 0.4,
     ) -> list[Detection]:
         """
         Detect objects in image
@@ -308,9 +312,7 @@ class IOCREngine(ABC):
 
     @abstractmethod
     async def extract_text(
-        self,
-        image: npt.NDArray[np.uint8],
-        languages: Optional[list[str]] = None
+        self, image: npt.NDArray[np.uint8], languages: Optional[list[str]] = None
     ) -> list[TextRegion]:
         """
         Extract text from image
@@ -325,10 +327,7 @@ class IOCREngine(ABC):
         pass
 
     @abstractmethod
-    async def extract_text_structured(
-        self,
-        image: npt.NDArray[np.uint8]
-    ) -> dict[str, Any]:
+    async def extract_text_structured(self, image: npt.NDArray[np.uint8]) -> dict[str, Any]:
         """
         Extract structured text (tables, forms, etc.)
 
@@ -346,10 +345,7 @@ class ISceneAnalyzer(ABC):
 
     @abstractmethod
     async def analyze_scene(
-        self,
-        frame: Frame,
-        include_objects: bool = True,
-        include_text: bool = True
+        self, frame: Frame, include_objects: bool = True, include_text: bool = True
     ) -> SceneAnalysis:
         """
         Perform comprehensive scene analysis
@@ -369,9 +365,11 @@ class ISceneAnalyzer(ABC):
 # Audio Pipeline Interfaces
 # ============================================================================
 
+
 @dataclass
 class AudioChunk:
     """Audio data chunk with metadata"""
+
     data: npt.NDArray[np.float32]  # Audio samples (channels, samples)
     timestamp: Timestamp
     sample_rate: int
@@ -387,6 +385,7 @@ class AudioChunk:
 @dataclass
 class TranscriptionSegment:
     """Speech-to-text transcription result"""
+
     text: str
     start_time: float
     end_time: float
@@ -404,6 +403,7 @@ class TranscriptionSegment:
 @dataclass
 class Speaker:
     """Speaker identification result"""
+
     speaker_id: str
     name: Optional[str] = None
     confidence: float = 0.0
@@ -415,10 +415,7 @@ class IAudioCapture(ABC):
 
     @abstractmethod
     async def start_capture(
-        self,
-        sample_rate: int = 16000,
-        channels: int = 1,
-        chunk_duration_ms: int = 100
+        self, sample_rate: int = 16000, channels: int = 1, chunk_duration_ms: int = 100
     ) -> None:
         """
         Start capturing audio
@@ -478,9 +475,7 @@ class ISpeechRecognizer(ABC):
 
     @abstractmethod
     async def transcribe(
-        self,
-        audio: AudioChunk,
-        language: Optional[str] = None
+        self, audio: AudioChunk, language: Optional[str] = None
     ) -> TranscriptionSegment:
         """
         Transcribe audio to text
@@ -496,8 +491,7 @@ class ISpeechRecognizer(ABC):
 
     @abstractmethod
     async def transcribe_stream(
-        self,
-        audio_stream: AsyncIterator[AudioChunk]
+        self, audio_stream: AsyncIterator[AudioChunk]
     ) -> AsyncIterator[TranscriptionSegment]:
         """
         Transcribe streaming audio in real-time
@@ -515,10 +509,7 @@ class ISpeakerIdentifier(ABC):
     """Interface for speaker identification"""
 
     @abstractmethod
-    async def identify_speaker(
-        self,
-        audio: AudioChunk
-    ) -> Speaker:
+    async def identify_speaker(self, audio: AudioChunk) -> Speaker:
         """
         Identify speaker from audio
 
@@ -531,11 +522,7 @@ class ISpeakerIdentifier(ABC):
         pass
 
     @abstractmethod
-    async def enroll_speaker(
-        self,
-        speaker_name: str,
-        audio_samples: list[AudioChunk]
-    ) -> str:
+    async def enroll_speaker(self, speaker_name: str, audio_samples: list[AudioChunk]) -> str:
         """
         Enroll new speaker for identification
 
@@ -553,8 +540,10 @@ class ISpeakerIdentifier(ABC):
 # Privacy Layer Interfaces
 # ============================================================================
 
+
 class PIIType(Enum):
     """Types of personally identifiable information"""
+
     FACE = "face"
     EMAIL = "email"
     PHONE = "phone"
@@ -570,11 +559,12 @@ class PIIType(Enum):
 @dataclass
 class PIIDetection:
     """Detected personally identifiable information"""
+
     pii_type: PIIType
     value: str
     confidence: float
     location: Optional[BoundingBox] = None  # For visual PII
-    start_offset: Optional[int] = None      # For text PII
+    start_offset: Optional[int] = None  # For text PII
     end_offset: Optional[int] = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -582,6 +572,7 @@ class PIIDetection:
 @dataclass
 class RedactionConfig:
     """Configuration for PII redaction"""
+
     blur_faces: bool = True
     blur_sigma: float = 50.0
     redact_text: bool = True
@@ -592,6 +583,7 @@ class RedactionConfig:
 
 class ConsentType(Enum):
     """Types of user consent"""
+
     DATA_COLLECTION = "data_collection"
     FACE_RECOGNITION = "face_recognition"
     AUDIO_RECORDING = "audio_recording"
@@ -604,10 +596,7 @@ class IPIIDetector(ABC):
     """Interface for PII detection"""
 
     @abstractmethod
-    async def detect_visual_pii(
-        self,
-        frame: Frame
-    ) -> list[PIIDetection]:
+    async def detect_visual_pii(self, frame: Frame) -> list[PIIDetection]:
         """
         Detect PII in visual data (faces, ID cards, etc.)
 
@@ -620,10 +609,7 @@ class IPIIDetector(ABC):
         pass
 
     @abstractmethod
-    async def detect_text_pii(
-        self,
-        text: str
-    ) -> list[PIIDetection]:
+    async def detect_text_pii(self, text: str) -> list[PIIDetection]:
         """
         Detect PII in text data
 
@@ -641,10 +627,7 @@ class IPrivacyFilter(ABC):
 
     @abstractmethod
     async def filter_frame(
-        self,
-        frame: Frame,
-        pii_detections: list[PIIDetection],
-        config: RedactionConfig
+        self, frame: Frame, pii_detections: list[PIIDetection], config: RedactionConfig
     ) -> Frame:
         """
         Apply privacy filters to frame
@@ -661,10 +644,7 @@ class IPrivacyFilter(ABC):
 
     @abstractmethod
     async def filter_text(
-        self,
-        text: str,
-        pii_detections: list[PIIDetection],
-        config: RedactionConfig
+        self, text: str, pii_detections: list[PIIDetection], config: RedactionConfig
     ) -> str:
         """
         Apply privacy filters to text
@@ -684,11 +664,7 @@ class IConsentManager(ABC):
     """Interface for consent management"""
 
     @abstractmethod
-    async def check_consent(
-        self,
-        user_id: str,
-        consent_type: ConsentType
-    ) -> bool:
+    async def check_consent(self, user_id: str, consent_type: ConsentType) -> bool:
         """
         Check if user has given consent
 
@@ -703,10 +679,7 @@ class IConsentManager(ABC):
 
     @abstractmethod
     async def request_consent(
-        self,
-        user_id: str,
-        consent_type: ConsentType,
-        description: str
+        self, user_id: str, consent_type: ConsentType, description: str
     ) -> bool:
         """
         Request user consent
@@ -722,11 +695,7 @@ class IConsentManager(ABC):
         pass
 
     @abstractmethod
-    async def revoke_consent(
-        self,
-        user_id: str,
-        consent_type: ConsentType
-    ) -> None:
+    async def revoke_consent(self, user_id: str, consent_type: ConsentType) -> None:
         """
         Revoke previously granted consent
 
@@ -741,9 +710,11 @@ class IConsentManager(ABC):
 # AI Engine Interfaces
 # ============================================================================
 
+
 @dataclass
 class Context:
     """Current contextual information for AI processing"""
+
     user_id: str
     session_id: str
     current_scene: Optional[SceneAnalysis] = None
@@ -756,6 +727,7 @@ class Context:
 @dataclass
 class LLMRequest:
     """Request for LLM generation"""
+
     prompt: str
     system_prompt: Optional[str] = None
     temperature: float = 0.7
@@ -770,6 +742,7 @@ class LLMRequest:
 @dataclass
 class LLMResponse:
     """Response from LLM generation"""
+
     text: str
     model: str
     tokens_used: int
@@ -781,6 +754,7 @@ class LLMResponse:
 @dataclass
 class Document:
     """Document in knowledge base"""
+
     id: str
     content: str
     metadata: dict[str, Any]
@@ -792,6 +766,7 @@ class Document:
 @dataclass
 class SearchResult:
     """Search result from knowledge base"""
+
     document: Document
     score: float
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -800,6 +775,7 @@ class SearchResult:
 @dataclass
 class RAGRequest:
     """Request for RAG pipeline"""
+
     query: str
     context: Optional[Context] = None
     top_k_documents: int = 5
@@ -810,6 +786,7 @@ class RAGRequest:
 @dataclass
 class RAGResponse:
     """Response from RAG pipeline"""
+
     answer: str
     sources: list[Document]
     llm_response: LLMResponse
@@ -824,7 +801,7 @@ class IContextEngine(ABC):
         self,
         session_id: str,
         scene: Optional[SceneAnalysis] = None,
-        transcription: Optional[TranscriptionSegment] = None
+        transcription: Optional[TranscriptionSegment] = None,
     ) -> Context:
         """
         Update context with new information
@@ -856,11 +833,7 @@ class IContextEngine(ABC):
         pass
 
     @abstractmethod
-    async def get_context_summary(
-        self,
-        session_id: str,
-        max_length: int = 500
-    ) -> str:
+    async def get_context_summary(self, session_id: str, max_length: int = 500) -> str:
         """
         Get text summary of current context
 
@@ -891,10 +864,7 @@ class ILLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def generate_stream(
-        self,
-        request: LLMRequest
-    ) -> AsyncIterator[str]:
+    async def generate_stream(self, request: LLMRequest) -> AsyncIterator[str]:
         """
         Generate text with streaming response
 
@@ -925,10 +895,7 @@ class IKnowledgeBase(ABC):
 
     @abstractmethod
     async def search(
-        self,
-        query: str,
-        top_k: int = 5,
-        filters: Optional[dict[str, Any]] = None
+        self, query: str, top_k: int = 5, filters: Optional[dict[str, Any]] = None
     ) -> list[SearchResult]:
         """
         Semantic search in knowledge base
@@ -1007,6 +974,7 @@ EventHandler = Callable[[dict[str, Any]], Awaitable[None]]
 @dataclass
 class Message:
     """Message for queue system"""
+
     id: str
     topic: str
     payload: dict[str, Any]
@@ -1031,11 +999,7 @@ class IEventBus(ABC):
         pass
 
     @abstractmethod
-    async def subscribe(
-        self,
-        event_type: str,
-        handler: EventHandler
-    ) -> str:
+    async def subscribe(self, event_type: str, handler: EventHandler) -> str:
         """
         Subscribe to event type
 
@@ -1073,11 +1037,7 @@ class IMessageQueue(ABC):
         pass
 
     @abstractmethod
-    async def dequeue(
-        self,
-        topic: str,
-        timeout: float = 1.0
-    ) -> Optional[Message]:
+    async def dequeue(self, topic: str, timeout: float = 1.0) -> Optional[Message]:
         """
         Retrieve message from queue
 
@@ -1101,11 +1061,7 @@ class IMessageQueue(ABC):
         pass
 
     @abstractmethod
-    async def reject(
-        self,
-        message_id: str,
-        requeue: bool = True
-    ) -> None:
+    async def reject(self, message_id: str, requeue: bool = True) -> None:
         """
         Reject message
 
@@ -1120,9 +1076,11 @@ class IMessageQueue(ABC):
 # Storage Interfaces
 # ============================================================================
 
+
 @dataclass
 class Session:
     """User session data"""
+
     session_id: str
     user_id: str
     start_time: Timestamp
@@ -1209,12 +1167,7 @@ class ICacheStore(ABC):
         pass
 
     @abstractmethod
-    async def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: Optional[int] = None
-    ) -> None:
+    async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """
         Store value in cache
 
@@ -1258,6 +1211,7 @@ class ICacheStore(ABC):
 # Lifecycle Management
 # ============================================================================
 
+
 class ILifecycle(ABC):
     """Interface for component lifecycle management"""
 
@@ -1296,54 +1250,65 @@ class ILifecycle(ABC):
 # Error Hierarchy
 # ============================================================================
 
+
 class EduLensError(Exception):
     """Base exception for all EduLens errors"""
+
     pass
 
 
 class CameraError(EduLensError):
     """Camera-related errors"""
+
     pass
 
 
 class AudioError(EduLensError):
     """Audio-related errors"""
+
     pass
 
 
 class VisionError(EduLensError):
     """Vision processing errors"""
+
     pass
 
 
 class AIError(EduLensError):
     """AI engine errors"""
+
     pass
 
 
 class PrivacyError(EduLensError):
     """Privacy-related errors"""
+
     pass
 
 
 class StorageError(EduLensError):
     """Storage-related errors"""
+
     pass
 
 
 class ConfigurationError(EduLensError):
     """Configuration errors"""
+
     pass
 
 
 class ContextNotFoundError(EduLensError):
     """Context not found error"""
+
     pass
 
 
 # ============================================================================
 # Protocol Definitions (Runtime Checkable)
 # ============================================================================
+
 
 @runtime_checkable
 class Serializable(Protocol):

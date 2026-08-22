@@ -88,32 +88,40 @@ class TutoringContext:
         ]
 
         if self.student_question:
-            lines.extend([
-                "--- Student's Question ---",
-                self.student_question,
-                "",
-            ])
+            lines.extend(
+                [
+                    "--- Student's Question ---",
+                    self.student_question,
+                    "",
+                ]
+            )
 
         if self.student_answer:
-            lines.extend([
-                "--- Student's Answer ---",
-                self.student_answer,
-                "",
-            ])
+            lines.extend(
+                [
+                    "--- Student's Answer ---",
+                    self.student_answer,
+                    "",
+                ]
+            )
 
         if self.relevant_concepts:
-            lines.extend([
-                "--- Relevant Concepts ---",
-                ", ".join(self.relevant_concepts),
-                "",
-            ])
+            lines.extend(
+                [
+                    "--- Relevant Concepts ---",
+                    ", ".join(self.relevant_concepts),
+                    "",
+                ]
+            )
 
         if self.common_misconceptions:
-            lines.extend([
-                "--- Common Misconceptions to Watch For ---",
-                "\n".join(f"- {m}" for m in self.common_misconceptions),
-                "",
-            ])
+            lines.extend(
+                [
+                    "--- Common Misconceptions to Watch For ---",
+                    "\n".join(f"- {m}" for m in self.common_misconceptions),
+                    "",
+                ]
+            )
 
         if self.is_followup:
             lines.append(f"(This is a follow-up. {self.previous_hints_given} hints already given.)")
@@ -187,9 +195,7 @@ class ContextBuilder:
         common_misconceptions = []
 
         if self.curriculum_manager and subject != "unknown":
-            curriculum_context = self._get_curriculum_context(
-                subject, content_type, student_grade
-            )
+            curriculum_context = self._get_curriculum_context(subject, content_type, student_grade)
             relevant_concepts = curriculum_context.get("concepts", [])
             prerequisites = curriculum_context.get("prerequisites", [])
             common_misconceptions = curriculum_context.get("misconceptions", [])

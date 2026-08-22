@@ -10,35 +10,31 @@ This test suite validates that vision models meet edge deployment requirements:
 Author: Vision Processing Agent (VIS-001)
 """
 
-import pytest
-import numpy as np
+import tempfile
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional
-import tempfile
+from typing import Any, Dict, Optional
+
+import numpy as np
+import pytest
 import yaml
 
 # Import modules to test
 try:
+    from src.runtime.resource_manager import (
+        DeviceProfile,
+        QualityLevel,
+        ResourceLevel,
+        ResourceLimits,
+        ResourceManager,
+    )
+    from src.vision.edge_runtime import EdgeVisionRuntime, InferenceProvider, ModelConfig, ModelType
     from src.vision.model_optimizer import (
+        DeviceType,
+        ModelFramework,
         ModelOptimizer,
         OptimizationConfig,
         QuantizationType,
-        DeviceType,
-        ModelFramework
-    )
-    from src.vision.edge_runtime import (
-        EdgeVisionRuntime,
-        ModelType,
-        ModelConfig,
-        InferenceProvider
-    )
-    from src.runtime.resource_manager import (
-        ResourceManager,
-        ResourceLimits,
-        ResourceLevel,
-        QualityLevel,
-        DeviceProfile
     )
 except ImportError as e:
     pytest.skip(f"Required modules not available: {e}", allow_module_level=True)
@@ -46,6 +42,7 @@ except ImportError as e:
 try:
     import torch
     import torch.nn as nn
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -54,6 +51,7 @@ except ImportError:
 
 try:
     import onnxruntime as ort
+
     ONNX_AVAILABLE = True
 except ImportError:
     ONNX_AVAILABLE = False
@@ -111,7 +109,7 @@ def model_optimizer():
         max_memory_mb=MEMORY_LIMIT_MB,
         target_latency_ms=OCR_TIME_LIMIT_MS,
         enable_pruning=True,
-        pruning_ratio=0.3
+        pruning_ratio=0.3,
     )
     return ModelOptimizer(config=config, framework=ModelFramework.PYTORCH)
 
@@ -122,7 +120,7 @@ def edge_runtime():
     return EdgeVisionRuntime(
         memory_budget_mb=MEMORY_LIMIT_MB,
         enable_optimization=True,
-        default_provider=InferenceProvider.CPU
+        default_provider=InferenceProvider.CPU,
     )
 
 
@@ -133,13 +131,9 @@ def resource_manager():
         max_memory_mb=MEMORY_LIMIT_MB,
         max_cpu_percent=80.0,
         max_temp_celsius=75.0,
-        min_battery_percent=15.0
+        min_battery_percent=15.0,
     )
-    return ResourceManager(
-        limits=limits,
-        monitor_interval_sec=0.5,
-        enable_auto_throttle=True
-    )
+    return ResourceManager(limits=limits, monitor_interval_sec=0.5, enable_auto_throttle=True)
 
 
 @pytest.fixture
@@ -152,12 +146,12 @@ def test_image():
 def test_batch():
     """Create batch of test images."""
     return [
-        np.random.randn(TEST_IMAGE_SIZE[0], TEST_IMAGE_SIZE[1]).astype(np.float32)
-        for _ in range(4)
+        np.random.randn(TEST_IMAGE_SIZE[0], TEST_IMAGE_SIZE[1]).astype(np.float32) for _ in range(4)
     ]
 
 
 # Model Optimization Tests
+
 
 class TestModelOptimization:
     """Test suite for model optimization."""
@@ -166,8 +160,7 @@ class TestModelOptimization:
     def test_quantization_int8(self, model_optimizer, simple_model):
         """Test INT8 quantization."""
         quantized = model_optimizer.quantize_model(
-            simple_model,
-            quantization_type=QuantizationType.DYNAMIC
+            simple_model, quantization_type=QuantizationType.DYNAMIC
         )
 
         assert quantized is not None
@@ -179,7 +172,7 @@ class TestModelOptimization:
         """Test FP16 quantization."""
         optimizer = ModelOptimizer(
             config=OptimizationConfig(quantization_type=QuantizationType.FP16),
-            framework=ModelFramework.PYTORCH
+            framework=ModelFramework.PYTORCH,
         )
 
         quantized = optimizer.quantize_model(simple_model)
@@ -189,9 +182,7 @@ class TestModelOptimization:
     def test_model_pruning(self, model_optimizer, simple_model):
         """Test model pruning."""
         pruned = model_optimizer.prune_model(
-            simple_model,
-            pruning_ratio=0.3,
-            preserve_accuracy=True
+            simple_model, pruning_ratio=0.3, preserve_accuracy=True
         )
 
         assert pruned is not None
@@ -200,7 +191,9 @@ class TestModelOptimization:
         output = pruned(dummy_input)
         assert output.shape == (1, 10)
 
-    @pytest.mark.skipif(not TORCH_AVAILABLE or not ONNX_AVAILABLE, reason="Dependencies not available")
+    @pytest.mark.skipif(
+        not TORCH_AVAILABLE or not ONNX_AVAILABLE, reason="Dependencies not available"
+    )
     def test_onnx_conversion(self, model_optimizer, simple_model):
         """Test ONNX conversion."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -211,7 +204,7 @@ class TestModelOptimization:
                 input_shape=(1, 1, 224, 224),
                 output_path=output_path,
                 opset_version=13,
-                optimize=True
+                optimize=True,
             )
 
             assert Path(onnx_path).exists()
@@ -223,10 +216,7 @@ class TestModelOptimization:
         dummy_input = torch.randn(1, 1, 224, 224)
 
         result = model_optimizer.benchmark_model(
-            simple_model,
-            dummy_input,
-            num_iterations=10,
-            warmup_iterations=2
+            simple_model, dummy_input, num_iterations=10, warmup_iterations=2
         )
 
         assert result.avg_inference_time_ms > 0
@@ -238,7 +228,7 @@ class TestModelOptimization:
         """Test device-specific optimization."""
         optimizer = ModelOptimizer(
             config=OptimizationConfig(target_device=DeviceType.ARM_CPU),
-            framework=ModelFramework.PYTORCH
+            framework=ModelFramework.PYTORCH,
         )
 
         optimized = optimizer.optimize_for_device(simple_model, DeviceType.ARM_CPU)
@@ -254,7 +244,7 @@ class TestModelOptimization:
                 simple_model,
                 input_shape=(1, 1, 224, 224),
                 output_path=output_path,
-                calibration_data=None
+                calibration_data=None,
             )
 
             assert "original_model" in results
@@ -264,6 +254,7 @@ class TestModelOptimization:
 
 
 # Edge Runtime Tests
+
 
 class TestEdgeRuntime:
     """Test suite for edge inference runtime."""
@@ -292,7 +283,7 @@ class TestEdgeRuntime:
             model_type=ModelType.OCR,
             model_path="dummy.onnx",
             input_shape=(1, 1, 224, 224),
-            output_shape=(1, 1000)
+            output_shape=(1, 1000),
         )
         edge_runtime.model_configs[ModelType.OCR] = config
 
@@ -327,6 +318,7 @@ class TestEdgeRuntime:
 
 # Resource Management Tests
 
+
 class TestResourceManagement:
     """Test suite for resource management."""
 
@@ -345,7 +337,7 @@ class TestResourceManagement:
         assert capabilities.profile in [
             DeviceProfile.LOW_END,
             DeviceProfile.MID_RANGE,
-            DeviceProfile.HIGH_END
+            DeviceProfile.HIGH_END,
         ]
 
     def test_memory_monitoring(self, resource_manager):
@@ -388,7 +380,7 @@ class TestResourceManagement:
             ResourceLevel.LOW,
             ResourceLevel.MODERATE,
             ResourceLevel.GOOD,
-            ResourceLevel.EXCELLENT
+            ResourceLevel.EXCELLENT,
         ]
 
     def test_quality_recommendation(self, resource_manager):
@@ -400,7 +392,7 @@ class TestResourceManagement:
             QualityLevel.LOW,
             QualityLevel.MEDIUM,
             QualityLevel.HIGH,
-            QualityLevel.MAXIMUM
+            QualityLevel.MAXIMUM,
         ]
 
     def test_throttling_callback(self, resource_manager):
@@ -443,6 +435,7 @@ class TestResourceManagement:
 
 # Integration Tests
 
+
 class TestEdgeIntegration:
     """Integration tests for edge deployment."""
 
@@ -477,8 +470,7 @@ class TestEdgeIntegration:
 
         # Optimize model
         optimized = model_optimizer.quantize_model(
-            simple_model,
-            quantization_type=QuantizationType.DYNAMIC
+            simple_model, quantization_type=QuantizationType.DYNAMIC
         )
 
         # Get optimized outputs
@@ -488,8 +480,7 @@ class TestEdgeIntegration:
         # Check that outputs are similar (within tolerance)
         # For quantized models, some accuracy loss is expected
         correlation = np.corrcoef(
-            original_output.numpy().flatten(),
-            optimized_output.numpy().flatten()
+            original_output.numpy().flatten(), optimized_output.numpy().flatten()
         )[0, 1]
 
         assert correlation > 0.9  # At least 90% correlation
@@ -509,7 +500,7 @@ class TestEdgeIntegration:
         if resource_manager.throttling_active:
             assert resource_manager.current_quality.value in [
                 QualityLevel.MINIMAL.value,
-                QualityLevel.LOW.value
+                QualityLevel.LOW.value,
             ]
 
     def test_config_file_loading(self):
@@ -536,6 +527,7 @@ class TestEdgeIntegration:
 
 
 # Performance Benchmarks
+
 
 class TestPerformanceBenchmarks:
     """Performance benchmark tests."""
@@ -596,7 +588,7 @@ class TestPerformanceBenchmarks:
             model_type=ModelType.OCR,
             model_path="dummy.onnx",
             input_shape=(1, 1, 224, 224),
-            output_shape=(1, 1000)
+            output_shape=(1, 1000),
         )
         edge_runtime.model_configs[ModelType.OCR] = config
 

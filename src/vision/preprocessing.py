@@ -11,9 +11,10 @@ for elementary educational materials. It includes operations for:
 Author: Vision Processing Agent (VIS-001)
 """
 
-import numpy as np
-from typing import Optional, Dict, Any, Tuple
 import logging
+from typing import Any, Dict, Optional, Tuple
+
+import numpy as np
 
 try:
     import cv2
@@ -248,16 +249,13 @@ class ImagePreprocessor:
             rotation_matrix,
             (new_width, new_height),
             borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(255, 255, 255)
+            borderValue=(255, 255, 255),
         )
 
         return rotated
 
     def denoise(
-        self,
-        image: np.ndarray,
-        method: str = "bilateral",
-        strength: int = 10
+        self, image: np.ndarray, method: str = "bilateral", strength: int = 10
     ) -> np.ndarray:
         """
         Reduce noise while preserving edges.
@@ -282,7 +280,9 @@ class ImagePreprocessor:
         try:
             if method == "bilateral":
                 # Bilateral filter preserves edges while smoothing
-                denoised = cv2.bilateralFilter(image, d=9, sigmaColor=strength*7, sigmaSpace=strength*7)
+                denoised = cv2.bilateralFilter(
+                    image, d=9, sigmaColor=strength * 7, sigmaSpace=strength * 7
+                )
 
             elif method == "gaussian":
                 # Gaussian blur for simple smoothing
@@ -297,9 +297,18 @@ class ImagePreprocessor:
             elif method == "nlmeans":
                 # Non-local means denoising (slower but high quality)
                 if len(image.shape) == 2:
-                    denoised = cv2.fastNlMeansDenoising(image, None, h=strength, templateWindowSize=7, searchWindowSize=21)
+                    denoised = cv2.fastNlMeansDenoising(
+                        image, None, h=strength, templateWindowSize=7, searchWindowSize=21
+                    )
                 else:
-                    denoised = cv2.fastNlMeansDenoisingColored(image, None, h=strength, hColor=strength, templateWindowSize=7, searchWindowSize=21)
+                    denoised = cv2.fastNlMeansDenoisingColored(
+                        image,
+                        None,
+                        h=strength,
+                        hColor=strength,
+                        templateWindowSize=7,
+                        searchWindowSize=21,
+                    )
 
             else:
                 raise ValueError(f"Unknown denoising method: {method}")
@@ -311,11 +320,7 @@ class ImagePreprocessor:
             logger.warning(f"Denoising failed: {e}. Returning original image.")
             return image
 
-    def enhance_contrast(
-        self,
-        image: np.ndarray,
-        method: str = "clahe"
-    ) -> np.ndarray:
+    def enhance_contrast(self, image: np.ndarray, method: str = "clahe") -> np.ndarray:
         """
         Enhance image contrast for better text visibility.
 
@@ -349,10 +354,7 @@ class ImagePreprocessor:
                 clip_limit = self.config.get("clahe_clip_limit", 2.0)
                 tile_size = self.config.get("clahe_tile_size", 8)
 
-                clahe = cv2.createCLAHE(
-                    clipLimit=clip_limit,
-                    tileGridSize=(tile_size, tile_size)
-                )
+                clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(tile_size, tile_size))
                 enhanced = clahe.apply(gray)
 
             elif method == "histogram":
@@ -361,13 +363,7 @@ class ImagePreprocessor:
 
             elif method == "normalize":
                 # Normalization to full range
-                enhanced = cv2.normalize(
-                    gray,
-                    None,
-                    alpha=0,
-                    beta=255,
-                    norm_type=cv2.NORM_MINMAX
-                )
+                enhanced = cv2.normalize(gray, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
 
             else:
                 raise ValueError(f"Unknown contrast enhancement method: {method}")
@@ -383,11 +379,7 @@ class ImagePreprocessor:
             logger.warning(f"Contrast enhancement failed: {e}. Returning original image.")
             return image
 
-    def binarize(
-        self,
-        image: np.ndarray,
-        method: Optional[str] = None
-    ) -> np.ndarray:
+    def binarize(self, image: np.ndarray, method: Optional[str] = None) -> np.ndarray:
         """
         Convert image to binary (black and white) for optimal text recognition.
 
@@ -415,12 +407,7 @@ class ImagePreprocessor:
 
             if method == "otsu":
                 # Otsu's method automatically determines optimal threshold
-                _, binary = cv2.threshold(
-                    gray,
-                    0,
-                    255,
-                    cv2.THRESH_BINARY + cv2.THRESH_OTSU
-                )
+                _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
             elif method == "adaptive":
                 # Adaptive thresholding - better for varying lighting
@@ -428,23 +415,13 @@ class ImagePreprocessor:
                 c = self.config.get("adaptive_c", 2)
 
                 binary = cv2.adaptiveThreshold(
-                    gray,
-                    255,
-                    cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                    cv2.THRESH_BINARY,
-                    block_size,
-                    c
+                    gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block_size, c
                 )
 
             elif method == "simple":
                 # Simple thresholding with fixed threshold
                 threshold = self.config.get("binary_threshold", 127)
-                _, binary = cv2.threshold(
-                    gray,
-                    threshold,
-                    255,
-                    cv2.THRESH_BINARY
-                )
+                _, binary = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
 
             else:
                 raise ValueError(f"Unknown binarization method: {method}")
@@ -456,11 +433,7 @@ class ImagePreprocessor:
             logger.warning(f"Binarization failed: {e}. Returning original image.")
             return image
 
-    def sharpen(
-        self,
-        image: np.ndarray,
-        strength: float = 1.0
-    ) -> np.ndarray:
+    def sharpen(self, image: np.ndarray, strength: float = 1.0) -> np.ndarray:
         """
         Sharpen image to enhance text edges.
 
@@ -476,11 +449,7 @@ class ImagePreprocessor:
 
         try:
             # Create sharpening kernel
-            kernel = np.array([
-                [0, -1, 0],
-                [-1, 5, -1],
-                [0, -1, 0]
-            ], dtype=np.float32)
+            kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]], dtype=np.float32)
 
             # Adjust kernel strength
             kernel = (kernel - 1) * strength + 1
@@ -495,11 +464,7 @@ class ImagePreprocessor:
             logger.warning(f"Sharpening failed: {e}. Returning original image.")
             return image
 
-    def remove_lines(
-        self,
-        image: np.ndarray,
-        line_type: str = "both"
-    ) -> np.ndarray:
+    def remove_lines(self, image: np.ndarray, line_type: str = "both") -> np.ndarray:
         """
         Remove horizontal and/or vertical lines from image.
 
@@ -554,10 +519,7 @@ class ImagePreprocessor:
             return image
 
     def resize(
-        self,
-        image: np.ndarray,
-        scale: float = 1.0,
-        interpolation: Optional[int] = None
+        self, image: np.ndarray, scale: float = 1.0, interpolation: Optional[int] = None
     ) -> np.ndarray:
         """
         Resize image by scale factor.
@@ -588,11 +550,7 @@ class ImagePreprocessor:
             new_height = int(height * scale)
 
             # Resize
-            resized = cv2.resize(
-                image,
-                (new_width, new_height),
-                interpolation=interpolation
-            )
+            resized = cv2.resize(image, (new_width, new_height), interpolation=interpolation)
 
             logger.debug(f"Resized image by factor {scale} to {new_width}x{new_height}")
             return resized
@@ -625,17 +583,13 @@ class ImagePreprocessor:
             _, binary = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY_INV)
 
             # Find contours
-            contours, _ = cv2.findContours(
-                binary,
-                cv2.RETR_EXTERNAL,
-                cv2.CHAIN_APPROX_SIMPLE
-            )
+            contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             if not contours:
                 return image
 
             # Get bounding box of all contours
-            x_min, y_min = float('inf'), float('inf')
+            x_min, y_min = float("inf"), float("inf")
             x_max, y_max = 0, 0
 
             for contour in contours:

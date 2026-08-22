@@ -8,12 +8,12 @@ scoring and issue identification.
 
 import json
 import re
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Set
-import uuid
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 class ValidationSeverity(str, Enum):
@@ -223,6 +223,7 @@ class Gate1ConceptDesign(ValidationGate):
     async def validate(self, context: Dict[str, Any]) -> ValidationResult:
         """Validate concept design phase output."""
         import time
+
         start_time = time.time()
 
         issues = []
@@ -237,12 +238,14 @@ class Gate1ConceptDesign(ValidationGate):
         if spec.get("project_overview"):
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="completeness",
-                message="Project overview is missing",
-                suggestion="Add a clear project overview describing the purpose and scope",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="completeness",
+                    message="Project overview is missing",
+                    suggestion="Add a clear project overview describing the purpose and scope",
+                )
+            )
 
         # Check 2: Requirements are defined
         total_checks += 1
@@ -250,12 +253,14 @@ class Gate1ConceptDesign(ValidationGate):
         if requirements and len(requirements) >= 3:
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="completeness",
-                message=f"Insufficient requirements defined (found {len(requirements)})",
-                suggestion="Define at least 3 clear requirements",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="completeness",
+                    message=f"Insufficient requirements defined (found {len(requirements)})",
+                    suggestion="Define at least 3 clear requirements",
+                )
+            )
 
         # Check 3: Architecture is documented
         total_checks += 1
@@ -263,12 +268,14 @@ class Gate1ConceptDesign(ValidationGate):
         if architecture.get("components") and architecture.get("data_flow"):
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="documentation",
-                message="Architecture documentation is incomplete",
-                suggestion="Document system components and data flow",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="documentation",
+                    message="Architecture documentation is incomplete",
+                    suggestion="Document system components and data flow",
+                )
+            )
 
         # Check 4: Technology stack is defined
         total_checks += 1
@@ -278,12 +285,14 @@ class Gate1ConceptDesign(ValidationGate):
             checks_passed += 1
         else:
             missing = [c for c in required_categories if not tech_stack.get(c)]
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="completeness",
-                message=f"Technology stack missing: {', '.join(missing)}",
-                suggestion="Define technologies for all required categories",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="completeness",
+                    message=f"Technology stack missing: {', '.join(missing)}",
+                    suggestion="Define technologies for all required categories",
+                )
+            )
 
         # Check 5: Deliverables are specified
         total_checks += 1
@@ -291,24 +300,28 @@ class Gate1ConceptDesign(ValidationGate):
         if deliverables and len(deliverables) >= 2:
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="planning",
-                message="Insufficient deliverables specified",
-                suggestion="Define clear project deliverables",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="planning",
+                    message="Insufficient deliverables specified",
+                    suggestion="Define clear project deliverables",
+                )
+            )
 
         # Check 6: Risk assessment exists
         total_checks += 1
         if spec.get("risks"):
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.INFO,
-                category="planning",
-                message="No risk assessment provided",
-                suggestion="Consider adding risk assessment for better planning",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.INFO,
+                    category="planning",
+                    message="No risk assessment provided",
+                    suggestion="Consider adding risk assessment for better planning",
+                )
+            )
             recommendations.append("Add risk assessment for identified challenges")
 
         # Check 7: Acceptance criteria defined
@@ -316,12 +329,14 @@ class Gate1ConceptDesign(ValidationGate):
         if spec.get("acceptance_criteria"):
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="quality",
-                message="Acceptance criteria not defined",
-                suggestion="Define clear acceptance criteria for deliverables",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="quality",
+                    message="Acceptance criteria not defined",
+                    suggestion="Define clear acceptance criteria for deliverables",
+                )
+            )
 
         # Calculate confidence
         confidence = self._calculate_confidence(issues, checks_passed, total_checks)
@@ -368,6 +383,7 @@ class Gate2MCPData(ValidationGate):
     async def validate(self, context: Dict[str, Any]) -> ValidationResult:
         """Validate MCP data retrieval phase."""
         import time
+
         start_time = time.time()
 
         issues = []
@@ -385,18 +401,22 @@ class Gate2MCPData(ValidationGate):
             checks_passed += 1
         elif server_status == "dormant":
             checks_passed += 0.5  # Partial credit for dormant (expected when no MCP)
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.INFO,
-                category="connectivity",
-                message="MCP servers are dormant (no external data needed)",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.INFO,
+                    category="connectivity",
+                    message="MCP servers are dormant (no external data needed)",
+                )
+            )
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="connectivity",
-                message=f"MCP server status: {server_status}",
-                suggestion="Check MCP server configuration and connectivity",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="connectivity",
+                    message=f"MCP server status: {server_status}",
+                    suggestion="Check MCP server configuration and connectivity",
+                )
+            )
 
         # Check 2: Data retrieval success
         total_checks += 1
@@ -405,12 +425,14 @@ class Gate2MCPData(ValidationGate):
         elif mcp_status.get("server_status") == "dormant":
             checks_passed += 1  # No data needed
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="data",
-                message="Data retrieval failed",
-                suggestion="Review MCP query and retry data retrieval",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="data",
+                    message="Data retrieval failed",
+                    suggestion="Review MCP query and retry data retrieval",
+                )
+            )
 
         # Check 3: Data schema validation
         total_checks += 1
@@ -418,12 +440,14 @@ class Gate2MCPData(ValidationGate):
         if schema_valid:
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="schema",
-                message="Retrieved data does not match expected schema",
-                suggestion="Verify data source schema and transform logic",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="schema",
+                    message="Retrieved data does not match expected schema",
+                    suggestion="Verify data source schema and transform logic",
+                )
+            )
 
         # Check 4: Cache status
         total_checks += 1
@@ -431,11 +455,13 @@ class Gate2MCPData(ValidationGate):
         if cache_hit or mcp_status.get("server_status") == "dormant":
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.INFO,
-                category="performance",
-                message="Cache miss - data fetched from source",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.INFO,
+                    category="performance",
+                    message="Cache miss - data fetched from source",
+                )
+            )
             checks_passed += 0.8  # Slight penalty for cache miss
 
         # Check 5: Rate limiting compliance
@@ -444,12 +470,14 @@ class Gate2MCPData(ValidationGate):
         if not rate_limited:
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="performance",
-                message="Rate limiting was triggered",
-                suggestion="Consider implementing request batching",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="performance",
+                    message="Rate limiting was triggered",
+                    suggestion="Consider implementing request batching",
+                )
+            )
 
         confidence = self._calculate_confidence(issues, checks_passed, total_checks)
         status = self._calculate_status(confidence)
@@ -495,6 +523,7 @@ class Gate3Infrastructure(ValidationGate):
     async def validate(self, context: Dict[str, Any]) -> ValidationResult:
         """Validate infrastructure setup phase."""
         import time
+
         start_time = time.time()
 
         issues = []
@@ -510,12 +539,14 @@ class Gate3Infrastructure(ValidationGate):
         if db_status.get("provisioned") and db_status.get("accessible"):
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.CRITICAL,
-                category="infrastructure",
-                message="Database not properly provisioned",
-                suggestion="Verify database credentials and connectivity",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.CRITICAL,
+                    category="infrastructure",
+                    message="Database not properly provisioned",
+                    suggestion="Verify database credentials and connectivity",
+                )
+            )
 
         # Check 2: Repository configured
         total_checks += 1
@@ -524,19 +555,23 @@ class Gate3Infrastructure(ValidationGate):
             checks_passed += 1
         elif repo_status.get("created"):
             checks_passed += 0.5
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="security",
-                message="Branch protection not configured",
-                suggestion="Enable branch protection rules on main branch",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="security",
+                    message="Branch protection not configured",
+                    suggestion="Enable branch protection rules on main branch",
+                )
+            )
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="infrastructure",
-                message="Repository not configured",
-                suggestion="Create and configure source repository",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="infrastructure",
+                    message="Repository not configured",
+                    suggestion="Create and configure source repository",
+                )
+            )
 
         # Check 3: CI/CD pipeline
         total_checks += 1
@@ -545,19 +580,23 @@ class Gate3Infrastructure(ValidationGate):
             checks_passed += 1
         elif cicd_status.get("configured"):
             checks_passed += 0.7
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="automation",
-                message="CI/CD pipeline configured but not passing",
-                suggestion="Review pipeline configuration and fix failures",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="automation",
+                    message="CI/CD pipeline configured but not passing",
+                    suggestion="Review pipeline configuration and fix failures",
+                )
+            )
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="automation",
-                message="CI/CD pipeline not configured",
-                suggestion="Set up automated build and deployment pipeline",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="automation",
+                    message="CI/CD pipeline not configured",
+                    suggestion="Set up automated build and deployment pipeline",
+                )
+            )
 
         # Check 4: Environment variables set
         total_checks += 1
@@ -567,12 +606,14 @@ class Gate3Infrastructure(ValidationGate):
         if not missing_vars:
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="configuration",
-                message=f"Missing environment variables: {', '.join(missing_vars)}",
-                suggestion="Configure all required environment variables",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="configuration",
+                    message=f"Missing environment variables: {', '.join(missing_vars)}",
+                    suggestion="Configure all required environment variables",
+                )
+            )
 
         # Check 5: Security configuration
         total_checks += 1
@@ -585,12 +626,14 @@ class Gate3Infrastructure(ValidationGate):
                 missing.append("SSL")
             if not security.get("firewall_configured"):
                 missing.append("firewall")
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="security",
-                message=f"Security not fully configured: {', '.join(missing)}",
-                suggestion="Enable SSL and configure firewall rules",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="security",
+                    message=f"Security not fully configured: {', '.join(missing)}",
+                    suggestion="Enable SSL and configure firewall rules",
+                )
+            )
 
         confidence = self._calculate_confidence(issues, checks_passed, total_checks)
         status = self._calculate_status(confidence)
@@ -634,6 +677,7 @@ class Gate4CodeGenerated(ValidationGate):
     async def validate(self, context: Dict[str, Any]) -> ValidationResult:
         """Validate code generation phase."""
         import time
+
         start_time = time.time()
 
         issues = []
@@ -649,13 +693,15 @@ class Gate4CodeGenerated(ValidationGate):
             checks_passed += 1
         else:
             errors = code_output.get("compilation_errors", [])
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.CRITICAL,
-                category="compilation",
-                message=f"Code compilation failed with {len(errors)} errors",
-                suggestion="Fix compilation errors before proceeding",
-                context={"errors": errors[:5]},
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.CRITICAL,
+                    category="compilation",
+                    message=f"Code compilation failed with {len(errors)} errors",
+                    suggestion="Fix compilation errors before proceeding",
+                    context={"errors": errors[:5]},
+                )
+            )
 
         # Check 2: Tests exist
         total_checks += 1
@@ -664,19 +710,23 @@ class Gate4CodeGenerated(ValidationGate):
             checks_passed += 1
         elif test_count > 0:
             checks_passed += 0.5
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="testing",
-                message=f"Low test count: {test_count}",
-                suggestion="Add more tests for better coverage",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="testing",
+                    message=f"Low test count: {test_count}",
+                    suggestion="Add more tests for better coverage",
+                )
+            )
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="testing",
-                message="No tests generated",
-                suggestion="Generate unit tests for critical functionality",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="testing",
+                    message="No tests generated",
+                    suggestion="Generate unit tests for critical functionality",
+                )
+            )
 
         # Check 3: Code style compliance
         total_checks += 1
@@ -685,20 +735,24 @@ class Gate4CodeGenerated(ValidationGate):
             checks_passed += 1
         elif len(style_issues) < 10:
             checks_passed += 0.7
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.INFO,
-                category="style",
-                message=f"Found {len(style_issues)} style issues",
-                auto_fixable=True,
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.INFO,
+                    category="style",
+                    message=f"Found {len(style_issues)} style issues",
+                    auto_fixable=True,
+                )
+            )
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="style",
-                message=f"Found {len(style_issues)} style issues",
-                suggestion="Run code formatter to fix style issues",
-                auto_fixable=True,
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="style",
+                    message=f"Found {len(style_issues)} style issues",
+                    suggestion="Run code formatter to fix style issues",
+                    auto_fixable=True,
+                )
+            )
 
         # Check 4: Security scan
         total_checks += 1
@@ -707,21 +761,25 @@ class Gate4CodeGenerated(ValidationGate):
         if not critical_security and len(security_issues) < 3:
             checks_passed += 1
         elif critical_security:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.CRITICAL,
-                category="security",
-                message=f"Found {len(critical_security)} critical security issues",
-                suggestion="Address security vulnerabilities immediately",
-                context={"issues": critical_security[:3]},
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.CRITICAL,
+                    category="security",
+                    message=f"Found {len(critical_security)} critical security issues",
+                    suggestion="Address security vulnerabilities immediately",
+                    context={"issues": critical_security[:3]},
+                )
+            )
         else:
             checks_passed += 0.5
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="security",
-                message=f"Found {len(security_issues)} security issues",
-                suggestion="Review and fix security warnings",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="security",
+                    message=f"Found {len(security_issues)} security issues",
+                    suggestion="Review and fix security warnings",
+                )
+            )
 
         # Check 5: Documentation
         total_checks += 1
@@ -730,19 +788,23 @@ class Gate4CodeGenerated(ValidationGate):
             checks_passed += 1
         elif doc_coverage >= 0.5:
             checks_passed += 0.7
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.INFO,
-                category="documentation",
-                message=f"Documentation coverage: {doc_coverage:.0%}",
-                suggestion="Add documentation for public APIs",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.INFO,
+                    category="documentation",
+                    message=f"Documentation coverage: {doc_coverage:.0%}",
+                    suggestion="Add documentation for public APIs",
+                )
+            )
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="documentation",
-                message=f"Low documentation coverage: {doc_coverage:.0%}",
-                suggestion="Document public classes and functions",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="documentation",
+                    message=f"Low documentation coverage: {doc_coverage:.0%}",
+                    suggestion="Document public classes and functions",
+                )
+            )
 
         confidence = self._calculate_confidence(issues, checks_passed, total_checks)
         status = self._calculate_status(confidence)
@@ -788,6 +850,7 @@ class Gate5IntegrationTest(ValidationGate):
     async def validate(self, context: Dict[str, Any]) -> ValidationResult:
         """Validate integration testing phase."""
         import time
+
         start_time = time.time()
 
         issues = []
@@ -807,19 +870,23 @@ class Gate5IntegrationTest(ValidationGate):
             checks_passed += 1
         elif pass_rate >= 0.80:
             checks_passed += 0.7
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="testing",
-                message=f"Test pass rate: {pass_rate:.0%}",
-                suggestion="Fix failing tests before deployment",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="testing",
+                    message=f"Test pass rate: {pass_rate:.0%}",
+                    suggestion="Fix failing tests before deployment",
+                )
+            )
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="testing",
-                message=f"Low test pass rate: {pass_rate:.0%}",
-                suggestion="Review and fix failing tests",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="testing",
+                    message=f"Low test pass rate: {pass_rate:.0%}",
+                    suggestion="Review and fix failing tests",
+                )
+            )
 
         # Check 2: Performance tests
         total_checks += 1
@@ -827,13 +894,15 @@ class Gate5IntegrationTest(ValidationGate):
         if perf_results.get("passed", False):
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="performance",
-                message="Performance tests did not meet requirements",
-                suggestion="Optimize slow operations or adjust thresholds",
-                context=perf_results.get("metrics", {}),
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="performance",
+                    message="Performance tests did not meet requirements",
+                    suggestion="Optimize slow operations or adjust thresholds",
+                    context=perf_results.get("metrics", {}),
+                )
+            )
 
         # Check 3: Error handling tests
         total_checks += 1
@@ -841,12 +910,14 @@ class Gate5IntegrationTest(ValidationGate):
         if error_handling.get("coverage", 0) >= 0.8:
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="resilience",
-                message=f"Error handling coverage: {error_handling.get('coverage', 0):.0%}",
-                suggestion="Add tests for error scenarios",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="resilience",
+                    message=f"Error handling coverage: {error_handling.get('coverage', 0):.0%}",
+                    suggestion="Add tests for error scenarios",
+                )
+            )
 
         # Check 4: End-to-end tests
         total_checks += 1
@@ -854,12 +925,14 @@ class Gate5IntegrationTest(ValidationGate):
         if e2e_results.get("passed", False):
             checks_passed += 1
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.ERROR,
-                category="integration",
-                message="End-to-end tests failed",
-                suggestion="Review integration points and fix issues",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="integration",
+                    message="End-to-end tests failed",
+                    suggestion="Review integration points and fix issues",
+                )
+            )
 
         # Check 5: Code coverage
         total_checks += 1
@@ -870,12 +943,14 @@ class Gate5IntegrationTest(ValidationGate):
             checks_passed += 0.7
             recommendations.append(f"Consider increasing test coverage from {coverage:.0%}")
         else:
-            issues.append(ValidationIssue(
-                severity=ValidationSeverity.WARNING,
-                category="coverage",
-                message=f"Low test coverage: {coverage:.0%}",
-                suggestion="Add tests to improve coverage",
-            ))
+            issues.append(
+                ValidationIssue(
+                    severity=ValidationSeverity.WARNING,
+                    category="coverage",
+                    message=f"Low test coverage: {coverage:.0%}",
+                    suggestion="Add tests to improve coverage",
+                )
+            )
 
         confidence = self._calculate_confidence(issues, checks_passed, total_checks)
         status = self._calculate_status(confidence)

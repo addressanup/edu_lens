@@ -7,23 +7,20 @@ for different age groups and use cases.
 Author: Vision Processing Agent (VIS-001)
 """
 
-import numpy as np
-import cv2
 from pathlib import Path
 
-from src.vision.handwriting_engine import (
-    HandwritingRecognizer,
-    AgeGroup,
-    HandwritingStyle
-)
+import cv2
+import numpy as np
+
 from src.vision.character_segmenter import CharacterSegmenter
+from src.vision.handwriting_engine import AgeGroup, HandwritingRecognizer, HandwritingStyle
 
 
 def example_basic_recognition():
     """Example: Basic handwriting recognition."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 1: Basic Handwriting Recognition")
-    print("="*70)
+    print("=" * 70)
 
     # Initialize recognizer
     recognizer = HandwritingRecognizer()
@@ -44,7 +41,7 @@ def example_basic_recognition():
         2.0,
         (0, 0, 0),
         2,
-        cv2.LINE_AA
+        cv2.LINE_AA,
     )
 
     # Recognize handwriting
@@ -60,9 +57,9 @@ def example_basic_recognition():
 
 def example_age_specific_recognition():
     """Example: Age-specific handwriting recognition."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 2: Age-Specific Recognition")
-    print("="*70)
+    print("=" * 70)
 
     # Create recognizer
     recognizer = HandwritingRecognizer()
@@ -71,11 +68,7 @@ def example_age_specific_recognition():
     sample_text = "The cat sat"
 
     # Test with different age groups
-    age_groups = [
-        AgeGroup.EARLY_ELEMENTARY,
-        AgeGroup.MID_ELEMENTARY,
-        AgeGroup.LATE_ELEMENTARY
-    ]
+    age_groups = [AgeGroup.EARLY_ELEMENTARY, AgeGroup.MID_ELEMENTARY, AgeGroup.LATE_ELEMENTARY]
 
     for age_group in age_groups:
         print(f"\nAge Group: {age_group.value}")
@@ -93,7 +86,7 @@ def example_age_specific_recognition():
             1.5,
             (0, 0, 0),
             2,
-            cv2.LINE_AA
+            cv2.LINE_AA,
         )
 
         # Recognize
@@ -106,36 +99,23 @@ def example_age_specific_recognition():
 
 def example_math_recognition():
     """Example: Mathematical expression recognition."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 3: Mathematical Expression Recognition")
-    print("="*70)
+    print("=" * 70)
 
     # Initialize recognizer
     recognizer = HandwritingRecognizer()
     recognizer.configure_for_children(AgeGroup.MID_ELEMENTARY)
 
     # Sample math expressions
-    expressions = [
-        "2 + 2 = 4",
-        "10 - 5 = 5",
-        "3 × 4 = 12"
-    ]
+    expressions = ["2 + 2 = 4", "10 - 5 = 5", "3 × 4 = 12"]
 
     for expr in expressions:
         print(f"\nExpression: {expr}")
 
         # Create sample image
         image = np.ones((150, 600, 3), dtype=np.uint8) * 255
-        cv2.putText(
-            image,
-            expr,
-            (50, 80),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1.5,
-            (0, 0, 0),
-            2,
-            cv2.LINE_AA
-        )
+        cv2.putText(image, expr, (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA)
 
         # Recognize math handwriting
         result = recognizer.recognize_math_handwriting(image)
@@ -146,9 +126,9 @@ def example_math_recognition():
 
 def example_confidence_analysis():
     """Example: Detailed confidence score analysis."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 4: Confidence Score Analysis")
-    print("="*70)
+    print("=" * 70)
 
     # Initialize recognizer
     recognizer = HandwritingRecognizer()
@@ -164,7 +144,7 @@ def example_confidence_analysis():
         2.0,
         (0, 0, 0),
         2,
-        cv2.LINE_AA
+        cv2.LINE_AA,
     )
 
     # Recognize
@@ -179,15 +159,15 @@ def example_confidence_analysis():
     print(f"Total Characters: {confidence_scores['total_characters']}")
 
     print("\nPer-Word Confidence:")
-    for word_score in confidence_scores['per_word']:
+    for word_score in confidence_scores["per_word"]:
         print(f"  '{word_score['text']}': {word_score['confidence']:.2%}")
 
 
 def example_character_segmentation():
     """Example: Character segmentation demonstration."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 5: Character Segmentation")
-    print("="*70)
+    print("=" * 70)
 
     # Initialize segmenter
     segmenter = CharacterSegmenter()
@@ -202,15 +182,12 @@ def example_character_segmentation():
         2.0,
         (0, 0, 0),
         2,
-        cv2.LINE_AA
+        cv2.LINE_AA,
     )
 
     # Perform segmentation
     result = segmenter.segment_all(
-        image,
-        segment_lines=True,
-        segment_words=True,
-        segment_characters=True
+        image, segment_lines=True, segment_words=True, segment_characters=True
     )
 
     print(f"Lines Detected: {len(result.lines)}")
@@ -219,20 +196,18 @@ def example_character_segmentation():
 
     print("\nWord Segments:")
     for i, word in enumerate(result.words, 1):
-        print(f"  Word {i}: Position ({word.x}, {word.y}), "
-              f"Size {word.width}x{word.height}")
+        print(f"  Word {i}: Position ({word.x}, {word.y}), " f"Size {word.width}x{word.height}")
 
     print("\nCharacter Segments:")
     for i, char in enumerate(result.characters[:10], 1):  # Show first 10
-        print(f"  Char {i}: Position ({char.x}, {char.y}), "
-              f"Size {char.width}x{char.height}")
+        print(f"  Char {i}: Position ({char.x}, {char.y}), " f"Size {char.width}x{char.height}")
 
 
 def example_preprocessing():
     """Example: Preprocessing pipeline demonstration."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 6: Handwriting Preprocessing")
-    print("="*70)
+    print("=" * 70)
 
     # Initialize recognizer
     recognizer = HandwritingRecognizer()
@@ -249,7 +224,7 @@ def example_preprocessing():
         2.0,
         (0, 0, 0),
         2,
-        cv2.LINE_AA
+        cv2.LINE_AA,
     )
 
     # Add noise
@@ -276,9 +251,9 @@ def example_preprocessing():
 
 def example_batch_processing():
     """Example: Batch processing multiple images."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EXAMPLE 7: Batch Processing")
-    print("="*70)
+    print("=" * 70)
 
     # Initialize recognizer
     recognizer = HandwritingRecognizer()
@@ -295,14 +270,7 @@ def example_batch_processing():
         # Create sample
         image = np.ones((150, 400, 3), dtype=np.uint8) * 255
         cv2.putText(
-            image,
-            word,
-            (50, 80),
-            cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,
-            1.5,
-            (0, 0, 0),
-            2,
-            cv2.LINE_AA
+            image, word, (50, 80), cv2.FONT_HERSHEY_SCRIPT_SIMPLEX, 1.5, (0, 0, 0), 2, cv2.LINE_AA
         )
 
         # Recognize
@@ -327,9 +295,9 @@ def example_batch_processing():
 
 def main():
     """Run all examples."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("EDULENS HANDWRITING RECOGNITION - EXAMPLE USAGE")
-    print("="*70)
+    print("=" * 70)
 
     try:
         # Run examples
@@ -341,16 +309,17 @@ def main():
         example_preprocessing()
         example_batch_processing()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("ALL EXAMPLES COMPLETED SUCCESSFULLY")
-        print("="*70)
+        print("=" * 70)
         print("\nNOTE: These examples use placeholder character recognition.")
         print("For production deployment, integrate trained CNN models.")
-        print("="*70)
+        print("=" * 70)
 
     except Exception as e:
         print(f"\nError running examples: {e}")
         import traceback
+
         traceback.print_exc()
 
 

@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, TypeVar, Union
 
-
 T = TypeVar("T")
 
 
@@ -351,7 +350,7 @@ def chunk_list(lst: List[T], chunk_size: int) -> List[List[T]]:
     Returns:
         List of chunks
     """
-    return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 
 def flatten_dict(

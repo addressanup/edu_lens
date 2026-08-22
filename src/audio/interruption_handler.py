@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class InterruptionType(Enum):
     """Types of interruptions."""
+
     SPEECH = "speech"  # Student started speaking
     WAKE_WORD = "wake_word"  # Wake word detected
     MANUAL = "manual"  # Manual interrupt (e.g., button press)
@@ -28,6 +29,7 @@ class InterruptionType(Enum):
 @dataclass
 class InterruptionEvent:
     """Interruption event data."""
+
     interrupt_type: InterruptionType
     timestamp: float
     audio_level: float
@@ -43,6 +45,7 @@ class InterruptionEvent:
 @dataclass
 class InterruptionConfig:
     """Configuration for interruption detection."""
+
     # Detection thresholds
     speech_threshold: float = 0.05  # RMS threshold for speech detection
     confidence_threshold: float = 0.7  # Confidence threshold for valid interrupt
@@ -85,9 +88,7 @@ class InterruptionHandler:
 
         # Audio monitoring
         self._audio_buffer = []
-        self._detection_samples = int(
-            self.config.detection_window_ms * 16  # Assume 16kHz
-        )
+        self._detection_samples = int(self.config.detection_window_ms * 16)  # Assume 16kHz
 
         # Callbacks
         self._interrupt_callbacks = []
@@ -137,9 +138,7 @@ class InterruptionHandler:
             logger.debug("TTS playback stopped")
 
     def detect_interruption(
-        self,
-        audio_data: np.ndarray,
-        sample_rate: int = 16000
+        self, audio_data: np.ndarray, sample_rate: int = 16000
     ) -> Optional[InterruptionEvent]:
         """
         Detect if current audio contains an interruption.
@@ -174,7 +173,7 @@ class InterruptionHandler:
 
         # Keep only detection window
         if len(self._audio_buffer) > self._detection_samples:
-            self._audio_buffer = self._audio_buffer[-self._detection_samples:]
+            self._audio_buffer = self._audio_buffer[-self._detection_samples :]
 
         # Need minimum samples
         min_samples = int(self.config.min_speech_duration_ms * sample_rate / 1000)
@@ -211,7 +210,7 @@ class InterruptionHandler:
             interrupt_type=InterruptionType.SPEECH,
             timestamp=time.time(),
             audio_level=audio_level,
-            confidence=confidence
+            confidence=confidence,
         )
 
         # Update state
@@ -220,8 +219,7 @@ class InterruptionHandler:
         self._total_interrupts += 1
 
         logger.info(
-            f"Interruption detected: level={audio_level:.3f}, "
-            f"confidence={confidence:.2f}"
+            f"Interruption detected: level={audio_level:.3f}, " f"confidence={confidence:.2f}"
         )
 
         return event
@@ -241,12 +239,14 @@ class InterruptionHandler:
         logger.info("Paused TTS playback due to interruption")
 
         # Trigger callbacks
-        self._trigger_callbacks(InterruptionEvent(
-            interrupt_type=InterruptionType.SPEECH,
-            timestamp=time.time(),
-            audio_level=0.0,
-            confidence=1.0
-        ))
+        self._trigger_callbacks(
+            InterruptionEvent(
+                interrupt_type=InterruptionType.SPEECH,
+                timestamp=time.time(),
+                audio_level=0.0,
+                confidence=1.0,
+            )
+        )
 
         return True
 
@@ -310,9 +310,7 @@ class InterruptionHandler:
             Dictionary of statistics
         """
         total = self._true_positive_count + self._false_positive_count
-        accuracy = (
-            self._true_positive_count / total if total > 0 else 0.0
-        )
+        accuracy = self._true_positive_count / total if total > 0 else 0.0
 
         return {
             "total_interrupts": self._total_interrupts,
@@ -321,7 +319,7 @@ class InterruptionHandler:
             "accuracy": accuracy,
             "is_monitoring": self._is_monitoring,
             "is_playing": self._is_playing,
-            "in_cooldown": self._in_cooldown
+            "in_cooldown": self._in_cooldown,
         }
 
     def mark_true_positive(self) -> None:
@@ -383,11 +381,7 @@ class InterruptionHandler:
         confidence = min(0.5 + (ratio - 1.0) * 0.3, 1.0)
         return float(confidence)
 
-    def _check_sustained_speech(
-        self,
-        audio_data: np.ndarray,
-        sample_rate: int
-    ) -> bool:
+    def _check_sustained_speech(self, audio_data: np.ndarray, sample_rate: int) -> bool:
         """
         Check if audio contains sustained speech (not just spike).
 
@@ -407,7 +401,7 @@ class InterruptionHandler:
         # Calculate RMS for each frame
         frame_rms = []
         for i in range(0, len(audio_data) - frame_size, frame_size):
-            frame = audio_data[i:i + frame_size]
+            frame = audio_data[i : i + frame_size]
             rms = self._calculate_rms(frame)
             frame_rms.append(rms)
 
@@ -435,7 +429,7 @@ class InterruptionHandler:
         if len(samples) == 0:
             return 0.0
 
-        return float(np.sqrt(np.mean(samples ** 2)))
+        return float(np.sqrt(np.mean(samples**2)))
 
     def _trigger_callbacks(self, event: InterruptionEvent) -> None:
         """
@@ -495,9 +489,7 @@ class AsyncInterruptionHandler:
         self._handler.set_playback_state(is_playing)
 
     async def detect_interruption(
-        self,
-        audio_data: np.ndarray,
-        sample_rate: int = 16000
+        self, audio_data: np.ndarray, sample_rate: int = 16000
     ) -> Optional[InterruptionEvent]:
         """
         Detect interruption (async).
@@ -509,11 +501,7 @@ class AsyncInterruptionHandler:
         Returns:
             InterruptionEvent if detected
         """
-        event = await asyncio.to_thread(
-            self._handler.detect_interruption,
-            audio_data,
-            sample_rate
-        )
+        event = await asyncio.to_thread(self._handler.detect_interruption, audio_data, sample_rate)
 
         if event:
             await self._interrupt_queue.put(event)
@@ -521,8 +509,7 @@ class AsyncInterruptionHandler:
         return event
 
     async def wait_for_interrupt(
-        self,
-        timeout: Optional[float] = None
+        self, timeout: Optional[float] = None
     ) -> Optional[InterruptionEvent]:
         """
         Wait for next interruption.
@@ -535,10 +522,7 @@ class AsyncInterruptionHandler:
         """
         try:
             if timeout:
-                event = await asyncio.wait_for(
-                    self._interrupt_queue.get(),
-                    timeout=timeout
-                )
+                event = await asyncio.wait_for(self._interrupt_queue.get(), timeout=timeout)
             else:
                 event = await self._interrupt_queue.get()
 

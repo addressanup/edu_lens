@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
 class AgentStatus(str, Enum):
@@ -97,7 +97,9 @@ class AgentMetrics:
             "total_tokens_input": self.total_tokens_input,
             "total_tokens_output": self.total_tokens_output,
             "average_latency_ms": self.average_latency_ms,
-            "last_invocation_at": self.last_invocation_at.isoformat() if self.last_invocation_at else None,
+            "last_invocation_at": (
+                self.last_invocation_at.isoformat() if self.last_invocation_at else None
+            ),
         }
 
 
@@ -355,7 +357,7 @@ class BaseAgent(ABC):
                 last_error = e
                 if attempt < self.max_retries - 1:
                     # Exponential backoff
-                    wait_time = 2 ** attempt
+                    wait_time = 2**attempt
                     await asyncio.sleep(wait_time)
 
         raise last_error
@@ -376,17 +378,21 @@ class BaseAgent(ABC):
             prompt_parts.append(f"- {cap.value.replace('_', ' ').title()}")
 
         if self._skills_content:
-            prompt_parts.extend([
-                "",
-                "Your detailed skills and expertise:",
-                self._skills_content,
-            ])
+            prompt_parts.extend(
+                [
+                    "",
+                    "Your detailed skills and expertise:",
+                    self._skills_content,
+                ]
+            )
 
-        prompt_parts.extend([
-            "",
-            "Always respond with valid JSON containing your analysis and output.",
-            "Be thorough, accurate, and follow best practices.",
-        ])
+        prompt_parts.extend(
+            [
+                "",
+                "Always respond with valid JSON containing your analysis and output.",
+                "Be thorough, accurate, and follow best practices.",
+            ]
+        )
 
         return "\n".join(prompt_parts)
 

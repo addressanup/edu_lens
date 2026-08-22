@@ -10,55 +10,43 @@ This package provides AI-powered educational components including:
 - Multi-provider LLM integration
 """
 
-from .curriculum_manager import CurriculumManager, create_curriculum_manager
-from .tutor_inference import (
-    TutorEngine,
-    create_tutor_engine,
-    ResponseType,
-    DifficultyLevel
-)
-from .prompt_templates import (
-    PromptTemplateManager,
-    HintLevel
-)
-from .response_validator import (
-    ResponseValidator,
-    validate_educational_response
-)
-from .llm_service import (
-    LLMService,
-    LLMConfig,
-    LLMProvider,
-    LLMMessage,
-    LLMResponse,
-    generate_response
-)
-
 # Import personalization module
 from . import personalization
+from .curriculum_manager import CurriculumManager, create_curriculum_manager
+from .llm_service import (
+    LLMConfig,
+    LLMMessage,
+    LLMProvider,
+    LLMResponse,
+    LLMService,
+    generate_response,
+)
+from .prompt_templates import HintLevel, PromptTemplateManager
+from .response_validator import ResponseValidator, validate_educational_response
+from .tutor_inference import DifficultyLevel, ResponseType, TutorEngine, create_tutor_engine
 
 __all__ = [
     # Curriculum
-    'CurriculumManager',
-    'create_curriculum_manager',
+    "CurriculumManager",
+    "create_curriculum_manager",
     # Tutoring
-    'TutorEngine',
-    'create_tutor_engine',
-    'ResponseType',
-    'DifficultyLevel',
+    "TutorEngine",
+    "create_tutor_engine",
+    "ResponseType",
+    "DifficultyLevel",
     # Templates
-    'PromptTemplateManager',
-    'HintLevel',
+    "PromptTemplateManager",
+    "HintLevel",
     # Validation
-    'ResponseValidator',
-    'validate_educational_response',
+    "ResponseValidator",
+    "validate_educational_response",
     # LLM Service
-    'LLMService',
-    'LLMConfig',
-    'LLMProvider',
-    'LLMMessage',
-    'LLMResponse',
-    'generate_response',
+    "LLMService",
+    "LLMConfig",
+    "LLMProvider",
+    "LLMMessage",
+    "LLMResponse",
+    "generate_response",
     # Personalization
-    'personalization',
+    "personalization",
 ]

@@ -7,8 +7,8 @@ based on token consumption.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class ModelTier(str, Enum):
@@ -166,23 +166,27 @@ class CostTracker:
 
         # Warning at 75%
         if utilization >= 0.75 and not any(a.get("level") == "warning" for a in self._alerts):
-            self._alerts.append({
-                "level": "warning",
-                "message": f"Budget utilization at {utilization:.0%}",
-                "cost": total,
-                "budget": self._budget,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            self._alerts.append(
+                {
+                    "level": "warning",
+                    "message": f"Budget utilization at {utilization:.0%}",
+                    "cost": total,
+                    "budget": self._budget,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
 
         # Critical at 90%
         if utilization >= 0.90 and not any(a.get("level") == "critical" for a in self._alerts):
-            self._alerts.append({
-                "level": "critical",
-                "message": f"Budget utilization at {utilization:.0%}",
-                "cost": total,
-                "budget": self._budget,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            self._alerts.append(
+                {
+                    "level": "critical",
+                    "message": f"Budget utilization at {utilization:.0%}",
+                    "cost": total,
+                    "budget": self._budget,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
 
     def get_total_cost(self) -> float:
         """Get total cost across all records."""
@@ -315,7 +319,9 @@ class CostTracker:
             "savings_usd": savings,
             "roi_percent": roi,
             "hours_saved": manual_hours_saved,
-            "effective_hourly_rate": total_cost / manual_hours_saved if manual_hours_saved > 0 else 0,
+            "effective_hourly_rate": (
+                total_cost / manual_hours_saved if manual_hours_saved > 0 else 0
+            ),
         }
 
     def get_alerts(self) -> List[Dict[str, Any]]:

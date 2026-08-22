@@ -17,14 +17,13 @@ import asyncio
 import gc
 import os
 import platform
-import psutil
 import time
 from typing import Dict, List
 from unittest.mock import Mock, patch
 
 import numpy as np
+import psutil
 import pytest
-
 
 # ============================================================================
 # Performance Measurement Utilities
@@ -73,8 +72,14 @@ class PerformanceMonitor:
             "peak_memory_mb": self.peak_memory,
             "memory_increase_mb": self.peak_memory - self.start_memory,
             "final_memory_mb": final["memory_mb"],
-            "avg_cpu_percent": sum(m["cpu_percent"] for m in self.measurements) / len(self.measurements) if self.measurements else 0,
-            "peak_cpu_percent": max(m["cpu_percent"] for m in self.measurements) if self.measurements else 0,
+            "avg_cpu_percent": (
+                sum(m["cpu_percent"] for m in self.measurements) / len(self.measurements)
+                if self.measurements
+                else 0
+            ),
+            "peak_cpu_percent": (
+                max(m["cpu_percent"] for m in self.measurements) if self.measurements else 0
+            ),
         }
 
 
@@ -285,9 +290,7 @@ class TestMemoryUsage:
         stats = performance_monitor.stop()
 
         # Memory increase should be minimal (data is minimized and discarded)
-        assert stats["memory_increase_mb"] < 50, (
-            "Image processing leaked memory"
-        )
+        assert stats["memory_increase_mb"] < 50, "Image processing leaked memory"
 
     @pytest.mark.performance
     def test_audio_processing_memory(
@@ -313,9 +316,7 @@ class TestMemoryUsage:
         stats = performance_monitor.stop()
 
         # Memory increase should be minimal
-        assert stats["memory_increase_mb"] < 50, (
-            "Audio processing leaked memory"
-        )
+        assert stats["memory_increase_mb"] < 50, "Audio processing leaked memory"
 
     @pytest.mark.performance
     def test_conversation_history_memory(
@@ -330,6 +331,7 @@ class TestMemoryUsage:
         for i in range(100):
             query = voice_to_ai_bridge.process_voice_input(f"Question {i}", 0.95)
             from src.integration.voice_to_ai_bridge import SpeechResponse
+
             response = SpeechResponse(text=f"Response {i}", tone="explaining")
             voice_to_ai_bridge.add_to_history(query, response)
 
@@ -339,9 +341,7 @@ class TestMemoryUsage:
         stats = performance_monitor.stop()
 
         # Memory should not grow unbounded (history should be limited)
-        assert stats["memory_increase_mb"] < 20, (
-            "Conversation history grew unbounded"
-        )
+        assert stats["memory_increase_mb"] < 20, "Conversation history grew unbounded"
 
 
 # ============================================================================
@@ -372,9 +372,9 @@ class TestCPUUsage:
         stats = performance_monitor.stop()
 
         # Idle CPU should be very low
-        assert stats["avg_cpu_percent"] < 10, (
-            f"Idle CPU usage too high: {stats['avg_cpu_percent']:.1f}%"
-        )
+        assert (
+            stats["avg_cpu_percent"] < 10
+        ), f"Idle CPU usage too high: {stats['avg_cpu_percent']:.1f}%"
 
     @pytest.mark.performance
     def test_active_processing_cpu(
@@ -402,9 +402,9 @@ class TestCPUUsage:
 
         # CPU should be reasonable even under load
         # Note: This can vary greatly by system, so use generous threshold
-        assert stats["avg_cpu_percent"] < 80, (
-            f"Average CPU too high: {stats['avg_cpu_percent']:.1f}%"
-        )
+        assert (
+            stats["avg_cpu_percent"] < 80
+        ), f"Average CPU too high: {stats['avg_cpu_percent']:.1f}%"
 
     @pytest.mark.performance
     def test_data_minimization_cpu(
@@ -465,9 +465,9 @@ class TestThroughput:
         interactions_per_second = interaction_count / elapsed
 
         # Should handle at least 100 interactions per second
-        assert interactions_per_second > 100, (
-            f"Throughput too low: {interactions_per_second:.1f} interactions/s"
-        )
+        assert (
+            interactions_per_second > 100
+        ), f"Throughput too low: {interactions_per_second:.1f} interactions/s"
 
     @pytest.mark.performance
     def test_concurrent_processing(
@@ -527,9 +527,7 @@ class TestResourceCleanup:
         stats = performance_monitor.stop()
 
         # Memory should not grow significantly
-        assert stats["memory_increase_mb"] < 30, (
-            "Sessions not properly cleaned up"
-        )
+        assert stats["memory_increase_mb"] < 30, "Sessions not properly cleaned up"
 
     @pytest.mark.performance
     def test_minimized_data_cleanup(
@@ -627,6 +625,7 @@ class TestStressScenarios:
 
         for i in range(500):
             from src.pipeline.session_manager import SessionState
+
             state = SessionState[states[i % len(states)]]
             session_manager.update_state(session.session_id, state)
 

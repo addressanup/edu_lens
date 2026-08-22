@@ -11,20 +11,21 @@ Tests wake word detection including:
 Author: Testing Agent (TST-001)
 """
 
-import pytest
-import numpy as np
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
+import numpy as np
+import pytest
+
+from src.audio.audio_capture import AudioConfig
 from src.audio.wake_word_engine import (
-    WakeWordDetector,
     AsyncWakeWordDetector,
+    AudioStreamProcessor,
+    DetectionMode,
     DetectionResult,
     DetectionStats,
-    DetectionMode,
-    AudioStreamProcessor,
+    WakeWordDetector,
 )
-from src.audio.audio_capture import AudioConfig
 
 
 class TestDetectionResult:
@@ -33,10 +34,7 @@ class TestDetectionResult:
     def test_detection_result_creation(self):
         """Test creating a detection result."""
         result = DetectionResult(
-            detected=True,
-            confidence=0.92,
-            timestamp=1234567890.0,
-            latency_ms=85.5
+            detected=True, confidence=0.92, timestamp=1234567890.0, latency_ms=85.5
         )
 
         assert result.detected is True
@@ -52,7 +50,7 @@ class TestDetectionResult:
             confidence=0.95,
             timestamp=1234567890.0,
             latency_ms=90.0,
-            audio_segment=audio
+            audio_segment=audio,
         )
 
         assert result.audio_segment is not None
@@ -72,19 +70,13 @@ class TestDetectionStats:
 
     def test_true_positive_rate(self):
         """Test TPR calculation."""
-        stats = DetectionStats(
-            true_positives=95,
-            false_negatives=5
-        )
+        stats = DetectionStats(true_positives=95, false_negatives=5)
 
         assert stats.true_positive_rate == 0.95
 
     def test_false_positive_rate(self):
         """Test FPR calculation."""
-        stats = DetectionStats(
-            true_positives=90,
-            false_positives=10
-        )
+        stats = DetectionStats(true_positives=90, false_positives=10)
 
         assert stats.false_positive_rate == 0.10
 
@@ -142,11 +134,14 @@ class TestWakeWordDetector:
 
         assert detector.config_path == str(config_file)
 
-    @pytest.mark.parametrize("sensitivity,expected_threshold", [
-        (0.0, 0.9),  # Very conservative
-        (0.5, 0.6),  # Balanced
-        (1.0, 0.3),  # Very aggressive
-    ])
+    @pytest.mark.parametrize(
+        "sensitivity,expected_threshold",
+        [
+            (0.0, 0.9),  # Very conservative
+            (0.5, 0.6),  # Balanced
+            (1.0, 0.3),  # Very aggressive
+        ],
+    )
     def test_sensitivity_to_threshold(self, sensitivity, expected_threshold):
         """Test sensitivity to threshold conversion."""
         detector = WakeWordDetector(sensitivity=sensitivity)
@@ -172,7 +167,7 @@ class TestWakeWordDetector:
 
     def test_start_listening(self, detector):
         """Test starting wake word detection."""
-        with patch('src.audio.audio_capture.MicrophoneStream') as mock_stream:
+        with patch("src.audio.audio_capture.MicrophoneStream") as mock_stream:
             mock_stream_instance = MagicMock()
             mock_stream.return_value = mock_stream_instance
 
@@ -183,7 +178,7 @@ class TestWakeWordDetector:
 
     def test_stop_listening(self, detector):
         """Test stopping wake word detection."""
-        with patch('src.audio.audio_capture.MicrophoneStream') as mock_stream:
+        with patch("src.audio.audio_capture.MicrophoneStream") as mock_stream:
             mock_stream_instance = MagicMock()
             mock_stream.return_value = mock_stream_instance
 
@@ -195,7 +190,7 @@ class TestWakeWordDetector:
 
     def test_start_listening_already_listening(self, detector):
         """Test starting when already listening."""
-        with patch('src.audio.audio_capture.MicrophoneStream') as mock_stream:
+        with patch("src.audio.audio_capture.MicrophoneStream") as mock_stream:
             mock_stream_instance = MagicMock()
             mock_stream.return_value = mock_stream_instance
 
@@ -232,7 +227,7 @@ class TestWakeWordDetector:
 
     def test_detect_batch_with_detection(self, detector, sample_audio):
         """Test batch detection with wake word present."""
-        with patch.object(detector, '_run_inference', return_value=0.95):
+        with patch.object(detector, "_run_inference", return_value=0.95):
             result = detector.detect_batch(sample_audio)
 
             assert result.detected is True
@@ -240,7 +235,7 @@ class TestWakeWordDetector:
 
     def test_detect_batch_no_detection(self, detector, sample_audio):
         """Test batch detection without wake word."""
-        with patch.object(detector, '_run_inference', return_value=0.3):
+        with patch.object(detector, "_run_inference", return_value=0.3):
             result = detector.detect_batch(sample_audio)
 
             assert result.detected is False
@@ -273,7 +268,7 @@ class TestWakeWordDetector:
 
     def test_context_manager(self, detector):
         """Test using detector as context manager."""
-        with patch('src.audio.audio_capture.MicrophoneStream'):
+        with patch("src.audio.audio_capture.MicrophoneStream"):
             with detector as d:
                 assert d.is_listening is True
 
@@ -306,16 +301,16 @@ class TestAudioStreamProcessor:
 
     def test_process_chunk_no_speech(self, processor, sample_audio_chunk):
         """Test processing chunk with no speech detected."""
-        with patch.object(processor.vad, 'detect', return_value=(False, 0.2)):
+        with patch.object(processor.vad, "detect", return_value=(False, 0.2)):
             result = processor.process_chunk(sample_audio_chunk)
 
             assert result is None
 
     def test_process_chunk_with_speech(self, processor, sample_audio_chunk):
         """Test processing chunk with speech."""
-        with patch.object(processor.vad, 'detect', return_value=(True, 0.8)):
-            with patch.object(processor, '_extract_features', return_value=np.random.randn(13, 10)):
-                with patch.object(processor.detector, '_run_inference', return_value=0.95):
+        with patch.object(processor.vad, "detect", return_value=(True, 0.8)):
+            with patch.object(processor, "_extract_features", return_value=np.random.randn(13, 10)):
+                with patch.object(processor.detector, "_run_inference", return_value=0.95):
                     result = processor.process_chunk(sample_audio_chunk)
 
                     assert isinstance(result, DetectionResult)
@@ -323,9 +318,9 @@ class TestAudioStreamProcessor:
 
     def test_process_chunk_low_confidence(self, processor, sample_audio_chunk):
         """Test processing with low confidence."""
-        with patch.object(processor.vad, 'detect', return_value=(True, 0.8)):
-            with patch.object(processor, '_extract_features', return_value=np.random.randn(13, 10)):
-                with patch.object(processor.detector, '_run_inference', return_value=0.3):
+        with patch.object(processor.vad, "detect", return_value=(True, 0.8)):
+            with patch.object(processor, "_extract_features", return_value=np.random.randn(13, 10)):
+                with patch.object(processor.detector, "_run_inference", return_value=0.3):
                     result = processor.process_chunk(sample_audio_chunk)
 
                     assert result is None  # Below threshold
@@ -341,7 +336,7 @@ class TestAudioStreamProcessor:
         """Test feature extraction with noise reduction."""
         noisy_audio = np.random.randn(1024).astype(np.float32) * 0.1
 
-        with patch.object(processor.noise_estimator, 'get_snr', return_value=5.0):  # Low SNR
+        with patch.object(processor.noise_estimator, "get_snr", return_value=5.0):  # Low SNR
             features = processor._extract_features(noisy_audio)
 
             # Should apply noise reduction
@@ -359,7 +354,7 @@ class TestDetectionAccuracy:
         """Test correct wake word detection."""
         audio = np.random.randn(16000).astype(np.float32)
 
-        with patch.object(detector, '_run_inference', return_value=0.95):
+        with patch.object(detector, "_run_inference", return_value=0.95):
             result = detector.detect_batch(audio)
 
             assert result.detected is True
@@ -369,7 +364,7 @@ class TestDetectionAccuracy:
         """Test correctly not detecting non-wake word."""
         audio = np.random.randn(16000).astype(np.float32) * 0.01  # Very quiet
 
-        with patch.object(detector, '_run_inference', return_value=0.2):
+        with patch.object(detector, "_run_inference", return_value=0.2):
             result = detector.detect_batch(audio)
 
             assert result.detected is False
@@ -381,7 +376,7 @@ class TestDetectionAccuracy:
 
         audio = np.random.randn(16000).astype(np.float32)
 
-        with patch.object(detector, '_run_inference', return_value=0.4):
+        with patch.object(detector, "_run_inference", return_value=0.4):
             result = detector.detect_batch(audio)
 
             # With high sensitivity, threshold is lower
@@ -391,13 +386,10 @@ class TestDetectionAccuracy:
         """Test minimum detection interval enforcement."""
         detector._last_detection_time = 1000.0
 
-        with patch('time.time', return_value=1001.0):  # 1 second later
-            with patch.object(detector, '_processor') as mock_processor:
+        with patch("time.time", return_value=1001.0):  # 1 second later
+            with patch.object(detector, "_processor") as mock_processor:
                 mock_processor.process_chunk.return_value = DetectionResult(
-                    detected=True,
-                    confidence=0.95,
-                    timestamp=1001.0,
-                    latency_ms=50.0
+                    detected=True, confidence=0.95, timestamp=1001.0, latency_ms=50.0
                 )
 
                 audio = np.random.randn(1024).astype(np.float32)
@@ -414,17 +406,20 @@ class TestDifferentVoices:
     def detector(self):
         return WakeWordDetector(sensitivity=0.5)
 
-    @pytest.mark.parametrize("voice_type,expected_confidence", [
-        ("child_high_pitch", 0.85),
-        ("child_low_pitch", 0.82),
-        ("adult_female", 0.75),
-        ("adult_male", 0.70),
-    ])
+    @pytest.mark.parametrize(
+        "voice_type,expected_confidence",
+        [
+            ("child_high_pitch", 0.85),
+            ("child_low_pitch", 0.82),
+            ("adult_female", 0.75),
+            ("adult_male", 0.70),
+        ],
+    )
     def test_different_voice_types(self, detector, voice_type, expected_confidence):
         """Test detection with different voice types."""
         audio = np.random.randn(16000).astype(np.float32)
 
-        with patch.object(detector, '_run_inference', return_value=expected_confidence):
+        with patch.object(detector, "_run_inference", return_value=expected_confidence):
             result = detector.detect_batch(audio)
 
             if expected_confidence >= detector.threshold:
@@ -436,7 +431,7 @@ class TestDifferentVoices:
         # Children typically have higher fundamental frequency
         child_audio = np.sin(2 * np.pi * 300 * np.linspace(0, 1, 16000)).astype(np.float32)
 
-        with patch.object(detector, '_run_inference', return_value=0.9):
+        with patch.object(detector, "_run_inference", return_value=0.9):
             result = detector.detect_batch(child_audio)
 
             assert result.detected is True
@@ -474,7 +469,7 @@ class TestAsyncWakeWordDetector:
     @pytest.mark.asyncio
     async def test_async_start_listening(self, async_detector):
         """Test starting async listening."""
-        with patch.object(async_detector._detector, 'start_listening'):
+        with patch.object(async_detector._detector, "start_listening"):
             await async_detector.start_listening()
 
             # Callback should be registered
@@ -483,7 +478,7 @@ class TestAsyncWakeWordDetector:
     @pytest.mark.asyncio
     async def test_async_stop_listening(self, async_detector):
         """Test stopping async listening."""
-        with patch.object(async_detector._detector, 'stop_listening'):
+        with patch.object(async_detector._detector, "stop_listening"):
             await async_detector.stop_listening()
 
     @pytest.mark.asyncio
@@ -491,10 +486,7 @@ class TestAsyncWakeWordDetector:
         """Test waiting for wake word detection."""
         # Simulate detection
         result = DetectionResult(
-            detected=True,
-            confidence=0.95,
-            timestamp=1234567890.0,
-            latency_ms=90.0
+            detected=True, confidence=0.95, timestamp=1234567890.0, latency_ms=90.0
         )
 
         # Put result in queue
@@ -594,7 +586,7 @@ class TestEdgeCases:
         """Test concurrent start/stop operations."""
         detector = WakeWordDetector()
 
-        with patch('src.audio.audio_capture.MicrophoneStream'):
+        with patch("src.audio.audio_capture.MicrophoneStream"):
             # Rapid start/stop
             detector.start_listening()
             detector.stop_listening()

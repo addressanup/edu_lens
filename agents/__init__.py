@@ -7,8 +7,7 @@ and all specialized agents for different development tasks.
 
 from typing import Dict, List, Optional, Type
 
-from agents.base_agent import BaseAgent, AgentCapability, AgentStatus
-
+from agents.base_agent import AgentCapability, AgentStatus, BaseAgent
 
 # Agent registry for dynamic loading
 _AGENT_REGISTRY: Dict[str, Type[BaseAgent]] = {}
@@ -46,14 +45,14 @@ def get_all_agents() -> Dict[str, Type[BaseAgent]]:
 # Note: These imports happen after the registry is defined to avoid circular imports
 def _load_agents():
     """Load all agent modules to register them."""
-    from agents.concept_designer import ConceptDesignerAgent
-    from agents.mcp_engineer import MCPEngineerAgent
-    from agents.integration_engineer import IntegrationEngineerAgent
     from agents.backend_engineer import BackendEngineerAgent
-    from agents.frontend_engineer import FrontendEngineerAgent
-    from agents.security_engineer import SecurityEngineerAgent
-    from agents.qa_engineer import QAEngineerAgent
+    from agents.concept_designer import ConceptDesignerAgent
     from agents.devops_engineer import DevOpsEngineerAgent
+    from agents.frontend_engineer import FrontendEngineerAgent
+    from agents.integration_engineer import IntegrationEngineerAgent
+    from agents.mcp_engineer import MCPEngineerAgent
+    from agents.qa_engineer import QAEngineerAgent
+    from agents.security_engineer import SecurityEngineerAgent
 
     # Register all agents
     for agent_class in [

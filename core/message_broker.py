@@ -9,18 +9,18 @@ import asyncio
 import json
 import time
 import uuid
-from dataclasses import dataclass, field, asdict
+from collections import defaultdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, IntEnum
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
-from collections import defaultdict
 
 import redis.asyncio as redis
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 
@@ -243,11 +243,13 @@ class MessageBroker:
         message_id = str(uuid.uuid4())
         expires_at = None
         if expires_in is not None:
-            expires_at = datetime.now(timezone.utc) + \
-                __import__("datetime").timedelta(seconds=expires_in)
+            expires_at = datetime.now(timezone.utc) + __import__("datetime").timedelta(
+                seconds=expires_in
+            )
         elif self._default_ttl:
-            expires_at = datetime.now(timezone.utc) + \
-                __import__("datetime").timedelta(seconds=self._default_ttl)
+            expires_at = datetime.now(timezone.utc) + __import__("datetime").timedelta(
+                seconds=self._default_ttl
+            )
 
         message = BrokerMessage(
             id=message_id,
@@ -271,9 +273,7 @@ class MessageBroker:
         queue_size = await self._redis.zcard(queue_key)
         if queue_size > self._max_queue_size:
             # Remove oldest messages
-            await self._redis.zremrangebyrank(
-                queue_key, 0, queue_size - self._max_queue_size - 1
-            )
+            await self._redis.zremrangebyrank(queue_key, 0, queue_size - self._max_queue_size - 1)
 
         # Update stats
         self._stats[to_agent].total_messages += 1
@@ -337,9 +337,7 @@ class MessageBroker:
         # Check each priority queue in order
         for queue_key in queue_keys:
             # Get oldest message (lowest score)
-            result = await self._redis.zrange(
-                queue_key, 0, 0, withscores=True
-            )
+            result = await self._redis.zrange(queue_key, 0, 0, withscores=True)
 
             if result:
                 message_data, score = result[0]
@@ -419,10 +417,7 @@ class MessageBroker:
             message.status = MessageStatus.PENDING
 
             queue_key = self._get_queue_key(message.to_agent, message.priority)
-            await self._redis.zadd(
-                queue_key,
-                {json.dumps(message.to_dict()): time.time()}
-            )
+            await self._redis.zadd(queue_key, {json.dumps(message.to_dict()): time.time()})
             self._stats[message.to_agent].pending_messages += 1
         else:
             # Move to dead letter queue
@@ -438,10 +433,7 @@ class MessageBroker:
         message.metadata["dlq_reason"] = reason
         message.metadata["dlq_timestamp"] = datetime.now(timezone.utc).isoformat()
 
-        await self._redis.zadd(
-            self._dlq_key,
-            {json.dumps(message.to_dict()): time.time()}
-        )
+        await self._redis.zadd(self._dlq_key, {json.dumps(message.to_dict()): time.time()})
         self._stats[message.to_agent].dead_letter_messages += 1
 
     async def get_dlq_messages(
@@ -494,10 +486,7 @@ class MessageBroker:
                 message.metadata["reprocessed_at"] = datetime.now(timezone.utc).isoformat()
 
                 queue_key = self._get_queue_key(message.to_agent, message.priority)
-                await self._redis.zadd(
-                    queue_key,
-                    {json.dumps(message.to_dict()): time.time()}
-                )
+                await self._redis.zadd(queue_key, {json.dumps(message.to_dict()): time.time()})
 
                 self._stats[message.to_agent].dead_letter_messages -= 1
                 self._stats[message.to_agent].pending_messages += 1

@@ -26,11 +26,11 @@ import yaml
 
 from .audio_capture import AudioConfig, MicrophoneStream
 from .feature_extraction import (
-    MFCCExtractor,
-    VoiceActivityDetector,
-    NoiseEstimator,
     FeatureNormalizer,
-    combine_features
+    MFCCExtractor,
+    NoiseEstimator,
+    VoiceActivityDetector,
+    combine_features,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 class DetectionMode(Enum):
     """Detection mode options."""
+
     STREAMING = "streaming"  # Real-time continuous detection
     BATCH = "batch"  # Process complete audio files
 
@@ -45,6 +46,7 @@ class DetectionMode(Enum):
 @dataclass
 class DetectionResult:
     """Wake word detection result."""
+
     detected: bool
     confidence: float
     timestamp: float
@@ -55,6 +57,7 @@ class DetectionResult:
 @dataclass
 class DetectionStats:
     """Detection statistics for monitoring."""
+
     total_detections: int = 0
     true_positives: int = 0
     false_positives: int = 0
@@ -85,11 +88,7 @@ class AudioStreamProcessor:
     with minimal latency.
     """
 
-    def __init__(
-        self,
-        detector: 'WakeWordDetector',
-        audio_config: AudioConfig
-    ):
+    def __init__(self, detector: "WakeWordDetector", audio_config: AudioConfig):
         """
         Initialize stream processor.
 
@@ -108,18 +107,17 @@ class AudioStreamProcessor:
             hop_length=160,
             n_mels=40,
             fmin=100.0,  # Optimized for children
-            fmax=8000.0
+            fmax=8000.0,
         )
 
         self.vad = VoiceActivityDetector(
             sample_rate=audio_config.sample_rate,
             energy_threshold=0.05,  # Lower threshold for children
-            speech_pad_ms=300.0
+            speech_pad_ms=300.0,
         )
 
         self.noise_estimator = NoiseEstimator(
-            sample_rate=audio_config.sample_rate,
-            adaptation_rate=0.1
+            sample_rate=audio_config.sample_rate, adaptation_rate=0.1
         )
 
         self.normalizer = FeatureNormalizer(feature_dim=39)  # 13 MFCC + delta + delta-delta
@@ -167,14 +165,16 @@ class AudioStreamProcessor:
 
             # Check detection threshold
             if confidence >= self.detector.threshold:
-                logger.info(f"Wake word detected! Confidence: {confidence:.3f}, Latency: {latency_ms:.1f}ms")
+                logger.info(
+                    f"Wake word detected! Confidence: {confidence:.3f}, Latency: {latency_ms:.1f}ms"
+                )
 
                 return DetectionResult(
                     detected=True,
                     confidence=confidence,
                     timestamp=time.time(),
                     latency_ms=latency_ms,
-                    audio_segment=audio_data
+                    audio_segment=audio_data,
                 )
 
             return None
@@ -206,11 +206,7 @@ class AudioStreamProcessor:
                 return None
 
             # Combine with delta features
-            features = combine_features(
-                mfcc,
-                include_delta=True,
-                include_delta_delta=True
-            )
+            features = combine_features(mfcc, include_delta=True, include_delta_delta=True)
 
             # Normalize features
             self.normalizer.update(features)
@@ -235,7 +231,7 @@ class WakeWordDetector:
         self,
         model_path: Optional[str] = None,
         sensitivity: float = 0.5,
-        config_path: Optional[str] = None
+        config_path: Optional[str] = None,
     ):
         """
         Initialize wake word detector.
@@ -254,15 +250,15 @@ class WakeWordDetector:
 
         # Audio configuration
         self.audio_config = AudioConfig(
-            sample_rate=self.config.get('sample_rate', 16000),
+            sample_rate=self.config.get("sample_rate", 16000),
             channels=1,
-            chunk_size=self.config.get('chunk_size', 1024),
-            buffer_duration=self.config.get('buffer_duration', 1.5)
+            chunk_size=self.config.get("chunk_size", 1024),
+            buffer_duration=self.config.get("buffer_duration", 1.5),
         )
 
         # Detection parameters
         self.threshold = self._sensitivity_to_threshold(sensitivity)
-        self.min_detection_interval = self.config.get('min_detection_interval', 2.0)  # seconds
+        self.min_detection_interval = self.config.get("min_detection_interval", 2.0)  # seconds
 
         # Components
         self._stream = None
@@ -297,14 +293,12 @@ class WakeWordDetector:
             try:
                 # Initialize stream processor
                 self._processor = AudioStreamProcessor(
-                    detector=self,
-                    audio_config=self.audio_config
+                    detector=self, audio_config=self.audio_config
                 )
 
                 # Initialize microphone stream
                 self._stream = MicrophoneStream(
-                    config=self.audio_config,
-                    callback=self._audio_callback
+                    config=self.audio_config, callback=self._audio_callback
                 )
 
                 # Start audio stream
@@ -381,10 +375,7 @@ class WakeWordDetector:
 
         # Initialize processor if needed
         if self._processor is None:
-            self._processor = AudioStreamProcessor(
-                detector=self,
-                audio_config=self.audio_config
-            )
+            self._processor = AudioStreamProcessor(detector=self, audio_config=self.audio_config)
 
         # Process audio
         result = self._processor.process_chunk(audio_data)
@@ -392,10 +383,7 @@ class WakeWordDetector:
         if result is None:
             latency_ms = (time.time() - start_time) * 1000
             result = DetectionResult(
-                detected=False,
-                confidence=0.0,
-                timestamp=time.time(),
-                latency_ms=latency_ms
+                detected=False, confidence=0.0, timestamp=time.time(), latency_ms=latency_ms
             )
 
         return result
@@ -426,13 +414,13 @@ class WakeWordDetector:
                 # Update statistics
                 self.stats.total_detections += 1
                 self.stats.avg_confidence = (
-                    (self.stats.avg_confidence * (self.stats.total_detections - 1) + result.confidence) /
-                    self.stats.total_detections
-                )
+                    self.stats.avg_confidence * (self.stats.total_detections - 1)
+                    + result.confidence
+                ) / self.stats.total_detections
                 self.stats.avg_latency_ms = (
-                    (self.stats.avg_latency_ms * (self.stats.total_detections - 1) + result.latency_ms) /
-                    self.stats.total_detections
-                )
+                    self.stats.avg_latency_ms * (self.stats.total_detections - 1)
+                    + result.latency_ms
+                ) / self.stats.total_detections
 
                 # Trigger callbacks
                 self._trigger_callbacks(result)
@@ -557,7 +545,7 @@ class WakeWordDetector:
             return {}
 
         try:
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
             logger.info(f"Loaded configuration from {config_path}")
             return config
@@ -633,7 +621,7 @@ class AsyncWakeWordDetector:
         self,
         model_path: Optional[str] = None,
         sensitivity: float = 0.5,
-        config_path: Optional[str] = None
+        config_path: Optional[str] = None,
     ):
         """
         Initialize async wake word detector.
@@ -644,9 +632,7 @@ class AsyncWakeWordDetector:
             config_path: Path to configuration file
         """
         self._detector = WakeWordDetector(
-            model_path=model_path,
-            sensitivity=sensitivity,
-            config_path=config_path
+            model_path=model_path, sensitivity=sensitivity, config_path=config_path
         )
         self._detection_queue = asyncio.Queue()
         self._loop = None
@@ -659,25 +645,16 @@ class AsyncWakeWordDetector:
         self._detector.on_wake_word(self._enqueue_detection)
 
         # Start detector in thread
-        await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._detector.start_listening
-        )
+        await asyncio.get_event_loop().run_in_executor(None, self._detector.start_listening)
 
     async def stop_listening(self) -> None:
         """Stop wake word detection."""
-        await asyncio.get_event_loop().run_in_executor(
-            None,
-            self._detector.stop_listening
-        )
+        await asyncio.get_event_loop().run_in_executor(None, self._detector.stop_listening)
 
     def _enqueue_detection(self, result: DetectionResult) -> None:
         """Enqueue detection result."""
         if self._loop:
-            asyncio.run_coroutine_threadsafe(
-                self._detection_queue.put(result),
-                self._loop
-            )
+            asyncio.run_coroutine_threadsafe(self._detection_queue.put(result), self._loop)
 
     async def wait_for_wake_word(self) -> DetectionResult:
         """

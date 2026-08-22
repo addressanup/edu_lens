@@ -11,7 +11,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Awaitable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 import yaml
 
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class ObservationState(Enum):
     """Observation session states."""
+
     IDLE = "idle"
     OBSERVING = "observing"
     STRUGGLE_DETECTED = "struggle"
@@ -30,6 +31,7 @@ class ObservationState(Enum):
 @dataclass
 class Frame:
     """A single observation frame."""
+
     frame_id: int
     timestamp: float
     data: bytes  # JPEG compressed
@@ -39,21 +41,19 @@ class Frame:
 @dataclass
 class ObservationEvent:
     """Event generated during observation."""
+
     event_type: str  # "scene_change", "struggle_detected", "intervention", "problem_completed"
     payload: Dict[str, Any]
     timestamp: float = field(default_factory=time.time)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "event_type": self.event_type,
-            "payload": self.payload,
-            "timestamp": self.timestamp
-        }
+        return {"event_type": self.event_type, "payload": self.payload, "timestamp": self.timestamp}
 
 
 @dataclass
 class ObservationConfig:
     """Configuration for observation service."""
+
     # Frame settings
     target_fps: int = 5
     frame_buffer_size: int = 30  # ~6 seconds at 5 FPS
@@ -85,37 +85,43 @@ class ObservationConfig:
     retention_minutes: int = 5
 
     @classmethod
-    def from_yaml(cls, path: str) -> 'ObservationConfig':
+    def from_yaml(cls, path: str) -> "ObservationConfig":
         """Load configuration from YAML file."""
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             data = yaml.safe_load(f)
 
-        obs = data.get('observation', {})
-        struggle = data.get('struggle_detection', {})
-        intervention = data.get('intervention', {})
-        privacy = data.get('privacy', {})
+        obs = data.get("observation", {})
+        struggle = data.get("struggle_detection", {})
+        intervention = data.get("intervention", {})
+        privacy = data.get("privacy", {})
 
         return cls(
-            target_fps=obs.get('target_fps', 5),
-            frame_buffer_size=obs.get('frame_buffer_size', 30),
-            scene_detection_enabled=obs.get('scene_detection', {}).get('enabled', True),
-            homework_confidence_threshold=obs.get('scene_detection', {}).get('homework_confidence_threshold', 0.7),
-            scene_change_threshold=obs.get('scene_detection', {}).get('scene_change_threshold', 0.3),
-            min_stable_frames=obs.get('scene_detection', {}).get('min_stable_frames', 5),
-            struggle_detection_enabled=struggle.get('enabled', True),
-            time_on_problem_threshold_seconds=struggle.get('time_on_problem_threshold_seconds', 45.0),
-            warning_threshold_seconds=struggle.get('warning_threshold_seconds', 30.0),
-            idle_threshold_seconds=struggle.get('idle_threshold_seconds', 15.0),
-            motion_threshold=struggle.get('motion_threshold', 0.05),
-            intervention_enabled=intervention.get('enabled', True),
-            cooldown_seconds=intervention.get('cooldown_seconds', 60.0),
-            max_interventions_per_problem=intervention.get('max_interventions_per_problem', 3),
-            intervention_delay_seconds=intervention.get('intervention_delay_seconds', 2.0),
-            use_child_name=intervention.get('use_child_name', True),
-            vary_messages=intervention.get('vary_messages', True),
-            store_frames=privacy.get('store_frames', False),
-            store_problem_text=privacy.get('store_problem_text', True),
-            retention_minutes=privacy.get('retention_minutes', 5),
+            target_fps=obs.get("target_fps", 5),
+            frame_buffer_size=obs.get("frame_buffer_size", 30),
+            scene_detection_enabled=obs.get("scene_detection", {}).get("enabled", True),
+            homework_confidence_threshold=obs.get("scene_detection", {}).get(
+                "homework_confidence_threshold", 0.7
+            ),
+            scene_change_threshold=obs.get("scene_detection", {}).get(
+                "scene_change_threshold", 0.3
+            ),
+            min_stable_frames=obs.get("scene_detection", {}).get("min_stable_frames", 5),
+            struggle_detection_enabled=struggle.get("enabled", True),
+            time_on_problem_threshold_seconds=struggle.get(
+                "time_on_problem_threshold_seconds", 45.0
+            ),
+            warning_threshold_seconds=struggle.get("warning_threshold_seconds", 30.0),
+            idle_threshold_seconds=struggle.get("idle_threshold_seconds", 15.0),
+            motion_threshold=struggle.get("motion_threshold", 0.05),
+            intervention_enabled=intervention.get("enabled", True),
+            cooldown_seconds=intervention.get("cooldown_seconds", 60.0),
+            max_interventions_per_problem=intervention.get("max_interventions_per_problem", 3),
+            intervention_delay_seconds=intervention.get("intervention_delay_seconds", 2.0),
+            use_child_name=intervention.get("use_child_name", True),
+            vary_messages=intervention.get("vary_messages", True),
+            store_frames=privacy.get("store_frames", False),
+            store_problem_text=privacy.get("store_problem_text", True),
+            retention_minutes=privacy.get("retention_minutes", 5),
         )
 
 
@@ -302,6 +308,7 @@ class ContinuousObserver:
         if self._scene_analyzer is None:
             try:
                 from .scene_analyzer import SceneAnalyzer
+
                 self._scene_analyzer = SceneAnalyzer()
             except ImportError:
                 logger.warning("SceneAnalyzer not available, using placeholder")
@@ -312,7 +319,10 @@ class ContinuousObserver:
         confidence = result.get("confidence", 0.0)
 
         # Check for scene change
-        if new_scene != self.current_scene and confidence >= self.config.homework_confidence_threshold:
+        if (
+            new_scene != self.current_scene
+            and confidence >= self.config.homework_confidence_threshold
+        ):
             self.scene_stable_frames += 1
 
             if self.scene_stable_frames >= self.config.min_stable_frames:
@@ -330,8 +340,8 @@ class ContinuousObserver:
                     payload={
                         "previous_scene": old_scene,
                         "new_scene": new_scene,
-                        "confidence": confidence
-                    }
+                        "confidence": confidence,
+                    },
                 )
 
                 if self.on_event:
@@ -349,6 +359,7 @@ class ContinuousObserver:
         if self._problem_tracker is None:
             try:
                 from .problem_tracker import ProblemTracker
+
                 self._problem_tracker = ProblemTracker()
             except ImportError:
                 logger.debug("ProblemTracker not available, using placeholder")
@@ -384,6 +395,7 @@ class ContinuousObserver:
         if self._struggle_detector is None:
             try:
                 from .struggle_detector import StruggleDetector
+
                 self._struggle_detector = StruggleDetector(self.config)
             except ImportError:
                 logger.debug("StruggleDetector not available, using placeholder")
@@ -428,29 +440,28 @@ class ContinuousObserver:
         if self._intervention_manager is None:
             try:
                 from .intervention_manager import InterventionManager
+
                 self._intervention_manager = InterventionManager(
-                    language=self.language,
-                    child_name=self.child_name,
-                    config=self.config
+                    language=self.language, child_name=self.child_name, config=self.config
                 )
             except ImportError:
                 logger.debug("InterventionManager not available, using placeholder")
                 self._intervention_manager = PlaceholderInterventionManager(
-                    language=self.language,
-                    child_name=self.child_name,
-                    config=self.config
+                    language=self.language, child_name=self.child_name, config=self.config
                 )
 
         # Determine intervention type based on history
         intervention_types = ["gentle_prompt", "hint_offer", "check_in", "encouragement"]
-        intervention_type = intervention_types[min(self.problem_interventions, len(intervention_types) - 1)]
+        intervention_type = intervention_types[
+            min(self.problem_interventions, len(intervention_types) - 1)
+        ]
 
         # Generate intervention
         intervention = await self._intervention_manager.generate(
             intervention_type=intervention_type,
             struggle_reason=struggle.get("reason"),
             problem=self.current_problem,
-            problem_time=time.time() - (self.problem_start_time or time.time())
+            problem_time=time.time() - (self.problem_start_time or time.time()),
         )
 
         if intervention:
@@ -468,7 +479,7 @@ class ContinuousObserver:
                     "audio_data": intervention.get("audio_data"),
                     "struggle_reason": struggle.get("reason"),
                     "time_on_problem": time.time() - (self.problem_start_time or time.time()),
-                }
+                },
             )
 
             if self.on_event:
@@ -504,17 +515,22 @@ class ContinuousObserver:
             "duration_seconds": time.time() - (self.started_at or time.time()),
             "current_scene": self.current_scene,
             "current_problem": self.current_problem,
-            "problem_time_seconds": time.time() - (self.problem_start_time or time.time()) if self.problem_start_time else 0,
+            "problem_time_seconds": (
+                time.time() - (self.problem_start_time or time.time())
+                if self.problem_start_time
+                else 0
+            ),
             "problem_interventions": self.problem_interventions,
             "total_interventions": self.total_interventions,
             "buffer_size": len(self.frame_buffer),
-            **self.stats
+            **self.stats,
         }
 
 
 # ============================================
 # Placeholder Classes (for when modules aren't available)
 # ============================================
+
 
 class PlaceholderSceneAnalyzer:
     """Placeholder scene analyzer when real one isn't available."""
@@ -626,7 +642,7 @@ class PlaceholderInterventionManager:
         intervention_type: str,
         struggle_reason: Optional[str],
         problem: Optional[Dict],
-        problem_time: float
+        problem_time: float,
     ) -> Optional[Dict[str, Any]]:
         messages = self.MESSAGES.get(self.language, self.MESSAGES["en"])
         type_messages = messages.get(intervention_type, messages.get("gentle_prompt", []))

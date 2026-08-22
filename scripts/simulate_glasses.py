@@ -39,11 +39,11 @@ import argparse
 import asyncio
 import json
 import os
+import queue
 import struct
 import sys
 import threading
 import time
-import queue
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -53,7 +53,9 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 # Global state
 class GlassesState:
@@ -62,11 +64,7 @@ class GlassesState:
         self.is_processing = False
         self.last_image = None
         self.extracted_text = ""
-        self.conversation_context = {
-            'age': 8,
-            'grade': '3',
-            'subject': 'general'
-        }
+        self.conversation_context = {"age": 8, "grade": "3", "subject": "general"}
         self.audio_queue = queue.Queue()
         self.running = True
 
@@ -78,9 +76,9 @@ class GlassesState:
         self.last_intervention: Optional[str] = None
         self.intervention_count = 0
         self.observation_stats = {
-            'frames_sent': 0,
-            'interventions_received': 0,
-            'session_duration': 0,
+            "frames_sent": 0,
+            "interventions_received": 0,
+            "session_duration": 0,
         }
 
 
@@ -90,6 +88,7 @@ state = GlassesState()
 # Autonomous Observation Mode Classes
 class FrameProtocol:
     """Protocol for sending frames to backend."""
+
     FRAME_TYPE = 0x01
     HEARTBEAT_TYPE = 0x05
 
@@ -100,7 +99,7 @@ class FrameProtocol:
         Format: [1 byte type][4 bytes frame_id][8 bytes timestamp_ms][N bytes JPEG]
         """
         timestamp_ms = int(time.time() * 1000)
-        header = struct.pack('>BIQ', FrameProtocol.FRAME_TYPE, frame_id, timestamp_ms)
+        header = struct.pack(">BIQ", FrameProtocol.FRAME_TYPE, frame_id, timestamp_ms)
         return header + jpeg_data
 
     @staticmethod
@@ -113,7 +112,7 @@ class ObservationClient:
     """WebSocket client for autonomous observation mode."""
 
     def __init__(self, server_url: str, session_id: str, child_id: Optional[str] = None):
-        self.server_url = server_url.replace('http://', 'ws://').replace('https://', 'wss://')
+        self.server_url = server_url.replace("http://", "ws://").replace("https://", "wss://")
         self.session_id = session_id
         self.child_id = child_id
         self.websocket = None
@@ -151,10 +150,7 @@ class ObservationClient:
         try:
             while self.connected and self.websocket:
                 try:
-                    message = await asyncio.wait_for(
-                        self.websocket.recv(),
-                        timeout=1.0
-                    )
+                    message = await asyncio.wait_for(self.websocket.recv(), timeout=1.0)
 
                     # Handle text (JSON) or binary (audio) messages
                     if isinstance(message, str):
@@ -177,57 +173,57 @@ class ObservationClient:
 
     async def _handle_event(self, event: dict):
         """Handle event from server."""
-        event_type = event.get('event_type', '')
+        event_type = event.get("event_type", "")
 
-        if event_type == 'connected':
+        if event_type == "connected":
             print(f"📡 Observation session started: {event.get('payload', {}).get('session_id')}")
 
-        elif event_type == 'intervention':
-            payload = event.get('payload', {})
-            message = payload.get('message', '')
-            intervention_type = payload.get('intervention_type', '')
+        elif event_type == "intervention":
+            payload = event.get("payload", {})
+            message = payload.get("message", "")
+            intervention_type = payload.get("intervention_type", "")
 
             print(f"\n🎯 INTERVENTION ({intervention_type}): {message}")
             state.last_intervention = message
             state.intervention_count += 1
-            state.observation_stats['interventions_received'] += 1
+            state.observation_stats["interventions_received"] += 1
 
             # Queue for TTS playback
-            state.audio_queue.put(('intervention', message))
+            state.audio_queue.put(("intervention", message))
 
-        elif event_type == 'scene_change':
-            payload = event.get('payload', {})
+        elif event_type == "scene_change":
+            payload = event.get("payload", {})
             print(f"📍 Scene: {payload.get('previous_scene')} → {payload.get('new_scene')}")
 
-        elif event_type == 'observation_stopped':
+        elif event_type == "observation_stopped":
             print(f"🛑 Observation stopped: {event.get('payload', {})}")
 
-        elif event_type == 'parent_connected':
-            payload = event.get('payload', {})
-            message = payload.get('message', 'A parent is now watching')
+        elif event_type == "parent_connected":
+            payload = event.get("payload", {})
+            message = payload.get("message", "A parent is now watching")
             print(f"\n👨‍👩‍👧 PARENT CONNECTED: {message}")
             # Announce via TTS if enabled
             if not state.no_audio:
-                state.audio_queue.put(('parent', message))
+                state.audio_queue.put(("parent", message))
 
-        elif event_type == 'parent_message':
-            payload = event.get('payload', {})
-            text = payload.get('text', '')
+        elif event_type == "parent_message":
+            payload = event.get("payload", {})
+            text = payload.get("text", "")
             print(f"\n💬 PARENT MESSAGE: {text}")
             # Speak the parent message via TTS
             if not state.no_audio and text:
-                state.audio_queue.put(('parent', text))
+                state.audio_queue.put(("parent", text))
 
-        elif event_type == 'encouragement':
-            payload = event.get('payload', {})
-            text = payload.get('text', '')
-            enc_type = payload.get('type', '')
+        elif event_type == "encouragement":
+            payload = event.get("payload", {})
+            text = payload.get("text", "")
+            enc_type = payload.get("type", "")
             print(f"\n👍 PARENT ENCOURAGEMENT ({enc_type}): {text}")
             # Speak the encouragement via TTS
             if not state.no_audio and text:
-                state.audio_queue.put(('encouragement', text))
+                state.audio_queue.put(("encouragement", text))
 
-        elif event_type == 'parent_disconnected':
+        elif event_type == "parent_disconnected":
             print(f"\n👋 Parent disconnected")
 
     async def _handle_audio(self, data: bytes):
@@ -251,7 +247,7 @@ class ObservationClient:
             self.frame_id += 1
             frame_packet = FrameProtocol.encode_frame(self.frame_id, jpeg_data)
             await self.websocket.send(frame_packet)
-            state.observation_stats['frames_sent'] += 1
+            state.observation_stats["frames_sent"] += 1
             return True
 
         except Exception as e:
@@ -294,9 +290,10 @@ def init_tts():
     # Fallback to pyttsx3 on other platforms
     try:
         import pyttsx3
+
         engine = pyttsx3.init()
-        engine.setProperty('rate', 150)
-        engine.setProperty('volume', 0.9)
+        engine.setProperty("rate", 150)
+        engine.setProperty("volume", 0.9)
         print("🔊 Using pyttsx3 TTS")
         return {"type": "pyttsx3", "engine": engine}
     except Exception as e:
@@ -322,14 +319,12 @@ def speak(text, tts_engine):
         if tts_engine.get("type") == "openai":
             try:
                 import tempfile
+
                 from openai import OpenAI
 
                 client = OpenAI(api_key=tts_engine["api_key"])
                 response = client.audio.speech.create(
-                    model="tts-1",
-                    voice="nova",
-                    input=text,
-                    speed=1.0
+                    model="tts-1", voice="nova", input=text, speed=1.0
                 )
 
                 with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
@@ -386,15 +381,16 @@ def process_image_for_ocr(image):
     """Process image through OCR."""
     try:
         from src.vision.ocr_engine import OCREngine
+
         ocr = OCREngine()
         result = ocr.extract_text(image)
-        return result.get('text', '')
+        return result.get("text", "")
     except ImportError:
         # Fallback: try pytesseract directly
         try:
+            import cv2
             import pytesseract
             from PIL import Image
-            import cv2
 
             # Convert to RGB
             rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -412,33 +408,32 @@ def process_image_for_ocr(image):
 def listen_for_speech(duration=5):
     """Record audio and convert to text."""
     try:
-        import sounddevice as sd
         import numpy as np
+        import sounddevice as sd
 
         print("🎤 Listening...")
         sample_rate = 16000
         audio_data = sd.rec(
-            int(duration * sample_rate),
-            samplerate=sample_rate,
-            channels=1,
-            dtype='float32'
+            int(duration * sample_rate), samplerate=sample_rate, channels=1, dtype="float32"
         )
         sd.wait()
 
         # Try to transcribe with whisper
         try:
             import whisper
+
             model = whisper.load_model("base")
 
             # Save temp file
             import tempfile
+
             import scipy.io.wavfile as wav
 
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
                 wav.write(f.name, sample_rate, (audio_data * 32767).astype(np.int16))
                 result = model.transcribe(f.name)
                 os.unlink(f.name)
-                return result['text'].strip()
+                return result["text"].strip()
         except ImportError:
             print("⚠️ Whisper not available, using placeholder")
             return None
@@ -453,13 +448,7 @@ def detect_wake_word(text):
     if not text:
         return False
 
-    wake_phrases = [
-        "hey edulens",
-        "hey edu lens",
-        "hey ed lens",
-        "okay edulens",
-        "hi edulens"
-    ]
+    wake_phrases = ["hey edulens", "hey edu lens", "hey ed lens", "okay edulens", "hi edulens"]
 
     text_lower = text.lower()
     return any(phrase in text_lower for phrase in wake_phrases)
@@ -474,12 +463,12 @@ def process_voice_query(tutor_engine, query, tts_engine):
     # Add image context if available
     context = state.conversation_context.copy()
     if state.extracted_text:
-        context['problem_statement'] = state.extracted_text[:500]
+        context["problem_statement"] = state.extracted_text[:500]
 
     try:
         print(f"🧒 Query: {query}")
         result = tutor_engine.generate_response(query, context)
-        response = result['response']
+        response = result["response"]
         print(f"🤖 Response: {response}")
         speak(response, tts_engine)
     except Exception as e:
@@ -533,15 +522,33 @@ def run_camera_loop(cap, window_name, server_url="http://localhost:8000", child_
             # Draw intervention banner
             cv2.rectangle(frame, (0, 45), (frame.shape[1], 85), (0, 80, 120), -1)
             intervention_text = f"Last: {state.last_intervention[:60]}..."
-            cv2.putText(frame, intervention_text, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            cv2.putText(
+                frame,
+                intervention_text,
+                (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 255),
+                1,
+            )
 
         # Show instructions at bottom
         if state.autonomous_mode:
             instructions = "[M]anual mode | [O]stats | [Q]uit | Streaming @ 5 FPS..."
         else:
             instructions = "[C]apture | [SPACE]Voice | [M]Auto mode | [Q]uit"
-        cv2.rectangle(frame, (0, frame.shape[0]-35), (frame.shape[1], frame.shape[0]), (50, 50, 50), -1)
-        cv2.putText(frame, instructions, (10, frame.shape[0]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+        cv2.rectangle(
+            frame, (0, frame.shape[0] - 35), (frame.shape[1], frame.shape[0]), (50, 50, 50), -1
+        )
+        cv2.putText(
+            frame,
+            instructions,
+            (10, frame.shape[0] - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (200, 200, 200),
+            1,
+        )
 
         cv2.imshow(window_name, frame)
 
@@ -550,18 +557,18 @@ def run_camera_loop(cap, window_name, server_url="http://localhost:8000", child_
             current_time = time.time()
             if current_time - last_frame_time >= frame_interval:
                 # Encode frame as JPEG
-                _, jpeg_data = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                _, jpeg_data = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 85])
                 if jpeg_data is not None:
                     loop.run_until_complete(observation_client.send_frame(jpeg_data.tobytes()))
                     last_frame_time = current_time
 
         key = cv2.waitKey(1) & 0xFF
 
-        if key == ord('q'):
+        if key == ord("q"):
             state.running = False
             break
 
-        elif key == ord('c') and not state.autonomous_mode:
+        elif key == ord("c") and not state.autonomous_mode:
             # Capture image (manual mode only)
             state.last_image = frame.copy()
             state.is_processing = True
@@ -576,15 +583,15 @@ def run_camera_loop(cap, window_name, server_url="http://localhost:8000", child_
                 print("⚠️ No text detected")
             state.is_processing = False
 
-        elif key == ord(' ') and not state.autonomous_mode:
+        elif key == ord(" ") and not state.autonomous_mode:
             # Manual voice trigger
             state.audio_queue.put("manual_trigger")
 
-        elif key == ord('m'):
+        elif key == ord("m"):
             # Toggle autonomous observation mode
             loop.run_until_complete(toggle_observation_mode(server_url, child_id))
 
-        elif key == ord('o'):
+        elif key == ord("o"):
             # Show observation stats
             print_observation_stats()
 
@@ -617,18 +624,16 @@ async def toggle_observation_mode(server_url: str, child_id: Optional[str] = Non
         state.observation_session_id = session_id
 
         observation_client = ObservationClient(
-            server_url=server_url,
-            session_id=session_id,
-            child_id=child_id
+            server_url=server_url, session_id=session_id, child_id=child_id
         )
 
         connected = await observation_client.connect()
         if connected:
             state.autonomous_mode = True
             state.observation_stats = {
-                'frames_sent': 0,
-                'interventions_received': 0,
-                'session_start': time.time(),
+                "frames_sent": 0,
+                "interventions_received": 0,
+                "session_start": time.time(),
             }
             print("✅ Autonomous observation active!")
             print("   The system will now watch for struggles and intervene proactively.")
@@ -650,8 +655,8 @@ def print_observation_stats():
     print(f"Frames Sent: {state.observation_stats.get('frames_sent', 0)}")
     print(f"Interventions: {state.observation_stats.get('interventions_received', 0)}")
 
-    if 'session_start' in state.observation_stats:
-        duration = time.time() - state.observation_stats['session_start']
+    if "session_start" in state.observation_stats:
+        duration = time.time() - state.observation_stats["session_start"]
         print(f"Session Duration: {duration:.1f}s")
 
     if state.last_intervention:
@@ -664,7 +669,10 @@ def run_audio_loop(tutor_engine, tts_engine):
     """Run the audio processing loop."""
 
     # Initial greeting
-    speak("Hello! I'm EduLens, your learning buddy. Show me your homework and ask me questions!", tts_engine)
+    speak(
+        "Hello! I'm EduLens, your learning buddy. Show me your homework and ask me questions!",
+        tts_engine,
+    )
 
     while state.running:
         try:
@@ -707,7 +715,10 @@ def run_audio_loop(tutor_engine, tts_engine):
 def run_continuous_listening(tutor_engine, tts_engine):
     """Run continuous voice listening mode - always on, hands-free."""
 
-    speak("Hello! I'm EduLens, your learning helper. I'm always listening - just talk to me anytime!", tts_engine)
+    speak(
+        "Hello! I'm EduLens, your learning helper. I'm always listening - just talk to me anytime!",
+        tts_engine,
+    )
     print("\n🎧 CONTINUOUS LISTENING MODE - Just speak naturally!")
     print("   Say 'Hey EduLens' to get my attention, or just ask a question.")
     print("   (Handles pauses - waits for you to finish speaking)\n")
@@ -722,8 +733,8 @@ def run_continuous_listening(tutor_engine, tts_engine):
 
     while state.running:
         try:
-            import sounddevice as sd
             import numpy as np
+            import sounddevice as sd
 
             # Listen for initial speech detection
             print("🎤 Listening...                    ", end="\r", flush=True)
@@ -731,7 +742,7 @@ def run_continuous_listening(tutor_engine, tts_engine):
                 int(chunk_duration * sample_rate),
                 samplerate=sample_rate,
                 channels=1,
-                dtype='float32'
+                dtype="float32",
             )
             sd.wait()
 
@@ -755,7 +766,7 @@ def run_continuous_listening(tutor_engine, tts_engine):
                     int(chunk_duration * sample_rate),
                     samplerate=sample_rate,
                     channels=1,
-                    dtype='float32'
+                    dtype="float32",
                 )
                 sd.wait()
 
@@ -787,33 +798,35 @@ def run_continuous_listening(tutor_engine, tts_engine):
 
             # Transcribe
             try:
-                import whisper
                 import tempfile
+
                 import scipy.io.wavfile as wav
+                import whisper
 
                 # Load model once
-                if not hasattr(run_continuous_listening, 'whisper_model'):
+                if not hasattr(run_continuous_listening, "whisper_model"):
                     print("Loading Whisper model...", flush=True)
                     run_continuous_listening.whisper_model = whisper.load_model("base")
                     print("Whisper model loaded!", flush=True)
 
                 # Save audio to temp file
-                temp_path = tempfile.mktemp(suffix='.wav')
+                temp_path = tempfile.mktemp(suffix=".wav")
                 wav.write(temp_path, sample_rate, (audio_data * 32767).astype(np.int16))
 
                 # Transcribe with timing
                 import time as time_module
+
                 start_time = time_module.time()
                 print(f"   [Transcribing {temp_path}...]", flush=True)
 
                 try:
                     result = run_continuous_listening.whisper_model.transcribe(
                         temp_path,
-                        language='en',  # Force English for faster processing
-                        fp16=False      # Explicitly disable FP16
+                        language="en",  # Force English for faster processing
+                        fp16=False,  # Explicitly disable FP16
                     )
                     elapsed = time_module.time() - start_time
-                    text = result.get('text', '').strip()
+                    text = result.get("text", "").strip()
 
                     # Debug: show timing and result
                     print(f"   [Transcribed in {elapsed:.1f}s]", flush=True)
@@ -824,7 +837,10 @@ def run_continuous_listening(tutor_engine, tts_engine):
 
                 except Exception as transcribe_error:
                     elapsed = time_module.time() - start_time
-                    print(f"   [Transcription FAILED after {elapsed:.1f}s: {transcribe_error}]", flush=True)
+                    print(
+                        f"   [Transcription FAILED after {elapsed:.1f}s: {transcribe_error}]",
+                        flush=True,
+                    )
                     text = ""
 
                 # Clean up temp file
@@ -848,15 +864,15 @@ def run_continuous_listening(tutor_engine, tts_engine):
                         int(5 * sample_rate),  # 5 seconds for question
                         samplerate=sample_rate,
                         channels=1,
-                        dtype='float32'
+                        dtype="float32",
                     )
                     sd.wait()
 
-                    with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
+                    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
                         wav.write(f.name, sample_rate, (audio_data * 32767).astype(np.int16))
                         result = run_continuous_listening.whisper_model.transcribe(f.name)
                         os.unlink(f.name)
-                        text = result['text'].strip()
+                        text = result["text"].strip()
 
                     if text:
                         print(f"🧒 Question: {text}")
@@ -867,11 +883,23 @@ def run_continuous_listening(tutor_engine, tts_engine):
                     text_lower = text.lower()
 
                     # Respond to greetings
-                    greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon']
+                    greetings = ["hello", "hi", "hey", "good morning", "good afternoon"]
                     is_greeting = any(g in text_lower for g in greetings)
 
                     # Respond to questions or longer statements
-                    is_question = '?' in text or any(w in text_lower for w in ['what', 'how', 'why', 'help', 'can you', 'explain', 'tell me', 'show me'])
+                    is_question = "?" in text or any(
+                        w in text_lower
+                        for w in [
+                            "what",
+                            "how",
+                            "why",
+                            "help",
+                            "can you",
+                            "explain",
+                            "tell me",
+                            "show me",
+                        ]
+                    )
 
                     # Process if it's a greeting, question, or reasonably long statement
                     if is_greeting or is_question or len(text) > 5:
@@ -902,10 +930,7 @@ def run_realtime_voice():
 
     async def _run_realtime():
         try:
-            from src.ai.openai_realtime import (
-                create_edulens_voice_service,
-                AudioChunk
-            )
+            from src.ai.openai_realtime import AudioChunk, create_edulens_voice_service
         except ImportError as e:
             print(f"Error importing OpenAI Realtime service: {e}")
             print("Make sure websockets is installed: pip install websockets")
@@ -961,8 +986,8 @@ def run_realtime_voice():
         async def play_audio():
             """Play audio chunks from the queue."""
             try:
-                import sounddevice as sd
                 import numpy as np
+                import sounddevice as sd
 
                 sample_rate = 24000  # OpenAI Realtime uses 24kHz
 
@@ -989,8 +1014,8 @@ def run_realtime_voice():
         async def capture_and_stream():
             """Capture audio from microphone and stream to API."""
             try:
-                import sounddevice as sd
                 import numpy as np
+                import sounddevice as sd
 
                 sample_rate = 24000  # OpenAI Realtime expects 24kHz
                 chunk_duration = 0.1  # 100ms chunks
@@ -1001,12 +1026,7 @@ def run_realtime_voice():
                     try:
                         # Record a chunk
                         samples = int(sample_rate * chunk_duration)
-                        audio = sd.rec(
-                            samples,
-                            samplerate=sample_rate,
-                            channels=1,
-                            dtype='int16'
-                        )
+                        audio = sd.rec(samples, samplerate=sample_rate, channels=1, dtype="int16")
                         sd.wait()
 
                         # Convert to bytes and send
@@ -1065,10 +1085,10 @@ def run_text_fallback(tutor_engine, tts_engine):
 
             if not query:
                 continue
-            if query.lower() in ['quit', 'exit', 'q']:
+            if query.lower() in ["quit", "exit", "q"]:
                 state.running = False
                 break
-            if query.lower() == 'capture':
+            if query.lower() == "capture":
                 print("📸 Use the camera window to capture (press 'c')")
                 continue
 
@@ -1083,23 +1103,38 @@ def run_text_fallback(tutor_engine, tts_engine):
 
 def main():
     parser = argparse.ArgumentParser(description="EduLens Smart Glasses Simulator")
-    parser.add_argument('--no-camera', action='store_true', help='Run without camera')
-    parser.add_argument('--no-audio', action='store_true', help='Run without audio (text only)')
-    parser.add_argument('--provider', choices=['anthropic', 'openai', 'google', 'deepseek', 'ollama'],
-                       help='LLM provider')
-    parser.add_argument('--server', default='http://localhost:8000',
-                       help='Backend server URL (default: http://localhost:8000)')
-    parser.add_argument('--autonomous', '-a', action='store_true',
-                       help='Start in autonomous observation mode')
-    parser.add_argument('--continuous-listen', '-l', action='store_true',
-                       help='Enable continuous voice listening (always-on microphone)')
-    parser.add_argument('--realtime', '-r', action='store_true',
-                       help='Use OpenAI Realtime API for native voice conversation (requires OPENAI_API_KEY)')
-    parser.add_argument('--child-id', help='Child profile ID for personalization')
+    parser.add_argument("--no-camera", action="store_true", help="Run without camera")
+    parser.add_argument("--no-audio", action="store_true", help="Run without audio (text only)")
+    parser.add_argument(
+        "--provider",
+        choices=["anthropic", "openai", "google", "deepseek", "ollama"],
+        help="LLM provider",
+    )
+    parser.add_argument(
+        "--server",
+        default="http://localhost:8000",
+        help="Backend server URL (default: http://localhost:8000)",
+    )
+    parser.add_argument(
+        "--autonomous", "-a", action="store_true", help="Start in autonomous observation mode"
+    )
+    parser.add_argument(
+        "--continuous-listen",
+        "-l",
+        action="store_true",
+        help="Enable continuous voice listening (always-on microphone)",
+    )
+    parser.add_argument(
+        "--realtime",
+        "-r",
+        action="store_true",
+        help="Use OpenAI Realtime API for native voice conversation (requires OPENAI_API_KEY)",
+    )
+    parser.add_argument("--child-id", help="Child profile ID for personalization")
     args = parser.parse_args()
 
     if args.provider:
-        os.environ['LLM_PROVIDER'] = args.provider
+        os.environ["LLM_PROVIDER"] = args.provider
 
     server_url = args.server
 
@@ -1122,7 +1157,7 @@ def main():
         sys.exit(1)
 
     # Child ID for parent connection support
-    child_id = getattr(args, 'child_id', None)
+    child_id = getattr(args, "child_id", None)
     if child_id:
         print(f"👶 Using child profile: {child_id}")
 
@@ -1133,6 +1168,7 @@ def main():
     if use_camera:
         try:
             import cv2
+
             cap = cv2.VideoCapture(0)
             if not cap.isOpened():
                 print("⚠️ No camera available, running in text mode")
@@ -1174,9 +1210,7 @@ def main():
                 audio_func = run_text_fallback
 
             audio_thread = threading.Thread(
-                target=audio_func,
-                args=(tutor_engine, tts_engine),
-                daemon=True
+                target=audio_func, args=(tutor_engine, tts_engine), daemon=True
             )
             audio_thread.start()
 

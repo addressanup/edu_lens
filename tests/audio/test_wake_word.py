@@ -10,6 +10,9 @@ Tests cover:
 """
 
 import os
+
+# Import components to test
+import sys
 import time
 import unittest
 from pathlib import Path
@@ -19,32 +22,30 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 
-# Import components to test
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from audio.audio_capture import (
-    AudioConfig,
     AudioBuffer,
+    AudioConfig,
     MicrophoneStream,
+    apply_pre_emphasis,
     convert_audio_format,
     normalize_audio,
-    apply_pre_emphasis
 )
 from audio.feature_extraction import (
-    MFCCExtractor,
-    VoiceActivityDetector,
-    NoiseEstimator,
     FeatureNormalizer,
+    MFCCExtractor,
+    NoiseEstimator,
+    VoiceActivityDetector,
+    combine_features,
     extract_delta_features,
-    combine_features
 )
 from audio.wake_word_engine import (
-    WakeWordDetector,
     AudioStreamProcessor,
+    DetectionMode,
     DetectionResult,
     DetectionStats,
-    DetectionMode
+    WakeWordDetector,
 )
 
 
@@ -147,12 +148,7 @@ class TestMFCCExtractor(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.extractor = MFCCExtractor(
-            sample_rate=16000,
-            n_mfcc=13,
-            n_fft=512,
-            hop_length=160
-        )
+        self.extractor = MFCCExtractor(sample_rate=16000, n_mfcc=13, n_fft=512, hop_length=160)
 
     def test_initialization(self):
         """Test MFCC extractor initialization."""
@@ -197,9 +193,7 @@ class TestVoiceActivityDetector(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.vad = VoiceActivityDetector(
-            sample_rate=16000,
-            energy_threshold=0.05,
-            zcr_threshold=0.3
+            sample_rate=16000, energy_threshold=0.05, zcr_threshold=0.3
         )
 
     def test_detect_silence(self):
@@ -246,10 +240,7 @@ class TestNoiseEstimator(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.estimator = NoiseEstimator(
-            sample_rate=16000,
-            adaptation_rate=0.1
-        )
+        self.estimator = NoiseEstimator(sample_rate=16000, adaptation_rate=0.1)
 
     def test_initialization(self):
         """Test noise estimator initialization."""
@@ -350,11 +341,7 @@ class TestDeltaFeatures(unittest.TestCase):
         mfcc = np.random.randn(13, 100).astype(np.float32)
 
         # Combine with delta and delta-delta
-        combined = combine_features(
-            mfcc,
-            include_delta=True,
-            include_delta_delta=True
-        )
+        combined = combine_features(mfcc, include_delta=True, include_delta_delta=True)
 
         # Should have 3x the features (MFCC + delta + delta-delta)
         self.assertEqual(combined.shape[0], 39)
@@ -367,10 +354,7 @@ class TestWakeWordDetector(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         # Create detector without model
-        self.detector = WakeWordDetector(
-            model_path=None,
-            sensitivity=0.5
-        )
+        self.detector = WakeWordDetector(model_path=None, sensitivity=0.5)
 
     def tearDown(self):
         """Clean up after tests."""
@@ -468,7 +452,9 @@ class TestPerformanceBenchmarks(unittest.TestCase):
         print(f"  Target: <100ms")
 
         # Check that average latency meets target
-        self.assertLess(avg_latency, 100.0, f"Average latency {avg_latency:.2f}ms exceeds 100ms target")
+        self.assertLess(
+            avg_latency, 100.0, f"Average latency {avg_latency:.2f}ms exceeds 100ms target"
+        )
 
     def test_feature_extraction_speed(self):
         """Test feature extraction speed."""
@@ -550,7 +536,7 @@ class TestTruePositiveRate(unittest.TestCase):
         # Add some structure (simplified wake word pattern)
         # In reality, this would be actual "Hey EduLens" recordings
         for i in range(0, len(audio), 1000):
-            audio[i:i+500] *= 1.5  # Energy bursts
+            audio[i : i + 500] *= 1.5  # Energy bursts
 
         return audio
 
@@ -681,6 +667,6 @@ class TestChildVoiceVariation(unittest.TestCase):
 
 
 # Test runner
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run tests with verbose output
     unittest.main(verbosity=2)

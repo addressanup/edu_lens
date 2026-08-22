@@ -11,12 +11,12 @@ This module manages the 200k token context budget with allocation:
 Includes progressive summarization between phases.
 """
 
+import json
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
-import json
 
 
 class BudgetCategory(str, Enum):
@@ -124,10 +124,10 @@ class ContextCompressor:
 
     # Patterns for identifying low-value content
     LOW_VALUE_PATTERNS = [
-        r'\n{3,}',  # Multiple blank lines
-        r'#{3,}.*?\n',  # Decorative headers
-        r'[-=]{5,}',  # Separator lines
-        r'```\s*```',  # Empty code blocks
+        r"\n{3,}",  # Multiple blank lines
+        r"#{3,}.*?\n",  # Decorative headers
+        r"[-=]{5,}",  # Separator lines
+        r"```\s*```",  # Empty code blocks
     ]
 
     @staticmethod
@@ -154,13 +154,13 @@ class ContextCompressor:
             return 0.0
 
         # Factors that increase density
-        code_blocks = len(re.findall(r'```[\s\S]*?```', text))
-        bullet_points = len(re.findall(r'^\s*[-*•]\s+', text, re.MULTILINE))
-        key_terms = len(re.findall(r'\b(API|error|config|function|class|module)\b', text, re.I))
+        code_blocks = len(re.findall(r"```[\s\S]*?```", text))
+        bullet_points = len(re.findall(r"^\s*[-*•]\s+", text, re.MULTILINE))
+        key_terms = len(re.findall(r"\b(API|error|config|function|class|module)\b", text, re.I))
 
         # Factors that decrease density
-        whitespace_ratio = len(re.findall(r'\s', text)) / len(text) if text else 0
-        repetition = len(re.findall(r'(.{10,})\1', text))
+        whitespace_ratio = len(re.findall(r"\s", text)) / len(text) if text else 0
+        repetition = len(re.findall(r"(.{10,})\1", text))
 
         # Calculate score
         positive = (code_blocks * 0.1) + (bullet_points * 0.05) + (key_terms * 0.02)
@@ -189,17 +189,17 @@ class ContextCompressor:
         # Step 1: Remove low-value patterns
         compressed = text
         for pattern in cls.LOW_VALUE_PATTERNS:
-            compressed = re.sub(pattern, '\n', compressed)
+            compressed = re.sub(pattern, "\n", compressed)
 
         # Step 2: Normalize whitespace
-        compressed = re.sub(r'\n{2,}', '\n\n', compressed)
-        compressed = re.sub(r' {2,}', ' ', compressed)
+        compressed = re.sub(r"\n{2,}", "\n\n", compressed)
+        compressed = re.sub(r" {2,}", " ", compressed)
 
         # Step 3: If still over target, truncate intelligently
         current_tokens = cls.estimate_tokens(compressed)
         if current_tokens > target_tokens:
             # Split into paragraphs and keep most valuable
-            paragraphs = compressed.split('\n\n')
+            paragraphs = compressed.split("\n\n")
             scored = [(p, cls.calculate_info_density(p)) for p in paragraphs]
             scored.sort(key=lambda x: x[1], reverse=True)
 
@@ -212,7 +212,7 @@ class ContextCompressor:
                     kept.append(para)
                     running_tokens += para_tokens
 
-            compressed = '\n\n'.join(kept)
+            compressed = "\n\n".join(kept)
 
         return compressed.strip()
 
@@ -242,9 +242,7 @@ class ContextCompressor:
                 summarized[key] = cls.compress(value, target_ratio=0.6)
             elif isinstance(value, dict):
                 # Recursively summarize nested dicts
-                summarized[key] = cls.summarize_for_phase_transition(
-                    value, from_phase, to_phase
-                )
+                summarized[key] = cls.summarize_for_phase_transition(value, from_phase, to_phase)
             elif isinstance(value, list):
                 # Keep lists but limit length
                 if len(value) > 10:
@@ -431,19 +429,23 @@ class ContextBudgetManager:
         utilization = budget.utilization
 
         if utilization >= self.CRITICAL_THRESHOLD:
-            self._alerts.append(BudgetAlert(
-                level=AlertLevel.CRITICAL,
-                category=category,
-                message=f"Critical: {category.value} budget at {utilization:.0%} utilization",
-                utilization=utilization,
-            ))
+            self._alerts.append(
+                BudgetAlert(
+                    level=AlertLevel.CRITICAL,
+                    category=category,
+                    message=f"Critical: {category.value} budget at {utilization:.0%} utilization",
+                    utilization=utilization,
+                )
+            )
         elif utilization >= self.WARNING_THRESHOLD:
-            self._alerts.append(BudgetAlert(
-                level=AlertLevel.WARNING,
-                category=category,
-                message=f"Warning: {category.value} budget at {utilization:.0%} utilization",
-                utilization=utilization,
-            ))
+            self._alerts.append(
+                BudgetAlert(
+                    level=AlertLevel.WARNING,
+                    category=category,
+                    message=f"Warning: {category.value} budget at {utilization:.0%} utilization",
+                    utilization=utilization,
+                )
+            )
 
     def get_alerts(self, level: Optional[AlertLevel] = None) -> List[BudgetAlert]:
         """Get budget alerts, optionally filtered by level."""
@@ -518,9 +520,7 @@ class ContextBudgetManager:
         Returns:
             Summarized context for next phase
         """
-        return self._compressor.summarize_for_phase_transition(
-            context, from_phase, to_phase
-        )
+        return self._compressor.summarize_for_phase_transition(context, from_phase, to_phase)
 
     def get_budget_report(self) -> Dict[str, Any]:
         """Get comprehensive budget report."""
@@ -529,10 +529,7 @@ class ContextBudgetManager:
             "total_used": self.get_total_used(),
             "total_available": self.get_total_available(),
             "utilization": self.get_total_used() / self.total_budget,
-            "categories": {
-                cat.value: alloc.to_dict()
-                for cat, alloc in self._budgets.items()
-            },
+            "categories": {cat.value: alloc.to_dict() for cat, alloc in self._budgets.items()},
             "alerts": [a.to_dict() for a in self._alerts],
             "usage_records": len(self._usage_history),
         }

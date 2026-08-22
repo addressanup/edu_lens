@@ -9,12 +9,12 @@ import hashlib
 import json
 import re
 import uuid
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from pydantic import BaseModel, Field, validator, ValidationError
+from pydantic import BaseModel, Field, ValidationError, validator
 
 
 class MessageType(str, Enum):
@@ -215,9 +215,17 @@ class Message:
             "id": self.id,
             "from_agent": self.from_agent,
             "to_agent": self.to_agent,
-            "message_type": self.message_type.value if isinstance(self.message_type, Enum) else self.message_type,
+            "message_type": (
+                self.message_type.value
+                if isinstance(self.message_type, Enum)
+                else self.message_type
+            ),
             "payload": self.payload,
-            "timestamp": self.timestamp.isoformat() if isinstance(self.timestamp, datetime) else self.timestamp,
+            "timestamp": (
+                self.timestamp.isoformat()
+                if isinstance(self.timestamp, datetime)
+                else self.timestamp
+            ),
         }
         content_str = json.dumps(content, sort_keys=True, default=str)
         return hashlib.sha256(content_str.encode()).hexdigest()
@@ -233,13 +241,21 @@ class Message:
             "id": self.id,
             "from_agent": self.from_agent,
             "to_agent": self.to_agent,
-            "message_type": self.message_type.value if isinstance(self.message_type, Enum) else self.message_type,
+            "message_type": (
+                self.message_type.value
+                if isinstance(self.message_type, Enum)
+                else self.message_type
+            ),
             "priority": self.priority.value if isinstance(self.priority, Enum) else self.priority,
             "payload": self.payload,
             "signature": self.signature,
             "correlation_id": self.correlation_id,
             "reply_to": self.reply_to,
-            "timestamp": self.timestamp.isoformat() if isinstance(self.timestamp, datetime) else self.timestamp,
+            "timestamp": (
+                self.timestamp.isoformat()
+                if isinstance(self.timestamp, datetime)
+                else self.timestamp
+            ),
             "metadata": self.metadata,
         }
 
@@ -470,9 +486,7 @@ class CommunicationProtocol:
                 errors.append(f"Invalid priority: {message.priority}")
 
         # Validate payload
-        valid, payload_errors = self.validate_payload(
-            message.message_type, message.payload
-        )
+        valid, payload_errors = self.validate_payload(message.message_type, message.payload)
         errors.extend(payload_errors)
 
         # Validate timestamp
@@ -530,10 +544,7 @@ class CommunicationProtocol:
         is_valid, errors = self.validate_message(message, verify_signature=False)
 
         if not is_valid:
-            raise ValidationError(
-                f"Message validation failed: {'; '.join(errors)}",
-                errors
-            )
+            raise ValidationError(f"Message validation failed: {'; '.join(errors)}", errors)
 
         # Regenerate signature after validation
         message.signature = message._generate_signature()
@@ -619,6 +630,7 @@ class CommunicationProtocol:
 
 # Example usage and utility functions
 
+
 def serialize_message(message: Message) -> str:
     """Serialize a message to JSON string."""
     return json.dumps(message.to_dict(), default=str)
@@ -660,6 +672,7 @@ async def send_and_wait_reply(
 
     # Wait for reply
     import asyncio
+
     start_time = asyncio.get_event_loop().time()
 
     while asyncio.get_event_loop().time() - start_time < timeout:

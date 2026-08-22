@@ -20,17 +20,17 @@ logger = logging.getLogger(__name__)
 class QueryIntent(Enum):
     """Detected intent from student's voice query."""
 
-    HELP_REQUEST = auto()          # "I need help" / "Help me"
-    EXPLAIN_CONCEPT = auto()       # "What is..." / "Explain..."
-    CHECK_ANSWER = auto()          # "Is this right?" / "Did I get it?"
-    HINT_REQUEST = auto()          # "Give me a hint" / "Can I have a clue?"
-    REPEAT_REQUEST = auto()        # "Say that again" / "Repeat"
-    SLOWER_REQUEST = auto()        # "Slower please" / "Too fast"
-    SKIP_REQUEST = auto()          # "Skip this" / "Next problem"
-    READ_PROBLEM = auto()          # "Read the problem" / "What does it say?"
-    CLARIFICATION = auto()         # "What do you mean?" / "I don't understand"
-    AFFIRMATIVE = auto()           # "Yes" / "Okay" / "Got it"
-    NEGATIVE = auto()              # "No" / "Not yet"
+    HELP_REQUEST = auto()  # "I need help" / "Help me"
+    EXPLAIN_CONCEPT = auto()  # "What is..." / "Explain..."
+    CHECK_ANSWER = auto()  # "Is this right?" / "Did I get it?"
+    HINT_REQUEST = auto()  # "Give me a hint" / "Can I have a clue?"
+    REPEAT_REQUEST = auto()  # "Say that again" / "Repeat"
+    SLOWER_REQUEST = auto()  # "Slower please" / "Too fast"
+    SKIP_REQUEST = auto()  # "Skip this" / "Next problem"
+    READ_PROBLEM = auto()  # "Read the problem" / "What does it say?"
+    CLARIFICATION = auto()  # "What do you mean?" / "I don't understand"
+    AFFIRMATIVE = auto()  # "Yes" / "Okay" / "Got it"
+    NEGATIVE = auto()  # "No" / "Not yet"
     UNKNOWN = auto()
 
 
@@ -99,46 +99,74 @@ class VoiceToAIBridge:
         """Build regex patterns for intent detection."""
         return {
             QueryIntent.HELP_REQUEST: [
-                r"\bhelp\b", r"\bhelp me\b", r"\bi('m| am) stuck\b",
-                r"\bdon'?t know\b", r"\bcan'?t figure\b",
+                r"\bhelp\b",
+                r"\bhelp me\b",
+                r"\bi('m| am) stuck\b",
+                r"\bdon'?t know\b",
+                r"\bcan'?t figure\b",
             ],
             QueryIntent.EXPLAIN_CONCEPT: [
-                r"\bwhat is\b", r"\bwhat are\b", r"\bexplain\b",
-                r"\btell me about\b", r"\bwhat does .+ mean\b",
+                r"\bwhat is\b",
+                r"\bwhat are\b",
+                r"\bexplain\b",
+                r"\btell me about\b",
+                r"\bwhat does .+ mean\b",
             ],
             QueryIntent.CHECK_ANSWER: [
-                r"\bis (this|that|it) (right|correct)\b", r"\bdid i get it\b",
-                r"\bam i right\b", r"\bcheck (my|this)\b",
+                r"\bis (this|that|it) (right|correct)\b",
+                r"\bdid i get it\b",
+                r"\bam i right\b",
+                r"\bcheck (my|this)\b",
             ],
             QueryIntent.HINT_REQUEST: [
-                r"\bhint\b", r"\bclue\b", r"\bhelp me start\b",
-                r"\bwhere do i begin\b", r"\bfirst step\b",
+                r"\bhint\b",
+                r"\bclue\b",
+                r"\bhelp me start\b",
+                r"\bwhere do i begin\b",
+                r"\bfirst step\b",
             ],
             QueryIntent.REPEAT_REQUEST: [
-                r"\brepeat\b", r"\bsay (that |it )?again\b",
-                r"\bwhat did you say\b", r"\bone more time\b",
+                r"\brepeat\b",
+                r"\bsay (that |it )?again\b",
+                r"\bwhat did you say\b",
+                r"\bone more time\b",
             ],
             QueryIntent.SLOWER_REQUEST: [
-                r"\bslower\b", r"\btoo fast\b", r"\bslow down\b",
+                r"\bslower\b",
+                r"\btoo fast\b",
+                r"\bslow down\b",
             ],
             QueryIntent.SKIP_REQUEST: [
-                r"\bskip\b", r"\bnext (one|problem)\b", r"\bmove on\b",
+                r"\bskip\b",
+                r"\bnext (one|problem)\b",
+                r"\bmove on\b",
             ],
             QueryIntent.READ_PROBLEM: [
                 r"\bread (the |this )?(problem|question)\b",
-                r"\bwhat does it say\b", r"\bread it to me\b",
+                r"\bwhat does it say\b",
+                r"\bread it to me\b",
             ],
             QueryIntent.CLARIFICATION: [
-                r"\bwhat do you mean\b", r"\bi don'?t understand\b",
-                r"\bconfused\b", r"\bcan you explain\b",
+                r"\bwhat do you mean\b",
+                r"\bi don'?t understand\b",
+                r"\bconfused\b",
+                r"\bcan you explain\b",
             ],
             QueryIntent.AFFIRMATIVE: [
-                r"^yes\b", r"^yeah\b", r"^okay\b", r"^ok\b",
-                r"\bgot it\b", r"\bi understand\b", r"^sure\b",
+                r"^yes\b",
+                r"^yeah\b",
+                r"^okay\b",
+                r"^ok\b",
+                r"\bgot it\b",
+                r"\bi understand\b",
+                r"^sure\b",
             ],
             QueryIntent.NEGATIVE: [
-                r"^no\b", r"^nope\b", r"\bnot yet\b",
-                r"\bi don'?t get it\b", r"\bstill confused\b",
+                r"^no\b",
+                r"^nope\b",
+                r"\bnot yet\b",
+                r"\bi don'?t get it\b",
+                r"\bstill confused\b",
             ],
         }
 
@@ -197,7 +225,9 @@ class VoiceToAIBridge:
                     return intent, 0.9  # High confidence for pattern match
 
         # Default to help request if question-like
-        if text_lower.endswith("?") or text_lower.startswith(("how", "why", "what", "when", "where")):
+        if text_lower.endswith("?") or text_lower.startswith(
+            ("how", "why", "what", "when", "where")
+        ):
             return QueryIntent.HELP_REQUEST, 0.6
 
         return QueryIntent.UNKNOWN, 0.3
@@ -206,7 +236,15 @@ class VoiceToAIBridge:
         """Extract mentioned subject from text."""
         text_lower = text.lower()
         subjects = {
-            "math": ["math", "mathematics", "addition", "subtraction", "multiplication", "division", "fraction"],
+            "math": [
+                "math",
+                "mathematics",
+                "addition",
+                "subtraction",
+                "multiplication",
+                "division",
+                "fraction",
+            ],
             "reading": ["reading", "story", "book", "word", "sentence", "paragraph"],
             "science": ["science", "experiment", "plant", "animal", "weather"],
             "social_studies": ["social studies", "history", "map", "community", "government"],
@@ -222,8 +260,15 @@ class VoiceToAIBridge:
         """Extract specific concept mentions."""
         # Common math concepts
         math_concepts = [
-            "addition", "subtraction", "multiplication", "division",
-            "fraction", "decimal", "percent", "equation", "variable",
+            "addition",
+            "subtraction",
+            "multiplication",
+            "division",
+            "fraction",
+            "decimal",
+            "percent",
+            "equation",
+            "variable",
         ]
 
         text_lower = text.lower()
@@ -299,8 +344,8 @@ class VoiceToAIBridge:
         """Clean text for natural speech output."""
         # Remove markdown formatting
         text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)  # Bold
-        text = re.sub(r"\*(.+?)\*", r"\1", text)      # Italic
-        text = re.sub(r"`(.+?)`", r"\1", text)        # Code
+        text = re.sub(r"\*(.+?)\*", r"\1", text)  # Italic
+        text = re.sub(r"`(.+?)`", r"\1", text)  # Code
 
         # Convert math symbols to words
         replacements = {
@@ -351,8 +396,15 @@ class VoiceToAIBridge:
         """Find key words to emphasize in speech."""
         # Emphasize important educational keywords
         keywords = [
-            "first", "next", "then", "finally", "remember",
-            "important", "key", "notice", "think about",
+            "first",
+            "next",
+            "then",
+            "finally",
+            "remember",
+            "important",
+            "key",
+            "notice",
+            "think about",
         ]
 
         emphasis = []

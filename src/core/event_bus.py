@@ -96,12 +96,8 @@ class EventBus:
     """
 
     def __init__(self) -> None:
-        self._async_handlers: dict[EventType, list[tuple[int, EventHandler]]] = (
-            defaultdict(list)
-        )
-        self._sync_handlers: dict[EventType, list[tuple[int, SyncEventHandler]]] = (
-            defaultdict(list)
-        )
+        self._async_handlers: dict[EventType, list[tuple[int, EventHandler]]] = defaultdict(list)
+        self._sync_handlers: dict[EventType, list[tuple[int, SyncEventHandler]]] = defaultdict(list)
         self._event_history: list[Event] = []
         self._history_limit: int = 1000
         self._is_running: bool = False
@@ -199,9 +195,7 @@ class EventBus:
         self._is_running = True
         while self._is_running:
             try:
-                event = await asyncio.wait_for(
-                    self._event_queue.get(), timeout=1.0
-                )
+                event = await asyncio.wait_for(self._event_queue.get(), timeout=1.0)
                 await self.publish(event)
             except asyncio.TimeoutError:
                 continue

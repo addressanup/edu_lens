@@ -9,18 +9,18 @@ Provides comprehensive parental control features including:
 - Parent notifications
 """
 
-from .usage_controller import UsageController
-from .content_filter import ContentFilter
 from .activity_monitor import ActivityMonitor
+from .content_filter import ContentFilter
 from .device_manager import DeviceManager
 from .notification_service import NotificationService
+from .usage_controller import UsageController
 
 __all__ = [
-    'UsageController',
-    'ContentFilter',
-    'ActivityMonitor',
-    'DeviceManager',
-    'NotificationService',
+    "UsageController",
+    "ContentFilter",
+    "ActivityMonitor",
+    "DeviceManager",
+    "NotificationService",
 ]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

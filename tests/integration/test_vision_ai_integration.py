@@ -16,10 +16,10 @@ import numpy as np
 import pytest
 
 from src.integration.vision_to_ai_bridge import (
-    VisionToAIBridge,
-    VisualContext,
     ContentType,
     SubjectArea,
+    VisionToAIBridge,
+    VisualContext,
 )
 
 

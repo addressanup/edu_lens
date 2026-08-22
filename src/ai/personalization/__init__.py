@@ -11,81 +11,74 @@ Author: EduLens AI Team
 Version: 1.0.0
 """
 
-from .student_model import (
-    StudentModel,
-    MasteryLevel,
-    LearningStyle,
-    LearningPace,
-    ConceptKnowledgeState,
-    InteractionRecord,
-    create_student_model
-)
-
 from .adaptive_tutor import (
-    AdaptiveTutor,
-    HintDirectness,
-    EmotionalState,
-    ExplanationType,
     AdaptationContext,
-    HintResponse,
+    AdaptiveTutor,
+    EmotionalState,
     ExplanationResponse,
-    create_adaptive_tutor
+    ExplanationType,
+    HintDirectness,
+    HintResponse,
+    create_adaptive_tutor,
 )
-
-from .progress_tracker import (
-    ProgressTracker,
-    AttemptOutcome,
-    ProblemAttempt,
-    ConceptProgress,
-    ProgressReport,
-    create_progress_tracker
-)
-
 from .learning_analytics import (
+    AggregateStatistics,
     LearningAnalytics,
     LearningPattern,
     TimeOfDay,
-    AggregateStatistics,
     TrendAnalysis,
-    create_learning_analytics
+    create_learning_analytics,
 )
-
+from .progress_tracker import (
+    AttemptOutcome,
+    ConceptProgress,
+    ProblemAttempt,
+    ProgressReport,
+    ProgressTracker,
+    create_progress_tracker,
+)
+from .student_model import (
+    ConceptKnowledgeState,
+    InteractionRecord,
+    LearningPace,
+    LearningStyle,
+    MasteryLevel,
+    StudentModel,
+    create_student_model,
+)
 
 __all__ = [
     # Student Model
-    'StudentModel',
-    'MasteryLevel',
-    'LearningStyle',
-    'LearningPace',
-    'ConceptKnowledgeState',
-    'InteractionRecord',
-    'create_student_model',
-
+    "StudentModel",
+    "MasteryLevel",
+    "LearningStyle",
+    "LearningPace",
+    "ConceptKnowledgeState",
+    "InteractionRecord",
+    "create_student_model",
     # Adaptive Tutor
-    'AdaptiveTutor',
-    'HintDirectness',
-    'EmotionalState',
-    'ExplanationType',
-    'AdaptationContext',
-    'HintResponse',
-    'ExplanationResponse',
-    'create_adaptive_tutor',
-
+    "AdaptiveTutor",
+    "HintDirectness",
+    "EmotionalState",
+    "ExplanationType",
+    "AdaptationContext",
+    "HintResponse",
+    "ExplanationResponse",
+    "create_adaptive_tutor",
     # Progress Tracker
-    'ProgressTracker',
-    'AttemptOutcome',
-    'ProblemAttempt',
-    'ConceptProgress',
-    'ProgressReport',
-    'create_progress_tracker',
-
+    "ProgressTracker",
+    "AttemptOutcome",
+    "ProblemAttempt",
+    "ConceptProgress",
+    "ProgressReport",
+    "create_progress_tracker",
     # Learning Analytics
-    'LearningAnalytics',
-    'LearningPattern',
-    'TimeOfDay',
-    'AggregateStatistics',
-    'TrendAnalysis',
-    'create_learning_analytics',
+    "LearningAnalytics",
+    "LearningPattern",
+    "TimeOfDay",
+    "AggregateStatistics",
+    "TrendAnalysis",
+    "create_learning_analytics",
 ]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

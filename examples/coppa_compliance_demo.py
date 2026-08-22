@@ -9,23 +9,24 @@ Author: Security and Privacy Agent (SEC-001)
 Last Updated: 2025-12-10
 """
 
-import sys
 import os
+import sys
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../"))
+
+from datetime import datetime
 
 from src.privacy.coppa_validator import (
-    COPPAValidator,
     ComplianceLevel,
+    COPPAValidator,
 )
 from src.privacy.data_handler import (
-    DataHandler,
     DataClassification,
-    ProcessingLocation,
+    DataHandler,
     DataItem,
+    ProcessingLocation,
 )
-from datetime import datetime
 
 
 def demo_compliant_scenario():
@@ -46,7 +47,7 @@ def demo_compliant_scenario():
         child_pseudonym="Demo Student",
         category=DataClassification.SENSITIVE_VISUAL,
         consent_method="CREDIT_CARD",
-        verification_method="STRIPE_VERIFICATION"
+        verification_method="STRIPE_VERIFICATION",
     )
     print("   ✓ Consent granted for camera image processing")
     print()
@@ -56,7 +57,7 @@ def demo_compliant_scenario():
         child_pseudonym="Demo Student",
         category=DataClassification.VOICE_DATA,
         consent_method="CREDIT_CARD",
-        verification_method="STRIPE_VERIFICATION"
+        verification_method="STRIPE_VERIFICATION",
     )
     print("   ✓ Consent granted for voice command processing")
     print()
@@ -97,7 +98,7 @@ def demo_compliant_scenario():
         parent_account_id="demo_parent_001",
         child_pseudonym="Demo Student",
         data_items=data_items,
-        third_party_processors=processors
+        third_party_processors=processors,
     )
 
     # Display results
@@ -109,7 +110,9 @@ def demo_compliant_scenario():
     print()
     print(f"Overall Status: {report.overall_status.value.upper()}")
     print(f"Checks Performed: {report.total_checks}")
-    print(f"Checks Passed: {report.passed_checks} ({report.passed_checks/report.total_checks*100:.1f}%)")
+    print(
+        f"Checks Passed: {report.passed_checks} ({report.passed_checks/report.total_checks*100:.1f}%)"
+    )
     print()
     print(f"Issues Found:")
     print(f"  - Critical: {report.critical_issues}")
@@ -198,7 +201,7 @@ def demo_consent_validation():
     level, issues = validator.validate_consent(
         parent_account_id="demo_parent_002",
         child_pseudonym="Demo Student 2",
-        required_categories=[DataClassification.SENSITIVE_VISUAL]
+        required_categories=[DataClassification.SENSITIVE_VISUAL],
     )
 
     print(f"Status: {level.value.upper()}")
@@ -216,13 +219,13 @@ def demo_consent_validation():
         child_pseudonym="Demo Student 2",
         category=DataClassification.SENSITIVE_VISUAL,
         consent_method="CREDIT_CARD",
-        verification_method="STRIPE_VERIFICATION"
+        verification_method="STRIPE_VERIFICATION",
     )
 
     level, issues = validator.validate_consent(
         parent_account_id="demo_parent_002",
         child_pseudonym="Demo Student 2",
-        required_categories=[DataClassification.SENSITIVE_VISUAL]
+        required_categories=[DataClassification.SENSITIVE_VISUAL],
     )
 
     print(f"Status: {level.value.upper()}")
@@ -276,6 +279,7 @@ def main():
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
 
 

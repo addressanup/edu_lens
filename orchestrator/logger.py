@@ -11,11 +11,11 @@ This module provides a comprehensive 5-level logging system:
 
 import json
 import sys
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-from enum import Enum
-from dataclasses import dataclass, field, asdict
 
 from loguru import logger
 
@@ -278,7 +278,7 @@ class LoggerManager:
         tokens_output: int = 0,
         latency_ms: float = 0.0,
         success: bool = True,
-        **metadata: Any
+        **metadata: Any,
     ) -> None:
         """
         Log an event (agent invocation, token usage, etc.).
@@ -302,7 +302,7 @@ class LoggerManager:
             tokens_output=tokens_output,
             latency_ms=latency_ms,
             success=success,
-            metadata=metadata
+            metadata=metadata,
         )
 
         logger.bind(category=LogCategory.EVENT.value, **log_entry.to_dict()).info(
@@ -316,7 +316,7 @@ class LoggerManager:
         reasoning: str = "",
         alternatives: Optional[List[str]] = None,
         confidence_score: float = 0.0,
-        **context: Any
+        **context: Any,
     ) -> None:
         """
         Log a decision made by an agent.
@@ -336,7 +336,7 @@ class LoggerManager:
             reasoning=reasoning,
             alternatives=alternatives or [],
             confidence_score=confidence_score,
-            context=context
+            context=context,
         )
 
         logger.bind(category=LogCategory.DECISION.value, **log_entry.to_dict()).info(
@@ -349,7 +349,7 @@ class LoggerManager:
         span_id: str,
         operation: str,
         parent_span_id: Optional[str] = None,
-        **attributes: Any
+        **attributes: Any,
     ) -> None:
         """
         Start a trace span.
@@ -368,7 +368,7 @@ class LoggerManager:
             parent_span_id=parent_span_id,
             operation=operation,
             status="started",
-            attributes=attributes
+            attributes=attributes,
         )
 
         self._active_traces[span_id] = log_entry
@@ -378,11 +378,7 @@ class LoggerManager:
         )
 
     def trace_end(
-        self,
-        span_id: str,
-        status: str = "ok",
-        duration_ms: float = 0.0,
-        **attributes: Any
+        self, span_id: str, status: str = "ok", duration_ms: float = 0.0, **attributes: Any
     ) -> None:
         """
         End a trace span.
@@ -412,7 +408,7 @@ class LoggerManager:
         phase: int = 0,
         recovery_attempted: bool = False,
         recovery_successful: bool = False,
-        **context: Any
+        **context: Any,
     ) -> None:
         """
         Log an error.
@@ -444,7 +440,7 @@ class LoggerManager:
             phase=phase,
             recovery_attempted=recovery_attempted,
             recovery_successful=recovery_successful,
-            context=context
+            context=context,
         )
 
         logger.bind(category=LogCategory.ERROR.value, **log_entry.to_dict()).error(
@@ -461,7 +457,7 @@ class LoggerManager:
         ip_address: str = "",
         user_agent: str = "",
         request_id: str = "",
-        **details: Any
+        **details: Any,
     ) -> None:
         """
         Log an audit event (compliance record).
@@ -487,7 +483,7 @@ class LoggerManager:
             ip_address=ip_address,
             user_agent=user_agent,
             request_id=request_id,
-            details=details
+            details=details,
         )
 
         logger.bind(category=LogCategory.AUDIT.value, **log_entry.to_dict()).info(

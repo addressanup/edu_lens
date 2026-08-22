@@ -7,8 +7,8 @@ input sanitization, and secret detection.
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Pattern, Tuple, Union
 from enum import Enum
+from typing import Any, Dict, List, Optional, Pattern, Tuple, Union
 
 
 class ValidationSeverity(str, Enum):
@@ -52,12 +52,14 @@ class ValidationResult:
         field: Optional[str] = None,
         suggestion: Optional[str] = None,
     ) -> None:
-        self.issues.append(ValidationIssue(
-            severity=severity,
-            message=message,
-            field=field,
-            suggestion=suggestion,
-        ))
+        self.issues.append(
+            ValidationIssue(
+                severity=severity,
+                message=message,
+                field=field,
+                suggestion=suggestion,
+            )
+        )
         if severity == ValidationSeverity.ERROR:
             self.valid = False
 
@@ -66,7 +68,9 @@ class ValidationResult:
             "valid": self.valid,
             "issues": [i.to_dict() for i in self.issues],
             "error_count": sum(1 for i in self.issues if i.severity == ValidationSeverity.ERROR),
-            "warning_count": sum(1 for i in self.issues if i.severity == ValidationSeverity.WARNING),
+            "warning_count": sum(
+                1 for i in self.issues if i.severity == ValidationSeverity.WARNING
+            ),
         }
 
 
@@ -388,31 +392,24 @@ class SecretDetector:
         # API Keys
         (r"api[_-]?key['\"]?\s*[:=]\s*['\"]?[\w-]{20,}", "API Key"),
         (r"apikey['\"]?\s*[:=]\s*['\"]?[\w-]{20,}", "API Key"),
-
         # AWS
         (r"AKIA[0-9A-Z]{16}", "AWS Access Key"),
         (r"aws[_-]?secret[_-]?access[_-]?key['\"]?\s*[:=]\s*['\"]?[\w/+]{40}", "AWS Secret Key"),
-
         # GitHub
         (r"ghp_[a-zA-Z0-9]{36}", "GitHub Personal Token"),
         (r"gho_[a-zA-Z0-9]{36}", "GitHub OAuth Token"),
         (r"ghu_[a-zA-Z0-9]{36}", "GitHub User Token"),
-
         # Generic tokens
         (r"bearer\s+[a-zA-Z0-9_.~+/=-]{20,}", "Bearer Token"),
         (r"token['\"]?\s*[:=]\s*['\"]?[a-zA-Z0-9_.~+/=-]{20,}", "Generic Token"),
-
         # Passwords
         (r"password['\"]?\s*[:=]\s*['\"]?[^\s'\"]{8,}", "Password"),
         (r"passwd['\"]?\s*[:=]\s*['\"]?[^\s'\"]{8,}", "Password"),
         (r"pwd['\"]?\s*[:=]\s*['\"]?[^\s'\"]{8,}", "Password"),
-
         # Private keys
         (r"-----BEGIN (?:RSA |DSA |EC |OPENSSH )?PRIVATE KEY-----", "Private Key"),
-
         # Connection strings
         (r"(?:postgres|mysql|mongodb)://[^\s]+:[^\s]+@", "Database Connection"),
-
         # Slack
         (r"xox[baprs]-[0-9a-zA-Z]{10,}", "Slack Token"),
     ]
@@ -420,8 +417,7 @@ class SecretDetector:
     def __init__(self):
         """Initialize the secret detector."""
         self._patterns = [
-            (re.compile(pattern, re.I), name)
-            for pattern, name in self.SECRET_PATTERNS
+            (re.compile(pattern, re.I), name) for pattern, name in self.SECRET_PATTERNS
         ]
 
     def scan(self, text: str) -> List[Dict[str, Any]]:
@@ -440,15 +436,19 @@ class SecretDetector:
             for match in pattern.finditer(text):
                 # Mask the actual value
                 value = match.group(0)
-                masked = value[:5] + "*" * (len(value) - 10) + value[-5:] if len(value) > 15 else "***"
+                masked = (
+                    value[:5] + "*" * (len(value) - 10) + value[-5:] if len(value) > 15 else "***"
+                )
 
-                findings.append({
-                    "type": secret_type,
-                    "masked_value": masked,
-                    "start": match.start(),
-                    "end": match.end(),
-                    "line": text[:match.start()].count('\n') + 1,
-                })
+                findings.append(
+                    {
+                        "type": secret_type,
+                        "masked_value": masked,
+                        "start": match.start(),
+                        "end": match.end(),
+                        "line": text[: match.start()].count("\n") + 1,
+                    }
+                )
 
         return findings
 

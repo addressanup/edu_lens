@@ -199,7 +199,7 @@ class PerformanceProfiler:
         # Add to history
         self._measurements.append(measurement)
         if len(self._measurements) > self.history_size:
-            self._measurements = self._measurements[-self.history_size:]
+            self._measurements = self._measurements[-self.history_size :]
 
         # Update stage stats
         self._stage_stats[stage].add_measurement(duration_ms, success)
@@ -208,11 +208,13 @@ class PerformanceProfiler:
         if stage == PipelineStage.TOTAL_E2E:
             self._e2e_latencies.append(duration_ms)
             if len(self._e2e_latencies) > self.history_size:
-                self._e2e_latencies = self._e2e_latencies[-self.history_size:]
+                self._e2e_latencies = self._e2e_latencies[-self.history_size :]
 
             # Check target
             if duration_ms > self.latency_target_ms:
-                logger.warning(f"E2E latency exceeded target: {duration_ms:.0f}ms > {self.latency_target_ms}ms")
+                logger.warning(
+                    f"E2E latency exceeded target: {duration_ms:.0f}ms > {self.latency_target_ms}ms"
+                )
                 if self._on_latency_exceeded:
                     self._on_latency_exceeded(stage, duration_ms)
 
@@ -266,9 +268,7 @@ class PerformanceProfiler:
         """Reset all statistics."""
         self._measurements.clear()
         self._e2e_latencies.clear()
-        self._stage_stats = {
-            stage: StageStats(stage=stage) for stage in PipelineStage
-        }
+        self._stage_stats = {stage: StageStats(stage=stage) for stage in PipelineStage}
         self._report_start = datetime.utcnow()
 
     def on_latency_exceeded(

@@ -6,31 +6,42 @@ Demonstrates how to use all parental control components together.
 """
 
 import sys
-from pathlib import Path
 from datetime import datetime, time, timedelta
+from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from parental.usage_controller import UsageController, DayOfWeek, LimitStatus
-from parental.content_filter import ContentFilter, FilterMode, DifficultyLevel, ContentType, AgeGroup
 from parental.activity_monitor import ActivityMonitor
+from parental.content_filter import (
+    AgeGroup,
+    ContentFilter,
+    ContentType,
+    DifficultyLevel,
+    FilterMode,
+)
 from parental.device_manager import DeviceManager
-from parental.notification_service import NotificationService, NotificationType, NotificationChannel
+from parental.notification_service import NotificationChannel, NotificationService, NotificationType
+from parental.usage_controller import DayOfWeek, LimitStatus, UsageController
 
 
 def example_usage_controller():
     """Demonstrate usage controller features."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("USAGE CONTROLLER EXAMPLE")
-    print("="*60)
+    print("=" * 60)
 
     controller = UsageController(user_id="child_demo")
 
     # Set daily limits for weekdays
     print("\n1. Setting up daily limits...")
-    for day in [DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY]:
+    for day in [
+        DayOfWeek.MONDAY,
+        DayOfWeek.TUESDAY,
+        DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY,
+        DayOfWeek.FRIDAY,
+    ]:
         controller.set_daily_limit(day, 90)  # 90 minutes on weekdays
 
     for day in [DayOfWeek.SATURDAY, DayOfWeek.SUNDAY]:
@@ -44,8 +55,13 @@ def example_usage_controller():
     weekday_schedule = [(time(15, 0), time(20, 0))]  # 3 PM - 8 PM
     weekend_schedule = [(time(9, 0), time(12, 0)), (time(14, 0), time(19, 0))]
 
-    for day in [DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY]:
+    for day in [
+        DayOfWeek.MONDAY,
+        DayOfWeek.TUESDAY,
+        DayOfWeek.WEDNESDAY,
+        DayOfWeek.THURSDAY,
+        DayOfWeek.FRIDAY,
+    ]:
         controller.set_schedule(day, weekday_schedule)
 
     for day in [DayOfWeek.SATURDAY, DayOfWeek.SUNDAY]:
@@ -73,9 +89,9 @@ def example_usage_controller():
 
 def example_content_filter():
     """Demonstrate content filter features."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("CONTENT FILTER EXAMPLE")
-    print("="*60)
+    print("=" * 60)
 
     filter = ContentFilter(user_id="child_demo")
 
@@ -88,8 +104,7 @@ def example_content_filter():
     # Add subject whitelist
     print("\n2. Setting up subject whitelist...")
     filter.filter_subjects(
-        FilterMode.WHITELIST,
-        ["mathematics", "science", "history", "language_arts"]
+        FilterMode.WHITELIST, ["mathematics", "science", "history", "language_arts"]
     )
     print("   ✓ Allowed subjects: math, science, history, language arts")
 
@@ -104,9 +119,7 @@ def example_content_filter():
 
     for subject, difficulty, content_type in test_cases:
         allowed, reason = filter.check_content(
-            subject=subject,
-            difficulty=difficulty,
-            content_type=content_type
+            subject=subject, difficulty=difficulty, content_type=content_type
         )
         status = "✓ ALLOWED" if allowed else "✗ BLOCKED"
         print(f"   {status}: {subject} ({difficulty.name}, {content_type.value})")
@@ -117,15 +130,15 @@ def example_content_filter():
     print("\n4. Filter Summary:")
     summary = filter.get_filter_summary()
     for key, value in summary.items():
-        if key != 'user_id':
+        if key != "user_id":
             print(f"   {key}: {value}")
 
 
 def example_activity_monitor():
     """Demonstrate activity monitor features."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("ACTIVITY MONITOR EXAMPLE")
-    print("="*60)
+    print("=" * 60)
 
     monitor = ActivityMonitor(user_id="child_demo")
 
@@ -134,50 +147,52 @@ def example_activity_monitor():
 
     sessions = [
         {
-            'session_id': 'session_001',
-            'subject': 'mathematics',
-            'duration': 30,
-            'attempted': 20,
-            'correct': 18,
-            'difficulty': 'middle_school',
-            'topics': ['algebra', 'equations']
+            "session_id": "session_001",
+            "subject": "mathematics",
+            "duration": 30,
+            "attempted": 20,
+            "correct": 18,
+            "difficulty": "middle_school",
+            "topics": ["algebra", "equations"],
         },
         {
-            'session_id': 'session_002',
-            'subject': 'science',
-            'duration': 25,
-            'attempted': 15,
-            'correct': 13,
-            'difficulty': 'middle_school',
-            'topics': ['biology', 'cells']
+            "session_id": "session_002",
+            "subject": "science",
+            "duration": 25,
+            "attempted": 15,
+            "correct": 13,
+            "difficulty": "middle_school",
+            "topics": ["biology", "cells"],
         },
         {
-            'session_id': 'session_003',
-            'subject': 'mathematics',
-            'duration': 35,
-            'attempted': 25,
-            'correct': 22,
-            'difficulty': 'middle_school',
-            'topics': ['geometry', 'triangles']
-        }
+            "session_id": "session_003",
+            "subject": "mathematics",
+            "duration": 35,
+            "attempted": 25,
+            "correct": 22,
+            "difficulty": "middle_school",
+            "topics": ["geometry", "triangles"],
+        },
     ]
 
     for session in sessions:
-        start = datetime.now() - timedelta(minutes=session['duration'])
+        start = datetime.now() - timedelta(minutes=session["duration"])
         end = datetime.now()
 
         monitor.log_session(
-            session_id=session['session_id'],
+            session_id=session["session_id"],
             start_time=start,
             end_time=end,
-            subject=session['subject'],
-            problems_attempted=session['attempted'],
-            problems_correct=session['correct'],
-            difficulty_level=session['difficulty'],
-            topics_covered=session['topics']
+            subject=session["subject"],
+            problems_attempted=session["attempted"],
+            problems_correct=session["correct"],
+            difficulty_level=session["difficulty"],
+            topics_covered=session["topics"],
         )
-        print(f"   ✓ Logged {session['subject']} session: {session['duration']} min, "
-              f"{session['correct']}/{session['attempted']} correct")
+        print(
+            f"   ✓ Logged {session['subject']} session: {session['duration']} min, "
+            f"{session['correct']}/{session['attempted']} correct"
+        )
 
     # Get daily report
     print("\n2. Daily Report:")
@@ -201,22 +216,22 @@ def example_activity_monitor():
     print("\n4. Learning Insights:")
     insights = monitor.get_learning_insights()
 
-    if insights.get('strengths'):
+    if insights.get("strengths"):
         print("   Strengths:")
-        for strength in insights['strengths']:
+        for strength in insights["strengths"]:
             print(f"      ✓ {strength}")
 
-    if insights.get('recommendations'):
+    if insights.get("recommendations"):
         print("   Recommendations:")
-        for rec in insights['recommendations']:
+        for rec in insights["recommendations"]:
             print(f"      → {rec}")
 
 
 def example_device_manager():
     """Demonstrate device manager features."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("DEVICE MANAGER EXAMPLE")
-    print("="*60)
+    print("=" * 60)
 
     manager = DeviceManager(parent_id="parent_demo")
 
@@ -225,19 +240,19 @@ def example_device_manager():
 
     devices = [
         {
-            'device_id': 'ipad_001',
-            'device_name': "Child's iPad",
-            'user_id': 'child_demo',
-            'platform': 'iOS',
-            'app_version': '1.0.0'
+            "device_id": "ipad_001",
+            "device_name": "Child's iPad",
+            "user_id": "child_demo",
+            "platform": "iOS",
+            "app_version": "1.0.0",
         },
         {
-            'device_id': 'tablet_001',
-            'device_name': "Child's Tablet",
-            'user_id': 'child_demo',
-            'platform': 'Android',
-            'app_version': '1.0.0'
-        }
+            "device_id": "tablet_001",
+            "device_name": "Child's Tablet",
+            "user_id": "child_demo",
+            "platform": "Android",
+            "app_version": "1.0.0",
+        },
     ]
 
     for device in devices:
@@ -248,10 +263,10 @@ def example_device_manager():
     print("\n2. Updating device status...")
     for device in devices:
         manager.update_device_heartbeat(
-            device_id=device['device_id'],
+            device_id=device["device_id"],
             battery_level=75,
             is_charging=False,
-            connection_type='wifi'
+            connection_type="wifi",
         )
     print("   ✓ Heartbeats updated")
 
@@ -259,20 +274,17 @@ def example_device_manager():
     print("\n3. Sending remote commands...")
 
     # Update settings
-    cmd_id = manager.update_settings(
-        'ipad_001',
-        {'daily_limit': 90, 'content_filter': 'moderate'}
-    )
+    cmd_id = manager.update_settings("ipad_001", {"daily_limit": 90, "content_filter": "moderate"})
     print(f"   ✓ Settings update sent to iPad (command: {cmd_id[:8]}...)")
 
     # Lock device (example)
-    cmd_id = manager.lock_device('tablet_001', 'Time limit reached')
+    cmd_id = manager.lock_device("tablet_001", "Time limit reached")
     print(f"   ✓ Lock command sent to Tablet (command: {cmd_id[:8]}...)")
 
     # Get device status
     print("\n4. Device Status:")
     for device in devices:
-        status = manager.get_device_status(device['device_id'])
+        status = manager.get_device_status(device["device_id"])
         print(f"   {status['device_name']}:")
         print(f"      Status: {status['status']}")
         print(f"      Battery: {status['battery_level']}%")
@@ -282,9 +294,9 @@ def example_device_manager():
 
 def example_notification_service():
     """Demonstrate notification service features."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("NOTIFICATION SERVICE EXAMPLE")
-    print("="*60)
+    print("=" * 60)
 
     service = NotificationService(parent_id="parent_demo")
 
@@ -295,7 +307,7 @@ def example_notification_service():
         quiet_hours_enabled=True,
         quiet_hours_start=time(22, 0),
         quiet_hours_end=time(7, 0),
-        daily_summary_time=time(20, 0)
+        daily_summary_time=time(20, 0),
     )
     print("   ✓ Email: parent@example.com")
     print("   ✓ Quiet hours: 10:00 PM - 7:00 AM")
@@ -303,13 +315,9 @@ def example_notification_service():
 
     # Set channel preferences
     print("\n2. Setting notification channels...")
+    service.set_channel_preferences(NotificationType.DAILY_SUMMARY, {NotificationChannel.EMAIL})
     service.set_channel_preferences(
-        NotificationType.DAILY_SUMMARY,
-        {NotificationChannel.EMAIL}
-    )
-    service.set_channel_preferences(
-        NotificationType.MILESTONE,
-        {NotificationChannel.PUSH, NotificationChannel.IN_APP}
+        NotificationType.MILESTONE, {NotificationChannel.PUSH, NotificationChannel.IN_APP}
     )
     print("   ✓ Daily summaries via email")
     print("   ✓ Milestones via push and in-app")
@@ -319,31 +327,26 @@ def example_notification_service():
 
     # Daily summary
     summary_data = {
-        'date': datetime.now().strftime('%Y-%m-%d'),
-        'total_duration_minutes': 90,
-        'total_sessions': 3,
-        'overall_accuracy': 87.5,
-        'subjects': {'mathematics': {}, 'science': {}}
+        "date": datetime.now().strftime("%Y-%m-%d"),
+        "total_duration_minutes": 90,
+        "total_sessions": 3,
+        "overall_accuracy": 87.5,
+        "subjects": {"mathematics": {}, "science": {}},
     }
 
     notif_id = service.send_daily_summary(
-        user_id='child_demo',
-        summary_data=summary_data,
-        force=True
+        user_id="child_demo", summary_data=summary_data, force=True
     )
     print(f"   ✓ Daily summary sent (ID: {notif_id[:10]}...)")
 
     # Milestone alert
-    milestone_data = {
-        'description': 'Completed 7-day practice streak!',
-        'streak_days': 7
-    }
+    milestone_data = {"description": "Completed 7-day practice streak!", "streak_days": 7}
 
     notif_id = service.send_milestone_alert(
-        user_id='child_demo',
-        milestone_type='Practice Streak',
+        user_id="child_demo",
+        milestone_type="Practice Streak",
         milestone_data=milestone_data,
-        force=True
+        force=True,
     )
     print(f"   ✓ Milestone alert sent (ID: {notif_id[:10]}...)")
 
@@ -358,9 +361,9 @@ def example_notification_service():
 
 def integrated_example():
     """Demonstrate integrated usage of all components."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("INTEGRATED EXAMPLE")
-    print("="*60)
+    print("=" * 60)
 
     print("\nSimulating a complete parental control workflow...")
 
@@ -389,7 +392,7 @@ def integrated_example():
         device_name="Child's Device",
         user_id=user_id,
         platform="iOS",
-        app_version="1.0.0"
+        app_version="1.0.0",
     )
 
     # Configure notifications
@@ -408,8 +411,7 @@ def integrated_example():
 
         # Check content
         allowed, reason = filter.check_content(
-            subject="mathematics",
-            difficulty=DifficultyLevel.MIDDLE_SCHOOL
+            subject="mathematics", difficulty=DifficultyLevel.MIDDLE_SCHOOL
         )
 
         if allowed:
@@ -434,7 +436,7 @@ def integrated_example():
         problems_attempted=25,
         problems_correct=22,
         difficulty_level="middle_school",
-        topics_covered=["algebra", "equations"]
+        topics_covered=["algebra", "equations"],
     )
 
     print(f"   ✓ Session completed: {minutes} minutes")
@@ -444,11 +446,7 @@ def integrated_example():
 
     # Generate and send report
     report = monitor.get_daily_report()
-    notif_id = notifications.send_daily_summary(
-        user_id=user_id,
-        summary_data=report,
-        force=True
-    )
+    notif_id = notifications.send_daily_summary(user_id=user_id, summary_data=report, force=True)
 
     print(f"   ✓ Summary sent to parent@example.com")
     print(f"      Duration: {report['total_duration_minutes']} minutes")
@@ -464,9 +462,9 @@ def integrated_example():
 
 def main():
     """Run all examples."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EDULENS PARENTAL CONTROLS - DEMONSTRATION")
-    print("="*60)
+    print("=" * 60)
     print("\nThis demonstration shows all features of the parental controls system.")
 
     try:
@@ -477,9 +475,9 @@ def main():
         example_notification_service()
         integrated_example()
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("DEMONSTRATION COMPLETE")
-        print("="*60)
+        print("=" * 60)
         print("\nAll parental control features demonstrated successfully!")
         print("See README.md for detailed documentation.")
         print("\n")
@@ -487,11 +485,12 @@ def main():
     except Exception as e:
         print(f"\n\nError during demonstration: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

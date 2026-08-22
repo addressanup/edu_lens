@@ -8,40 +8,43 @@ Author: Vision Processing Agent (VIS-001)
 Task: VIS-001-T3
 """
 
-import pytest
-import numpy as np
-from typing import List, Tuple
 from pathlib import Path
+from typing import List, Tuple
+
+import numpy as np
+import pytest
 
 # Test imports
 from src.vision.layout_analyzer import (
+    ContentType,
+    DocumentStructure,
     LayoutAnalyzer,
     LayoutRegion,
     RegionType,
-    ContentType,
-    DocumentStructure
 )
+from src.vision.ocr_engine import BoundingBox, OCRResult, TextRegion
 from src.vision.problem_segmenter import (
-    ProblemSegmenter,
     Problem,
-    ProblemFormat,
     ProblemDifficulty,
-    WorksheetProblems,
+    ProblemFormat,
     ProblemPart,
-    segment_worksheet,
+    ProblemSegmenter,
+    WorksheetProblems,
     extract_problem_by_number,
-    get_problems_by_format
+    get_problems_by_format,
+    segment_worksheet,
 )
-from src.vision.ocr_engine import BoundingBox, TextRegion, OCRResult
 
 try:
     import cv2
+
     CV2_AVAILABLE = True
 except ImportError:
     CV2_AVAILABLE = False
 
 
 # Test Fixtures
+
 
 @pytest.fixture
 def sample_image() -> np.ndarray:
@@ -99,7 +102,7 @@ def sample_region(sample_bounding_box) -> LayoutRegion:
         bounding_box=sample_bounding_box,
         content_type=ContentType.TEXT,
         confidence=0.85,
-        text_content="1. What is 2 + 2?"
+        text_content="1. What is 2 + 2?",
     )
 
 
@@ -111,36 +114,36 @@ def sample_ocr_result() -> OCRResult:
             text="Math Worksheet",
             confidence=0.95,
             bounding_box=BoundingBox(50, 30, 500, 40),
-            language="en"
+            language="en",
         ),
         TextRegion(
             text="1. What is 2 + 2?",
             confidence=0.92,
             bounding_box=BoundingBox(50, 100, 500, 40),
-            language="en"
+            language="en",
         ),
         TextRegion(
             text="2. Choose the correct answer:",
             confidence=0.90,
             bounding_box=BoundingBox(50, 250, 500, 40),
-            language="en"
+            language="en",
         ),
         TextRegion(
             text="A. Option 1",
             confidence=0.88,
             bounding_box=BoundingBox(70, 310, 230, 20),
-            language="en"
+            language="en",
         ),
         TextRegion(
             text="B. Option 2",
             confidence=0.88,
             bounding_box=BoundingBox(70, 340, 230, 20),
-            language="en"
+            language="en",
         ),
     ]
     return OCRResult(
         regions=regions,
-        full_text="Math Worksheet\n1. What is 2 + 2?\n2. Choose the correct answer:\nA. Option 1\nB. Option 2"
+        full_text="Math Worksheet\n1. What is 2 + 2?\n2. Choose the correct answer:\nA. Option 1\nB. Option 2",
     )
 
 
@@ -148,23 +151,18 @@ def sample_ocr_result() -> OCRResult:
 def layout_analyzer() -> LayoutAnalyzer:
     """Create a LayoutAnalyzer instance."""
     return LayoutAnalyzer(
-        min_region_size=100,
-        merge_threshold=0.5,
-        whitespace_threshold=20,
-        min_confidence=0.6
+        min_region_size=100, merge_threshold=0.5, whitespace_threshold=20, min_confidence=0.6
     )
 
 
 @pytest.fixture
 def problem_segmenter(layout_analyzer) -> ProblemSegmenter:
     """Create a ProblemSegmenter instance."""
-    return ProblemSegmenter(
-        layout_analyzer=layout_analyzer,
-        min_problem_size=200
-    )
+    return ProblemSegmenter(layout_analyzer=layout_analyzer, min_problem_size=200)
 
 
 # Tests for BoundingBox and LayoutRegion
+
 
 class TestBoundingBox:
     """Tests for BoundingBox functionality."""
@@ -216,17 +214,17 @@ class TestLayoutRegion:
         region1 = LayoutRegion(
             region_id="r1",
             region_type=RegionType.TEXT_BLOCK,
-            bounding_box=BoundingBox(100, 100, 100, 100)
+            bounding_box=BoundingBox(100, 100, 100, 100),
         )
         region2 = LayoutRegion(
             region_id="r2",
             region_type=RegionType.TEXT_BLOCK,
-            bounding_box=BoundingBox(150, 150, 100, 100)
+            bounding_box=BoundingBox(150, 150, 100, 100),
         )
         region3 = LayoutRegion(
             region_id="r3",
             region_type=RegionType.TEXT_BLOCK,
-            bounding_box=BoundingBox(300, 300, 100, 100)
+            bounding_box=BoundingBox(300, 300, 100, 100),
         )
 
         # region1 and region2 overlap
@@ -239,13 +237,13 @@ class TestLayoutRegion:
         parent = LayoutRegion(
             region_id="parent",
             region_type=RegionType.QUESTION,
-            bounding_box=BoundingBox(100, 100, 200, 200)
+            bounding_box=BoundingBox(100, 100, 200, 200),
         )
         child = LayoutRegion(
             region_id="child",
             region_type=RegionType.ANSWER_SPACE,
             bounding_box=BoundingBox(110, 250, 180, 40),
-            parent_id="parent"
+            parent_id="parent",
         )
 
         parent.children.append(child)
@@ -255,6 +253,7 @@ class TestLayoutRegion:
 
 
 # Tests for LayoutAnalyzer
+
 
 class TestLayoutAnalyzer:
     """Tests for LayoutAnalyzer functionality."""
@@ -289,7 +288,7 @@ class TestLayoutAnalyzer:
             region_id="test",
             region_type=RegionType.TEXT_BLOCK,
             bounding_box=BoundingBox(50, 100, 500, 40),
-            text_content="1. What is 2 + 2?"
+            text_content="1. What is 2 + 2?",
         )
 
         region_type = layout_analyzer.classify_region(region, sample_image)
@@ -301,7 +300,7 @@ class TestLayoutAnalyzer:
             region_id="test",
             region_type=RegionType.TEXT_BLOCK,
             bounding_box=BoundingBox(50, 100, 500, 100),
-            text_content="A. First option\nB. Second option\nC. Third option"
+            text_content="A. First option\nB. Second option\nC. Third option",
         )
 
         region_type = layout_analyzer.classify_region(region, sample_image)
@@ -313,7 +312,7 @@ class TestLayoutAnalyzer:
             region_id="test",
             region_type=RegionType.TEXT_BLOCK,
             bounding_box=BoundingBox(50, 20, 500, 40),
-            text_content="Math Worksheet"
+            text_content="Math Worksheet",
         )
 
         region_type = layout_analyzer.classify_region(region, sample_image)
@@ -326,19 +325,19 @@ class TestLayoutAnalyzer:
                 region_id="header",
                 region_type=RegionType.HEADER,
                 bounding_box=BoundingBox(50, 30, 500, 40),
-                text_content="Worksheet Title"
+                text_content="Worksheet Title",
             ),
             LayoutRegion(
                 region_id="q1",
                 region_type=RegionType.QUESTION,
                 bounding_box=BoundingBox(50, 100, 500, 40),
-                text_content="1. Question one?"
+                text_content="1. Question one?",
             ),
             LayoutRegion(
                 region_id="a1",
                 region_type=RegionType.ANSWER_SPACE,
                 bounding_box=BoundingBox(50, 150, 500, 50),
-                text_content=""
+                text_content="",
             ),
         ]
 
@@ -374,6 +373,7 @@ class TestLayoutAnalyzer:
 
 
 # Tests for ProblemSegmenter
+
 
 class TestProblemSegmenter:
     """Tests for ProblemSegmenter functionality."""
@@ -420,7 +420,7 @@ D. Rome"""
             region_id="test",
             region_type=RegionType.MULTIPLE_CHOICE,
             bounding_box=BoundingBox(50, 100, 500, 100),
-            text_content="A. Option 1\nB. Option 2\nC. Option 3"
+            text_content="A. Option 1\nB. Option 2\nC. Option 3",
         )
 
         parts = [
@@ -438,7 +438,7 @@ D. Rome"""
             region_id="test",
             region_type=RegionType.QUESTION,
             bounding_box=BoundingBox(50, 100, 500, 40),
-            text_content="1. The Earth is flat. True or False?"
+            text_content="1. The Earth is flat. True or False?",
         )
 
         format_type = problem_segmenter._classify_problem_format(region, [])
@@ -450,7 +450,7 @@ D. Rome"""
             region_id="test",
             region_type=RegionType.QUESTION,
             bounding_box=BoundingBox(50, 100, 500, 40),
-            text_content="1. The capital of France is _____."
+            text_content="1. The capital of France is _____.",
         )
 
         format_type = problem_segmenter._classify_problem_format(region, [])
@@ -462,7 +462,7 @@ D. Rome"""
             region_id="test",
             region_type=RegionType.QUESTION,
             bounding_box=BoundingBox(50, 100, 500, 40),
-            text_content="1. Solve: 2 + 2 = ?"
+            text_content="1. Solve: 2 + 2 = ?",
         )
 
         format_type = problem_segmenter._classify_problem_format(region, [])
@@ -474,7 +474,7 @@ D. Rome"""
             region_id="test",
             region_type=RegionType.QUESTION,
             bounding_box=BoundingBox(50, 100, 500, 100),
-            text_content="1. Choose one:\nA. First\nB. Second"
+            text_content="1. Choose one:\nA. First\nB. Second",
         )
 
         structure = DocumentStructure(regions=[region])
@@ -500,7 +500,7 @@ D. Rome"""
             problem_id="p1",
             problem_number="1",
             problem_format=ProblemFormat.MULTIPLE_CHOICE,
-            question_text="What is 2+2?"
+            question_text="What is 2+2?",
         )
         difficulty = problem_segmenter._estimate_difficulty(easy_problem)
         assert difficulty == ProblemDifficulty.ELEMENTARY
@@ -510,7 +510,7 @@ D. Rome"""
             problem_id="p2",
             problem_number="2",
             problem_format=ProblemFormat.ESSAY,
-            question_text="Explain the process of photosynthesis in detail, including all chemical reactions."
+            question_text="Explain the process of photosynthesis in detail, including all chemical reactions.",
         )
         difficulty = problem_segmenter._estimate_difficulty(hard_problem)
         assert difficulty == ProblemDifficulty.ADVANCED
@@ -525,7 +525,7 @@ class TestProblem:
             problem_id="p1",
             problem_number="1",
             problem_format=ProblemFormat.SHORT_ANSWER,
-            question_text="What is 2+2?"
+            question_text="What is 2+2?",
         )
 
         assert problem.problem_id == "p1"
@@ -539,7 +539,7 @@ class TestProblem:
             problem_number="1",
             problem_format=ProblemFormat.SHORT_ANSWER,
             question_text="What is 2+2?",
-            bounding_box=BoundingBox(50, 100, 500, 40)
+            bounding_box=BoundingBox(50, 100, 500, 40),
         )
 
         problem_dict = problem.to_dict()
@@ -562,10 +562,7 @@ class TestWorksheetProblems:
         worksheet = WorksheetProblems(
             problems=problems,
             total_count=2,
-            format_distribution={
-                ProblemFormat.MULTIPLE_CHOICE: 1,
-                ProblemFormat.SHORT_ANSWER: 1
-            }
+            format_distribution={ProblemFormat.MULTIPLE_CHOICE: 1, ProblemFormat.SHORT_ANSWER: 1},
         )
 
         assert worksheet.total_count == 2
@@ -573,10 +570,7 @@ class TestWorksheetProblems:
 
     def test_worksheet_to_dict(self):
         """Test converting WorksheetProblems to dict."""
-        worksheet = WorksheetProblems(
-            problems=[],
-            total_count=0
-        )
+        worksheet = WorksheetProblems(problems=[], total_count=0)
 
         worksheet_dict = worksheet.to_dict()
 
@@ -586,6 +580,7 @@ class TestWorksheetProblems:
 
 
 # Tests for convenience functions
+
 
 class TestConvenienceFunctions:
     """Tests for module-level convenience functions."""
@@ -598,7 +593,7 @@ class TestConvenienceFunctions:
                 Problem("p2", "2", ProblemFormat.MULTIPLE_CHOICE, "Q2"),
                 Problem("p3", "3", ProblemFormat.SHORT_ANSWER, "Q3"),
             ],
-            total_count=3
+            total_count=3,
         )
 
         result = extract_problem_by_number(problems, "2")
@@ -617,7 +612,7 @@ class TestConvenienceFunctions:
                 Problem("p2", "2", ProblemFormat.MULTIPLE_CHOICE, "Q2"),
                 Problem("p3", "3", ProblemFormat.SHORT_ANSWER, "Q3"),
             ],
-            total_count=3
+            total_count=3,
         )
 
         short_answer = get_problems_by_format(problems, ProblemFormat.SHORT_ANSWER)
@@ -628,6 +623,7 @@ class TestConvenienceFunctions:
 
 
 # Integration Tests
+
 
 class TestLayoutAnalysisIntegration:
     """Integration tests for complete layout analysis workflow."""
@@ -656,6 +652,7 @@ class TestLayoutAnalysisIntegration:
 
 # Performance Tests
 
+
 class TestPerformance:
     """Tests for performance and accuracy requirements."""
 
@@ -675,10 +672,18 @@ class TestPerformance:
     def test_region_classification_confidence(self, layout_analyzer, sample_image):
         """Test that classified regions have reasonable confidence."""
         regions = [
-            LayoutRegion("r1", RegionType.TEXT_BLOCK, BoundingBox(50, 100, 500, 40),
-                        text_content="1. What is 2+2?"),
-            LayoutRegion("r2", RegionType.TEXT_BLOCK, BoundingBox(50, 200, 500, 40),
-                        text_content="A. First\nB. Second"),
+            LayoutRegion(
+                "r1",
+                RegionType.TEXT_BLOCK,
+                BoundingBox(50, 100, 500, 40),
+                text_content="1. What is 2+2?",
+            ),
+            LayoutRegion(
+                "r2",
+                RegionType.TEXT_BLOCK,
+                BoundingBox(50, 200, 500, 40),
+                text_content="A. First\nB. Second",
+            ),
         ]
 
         for region in regions:

@@ -9,19 +9,19 @@ Author: EduLens AI Team
 Version: 1.0.0
 """
 
-import re
 import logging
-from typing import Dict, List, Optional, Tuple, Any
+import re
 from dataclasses import dataclass
-from enum import Enum
 from datetime import datetime
-
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class SocialStudiesDomain(Enum):
     """Social studies subject domains."""
+
     HISTORY = "history"
     GEOGRAPHY = "geography"
     CIVICS = "civics"
@@ -31,6 +31,7 @@ class SocialStudiesDomain(Enum):
 
 class TimelinePeriod(Enum):
     """Historical time periods."""
+
     PAST = "past"
     PRESENT = "present"
     FUTURE = "future"
@@ -38,6 +39,7 @@ class TimelinePeriod(Enum):
 
 class GeographicFeature(Enum):
     """Types of geographic features."""
+
     LANDFORMS = "landforms"
     WATER_BODIES = "water_bodies"
     CLIMATE = "climate"
@@ -47,6 +49,7 @@ class GeographicFeature(Enum):
 @dataclass
 class HistoricalContext:
     """Historical context information."""
+
     event_name: str
     time_period: str
     key_people: List[str]
@@ -59,6 +62,7 @@ class HistoricalContext:
 @dataclass
 class GeographicExplanation:
     """Geographic concept explanation."""
+
     feature_name: str
     definition: str
     visual_description: str
@@ -70,6 +74,7 @@ class GeographicExplanation:
 @dataclass
 class CivicConcept:
     """Civic education concept."""
+
     concept_name: str
     simple_definition: str
     why_it_matters: str
@@ -98,11 +103,7 @@ class SocialStudiesReasoner:
         self.civic_vocabulary = self._initialize_civic_vocabulary()
 
     def provide_context(
-        self,
-        topic: str,
-        domain: SocialStudiesDomain,
-        grade_level: str,
-        student_age: int
+        self, topic: str, domain: SocialStudiesDomain, grade_level: str, student_age: int
     ) -> Dict[str, Any]:
         """
         Provide historical, geographical, or cultural context for a topic.
@@ -139,14 +140,14 @@ class SocialStudiesReasoner:
         questions = self._generate_context_questions(topic, domain, student_age)
 
         return {
-            'topic': topic,
-            'domain': domain.value,
-            'background': background,
-            'key_points': key_points,
-            'connections_to_today': connections,
-            'vocabulary': vocabulary,
-            'guiding_questions': questions,
-            'additional_resources': self._suggest_resources(topic, domain)
+            "topic": topic,
+            "domain": domain.value,
+            "background": background,
+            "key_points": key_points,
+            "connections_to_today": connections,
+            "vocabulary": vocabulary,
+            "guiding_questions": questions,
+            "additional_resources": self._suggest_resources(topic, domain),
         }
 
     def explain_concepts(
@@ -154,7 +155,7 @@ class SocialStudiesReasoner:
         concept: str,
         domain: SocialStudiesDomain,
         student_age: int,
-        include_examples: bool = True
+        include_examples: bool = True,
     ) -> Dict[str, Any]:
         """
         Explain social studies concepts (civics, economics, geography, history).
@@ -186,7 +187,7 @@ class SocialStudiesReasoner:
         map_description: str,
         map_type: str,
         student_age: int,
-        learning_goal: Optional[str] = None
+        learning_goal: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Provide map reading assistance and guidance.
@@ -217,28 +218,23 @@ class SocialStudiesReasoner:
         questions = self._generate_map_questions(map_type, student_age)
 
         # Provide interpretation help
-        interpretation = self._guide_map_interpretation(
-            map_type, map_description, student_age
-        )
+        interpretation = self._guide_map_interpretation(map_type, map_description, student_age)
 
         # Identify skills to practice
         skills = self._identify_map_skills(map_type, student_age)
 
         return {
-            'map_type': map_type,
-            'what_to_look_for': features,
-            'map_elements': elements,
-            'questions_to_ask': questions,
-            'interpretation_help': interpretation,
-            'practice_skills': skills,
-            'map_reading_tips': self._get_map_reading_tips(student_age)
+            "map_type": map_type,
+            "what_to_look_for": features,
+            "map_elements": elements,
+            "questions_to_ask": questions,
+            "interpretation_help": interpretation,
+            "practice_skills": skills,
+            "map_reading_tips": self._get_map_reading_tips(student_age),
         }
 
     def timeline_support(
-        self,
-        events: List[Dict[str, str]],
-        student_age: int,
-        time_period: Optional[str] = None
+        self, events: List[Dict[str, str]], student_age: int, time_period: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Provide chronological understanding and timeline support.
@@ -274,19 +270,16 @@ class SocialStudiesReasoner:
         questions = self._generate_timeline_questions(organized, student_age)
 
         return {
-            'organized_events': organized,
-            'time_relationships': relationships,
-            'cause_and_effect': cause_effect,
-            'memory_aids': memory_aids,
-            'guiding_questions': questions,
-            'time_concepts': self._explain_time_concepts(student_age)
+            "organized_events": organized,
+            "time_relationships": relationships,
+            "cause_and_effect": cause_effect,
+            "memory_aids": memory_aids,
+            "guiding_questions": questions,
+            "time_concepts": self._explain_time_concepts(student_age),
         }
 
     def explain_perspectives(
-        self,
-        topic: str,
-        student_age: int,
-        grade_level: str
+        self, topic: str, student_age: int, grade_level: str
     ) -> Dict[str, Any]:
         """
         Help students understand different perspectives and viewpoints.
@@ -322,19 +315,16 @@ class SocialStudiesReasoner:
         prompts = self._create_discussion_prompts(topic, student_age)
 
         return {
-            'what_are_perspectives': explanation,
-            'why_perspectives_matter': importance,
-            'questions_to_consider': questions,
-            'empathy_guidance': empathy,
-            'discussion_prompts': prompts,
-            'thinking_stems': self._get_perspective_thinking_stems(student_age)
+            "what_are_perspectives": explanation,
+            "why_perspectives_matter": importance,
+            "questions_to_consider": questions,
+            "empathy_guidance": empathy,
+            "discussion_prompts": prompts,
+            "thinking_stems": self._get_perspective_thinking_stems(student_age),
         }
 
     def community_connections(
-        self,
-        concept: str,
-        student_age: int,
-        grade_level: str
+        self, concept: str, student_age: int, grade_level: str
     ) -> Dict[str, Any]:
         """
         Connect social studies concepts to student's community and life.
@@ -370,19 +360,16 @@ class SocialStudiesReasoner:
         observations = self._create_observation_activities(concept, student_age)
 
         return {
-            'in_my_community': community_examples,
-            'in_my_life': personal,
-            'people_who_help': helpers,
-            'ways_to_participate': participation,
-            'observation_activities': observations,
-            'discussion_questions': self._create_community_questions(concept, student_age)
+            "in_my_community": community_examples,
+            "in_my_life": personal,
+            "people_who_help": helpers,
+            "ways_to_participate": participation,
+            "observation_activities": observations,
+            "discussion_questions": self._create_community_questions(concept, student_age),
         }
 
     def explain_historical_significance(
-        self,
-        event: str,
-        student_age: int,
-        grade_level: str
+        self, event: str, student_age: int, grade_level: str
     ) -> HistoricalContext:
         """
         Explain the historical significance of an event.
@@ -413,9 +400,7 @@ class SocialStudiesReasoner:
         connection = self._connect_to_present(event, student_age)
 
         # Create age-appropriate explanation
-        explanation = self._create_age_appropriate_explanation(
-            event, time_period, student_age
-        )
+        explanation = self._create_age_appropriate_explanation(event, time_period, student_age)
 
         return HistoricalContext(
             event_name=event,
@@ -424,14 +409,11 @@ class SocialStudiesReasoner:
             important_places=places,
             why_significant=significance,
             connection_to_today=connection,
-            age_appropriate_explanation=explanation
+            age_appropriate_explanation=explanation,
         )
 
     def cultural_awareness(
-        self,
-        culture_topic: str,
-        student_age: int,
-        focus: str = "general"
+        self, culture_topic: str, student_age: int, focus: str = "general"
     ) -> Dict[str, Any]:
         """
         Provide cultural awareness and understanding.
@@ -462,22 +444,17 @@ class SocialStudiesReasoner:
         activities = self._suggest_cultural_learning(culture_topic, student_age)
 
         return {
-            'overview': overview,
-            'similarities_and_differences': comparisons,
-            'how_to_appreciate': appreciation,
-            'questions_for_understanding': questions,
-            'learning_activities': activities,
-            'important_values': self._identify_cultural_values(student_age)
+            "overview": overview,
+            "similarities_and_differences": comparisons,
+            "how_to_appreciate": appreciation,
+            "questions_for_understanding": questions,
+            "learning_activities": activities,
+            "important_values": self._identify_cultural_values(student_age),
         }
 
     # Private helper methods
 
-    def _generate_background(
-        self,
-        topic: str,
-        domain: SocialStudiesDomain,
-        age: int
-    ) -> str:
+    def _generate_background(self, topic: str, domain: SocialStudiesDomain, age: int) -> str:
         """Generate background information."""
         if age <= 7:
             return f"{topic} is something important to learn about!"
@@ -485,181 +462,127 @@ class SocialStudiesReasoner:
             return f"{topic} is an important part of {domain.value} that helps us understand our world."
 
     def _identify_key_points(
-        self,
-        topic: str,
-        domain: SocialStudiesDomain,
-        grade: str
+        self, topic: str, domain: SocialStudiesDomain, grade: str
     ) -> List[str]:
         """Identify key points to understand."""
         return [
             "Main idea about this topic",
             "Why this topic matters",
-            "How this connects to our lives"
+            "How this connects to our lives",
         ]
 
     def _create_personal_connections(
-        self,
-        topic: str,
-        domain: SocialStudiesDomain,
-        age: int
+        self, topic: str, domain: SocialStudiesDomain, age: int
     ) -> List[str]:
         """Create connections to student's life."""
         return [
             "You see this in your community",
             "This affects your daily life",
-            "Your family might experience this"
+            "Your family might experience this",
         ]
 
-    def _extract_important_vocabulary(
-        self,
-        topic: str,
-        domain: SocialStudiesDomain
-    ) -> List[str]:
+    def _extract_important_vocabulary(self, topic: str, domain: SocialStudiesDomain) -> List[str]:
         """Extract important vocabulary words."""
         vocab_by_domain = {
-            SocialStudiesDomain.HISTORY: ['past', 'present', 'timeline', 'change'],
-            SocialStudiesDomain.GEOGRAPHY: ['map', 'location', 'place', 'region'],
-            SocialStudiesDomain.CIVICS: ['citizen', 'community', 'rules', 'rights'],
-            SocialStudiesDomain.ECONOMICS: ['needs', 'wants', 'goods', 'services']
+            SocialStudiesDomain.HISTORY: ["past", "present", "timeline", "change"],
+            SocialStudiesDomain.GEOGRAPHY: ["map", "location", "place", "region"],
+            SocialStudiesDomain.CIVICS: ["citizen", "community", "rules", "rights"],
+            SocialStudiesDomain.ECONOMICS: ["needs", "wants", "goods", "services"],
         }
 
-        return vocab_by_domain.get(domain, ['community', 'people', 'place'])[:4]
+        return vocab_by_domain.get(domain, ["community", "people", "place"])[:4]
 
     def _generate_context_questions(
-        self,
-        topic: str,
-        domain: SocialStudiesDomain,
-        age: int
+        self, topic: str, domain: SocialStudiesDomain, age: int
     ) -> List[str]:
         """Generate questions to deepen understanding."""
         return [
             f"What do you already know about {topic}?",
             f"How does {topic} connect to your life?",
-            "What would you like to learn more about?"
+            "What would you like to learn more about?",
         ]
 
-    def _suggest_resources(
-        self,
-        topic: str,
-        domain: SocialStudiesDomain
-    ) -> List[str]:
+    def _suggest_resources(self, topic: str, domain: SocialStudiesDomain) -> List[str]:
         """Suggest additional learning resources."""
-        return [
-            "Books from the library",
-            "Educational videos",
-            "Community field trips"
-        ]
+        return ["Books from the library", "Educational videos", "Community field trips"]
 
-    def _explain_civic_concept(
-        self,
-        concept: str,
-        age: int,
-        examples: bool
-    ) -> Dict[str, Any]:
+    def _explain_civic_concept(self, concept: str, age: int, examples: bool) -> Dict[str, Any]:
         """Explain civic concept."""
         definition = f"{concept} is an important idea about being part of a community."
 
         result = {
-            'concept': concept,
-            'definition': definition,
-            'why_it_matters': f"{concept} helps us live together peacefully.",
-            'student_role': "You can practice this every day!"
+            "concept": concept,
+            "definition": definition,
+            "why_it_matters": f"{concept} helps us live together peacefully.",
+            "student_role": "You can practice this every day!",
         }
 
         if examples:
-            result['examples'] = [
-                "In your classroom",
-                "In your neighborhood",
-                "In your family"
-            ]
+            result["examples"] = ["In your classroom", "In your neighborhood", "In your family"]
 
         return result
 
-    def _explain_geographic_concept(
-        self,
-        concept: str,
-        age: int,
-        examples: bool
-    ) -> Dict[str, Any]:
+    def _explain_geographic_concept(self, concept: str, age: int, examples: bool) -> Dict[str, Any]:
         """Explain geographic concept."""
         result = {
-            'concept': concept,
-            'definition': f"{concept} is a geography term that helps us understand places.",
-            'visual_description': f"Picture {concept} in your mind - where it is and what it looks like."
+            "concept": concept,
+            "definition": f"{concept} is a geography term that helps us understand places.",
+            "visual_description": f"Picture {concept} in your mind - where it is and what it looks like.",
         }
 
         if examples:
-            result['examples'] = [
+            result["examples"] = [
                 "Places near you",
                 "Places you've visited",
-                "Places you've learned about"
+                "Places you've learned about",
             ]
 
         return result
 
-    def _explain_historical_concept(
-        self,
-        concept: str,
-        age: int,
-        examples: bool
-    ) -> Dict[str, Any]:
+    def _explain_historical_concept(self, concept: str, age: int, examples: bool) -> Dict[str, Any]:
         """Explain historical concept."""
         return {
-            'concept': concept,
-            'definition': f"{concept} helps us understand the past.",
-            'why_study_history': "Learning about the past helps us understand today!",
-            'time_connection': "This happened in the past, but affects us now."
+            "concept": concept,
+            "definition": f"{concept} helps us understand the past.",
+            "why_study_history": "Learning about the past helps us understand today!",
+            "time_connection": "This happened in the past, but affects us now.",
         }
 
-    def _explain_economic_concept(
-        self,
-        concept: str,
-        age: int,
-        examples: bool
-    ) -> Dict[str, Any]:
+    def _explain_economic_concept(self, concept: str, age: int, examples: bool) -> Dict[str, Any]:
         """Explain economic concept."""
         return {
-            'concept': concept,
-            'definition': f"{concept} is about how people get what they need and want.",
-            'in_daily_life': f"You see {concept} when you shop, save, or share!",
-            'simple_examples': ["At the store", "At home", "At school"]
+            "concept": concept,
+            "definition": f"{concept} is about how people get what they need and want.",
+            "in_daily_life": f"You see {concept} when you shop, save, or share!",
+            "simple_examples": ["At the store", "At home", "At school"],
         }
 
-    def _explain_general_concept(
-        self,
-        concept: str,
-        age: int,
-        examples: bool
-    ) -> Dict[str, Any]:
+    def _explain_general_concept(self, concept: str, age: int, examples: bool) -> Dict[str, Any]:
         """Explain general social studies concept."""
         return {
-            'concept': concept,
-            'definition': f"{concept} is an important social studies idea.",
-            'why_learn_it': "This helps us understand people and places!"
+            "concept": concept,
+            "definition": f"{concept} is an important social studies idea.",
+            "why_learn_it": "This helps us understand people and places!",
         }
 
-    def _identify_map_features(
-        self,
-        map_type: str,
-        description: str
-    ) -> List[str]:
+    def _identify_map_features(self, map_type: str, description: str) -> List[str]:
         """Identify key features to look for on map."""
-        features = ['title', 'legend/key', 'compass rose', 'scale']
+        features = ["title", "legend/key", "compass rose", "scale"]
 
-        if 'physical' in map_type.lower():
-            features.extend(['mountains', 'rivers', 'landforms'])
-        elif 'political' in map_type.lower():
-            features.extend(['borders', 'cities', 'countries'])
+        if "physical" in map_type.lower():
+            features.extend(["mountains", "rivers", "landforms"])
+        elif "political" in map_type.lower():
+            features.extend(["borders", "cities", "countries"])
 
         return features
 
     def _explain_map_elements(self, map_type: str, age: int) -> Dict[str, str]:
         """Explain important map elements."""
         return {
-            'title': 'Tells you what the map shows',
-            'legend': 'Explains the symbols and colors',
-            'compass rose': 'Shows directions (North, South, East, West)',
-            'scale': 'Shows how distances on the map match real distances'
+            "title": "Tells you what the map shows",
+            "legend": "Explains the symbols and colors",
+            "compass rose": "Shows directions (North, South, East, West)",
+            "scale": "Shows how distances on the map match real distances",
         }
 
     def _generate_map_questions(self, map_type: str, age: int) -> List[str]:
@@ -668,15 +591,10 @@ class SocialStudiesReasoner:
             "What does the title tell you?",
             "What do the colors and symbols mean?",
             "Which direction is north?",
-            "What can you find on this map?"
+            "What can you find on this map?",
         ]
 
-    def _guide_map_interpretation(
-        self,
-        map_type: str,
-        description: str,
-        age: int
-    ) -> str:
+    def _guide_map_interpretation(self, map_type: str, description: str, age: int) -> str:
         """Guide interpretation of map."""
         return "Start by reading the title and legend. Then look at the map to find interesting features!"
 
@@ -686,7 +604,7 @@ class SocialStudiesReasoner:
             "Finding locations using the legend",
             "Using the compass rose to identify directions",
             "Understanding symbols and colors",
-            "Comparing distances using the scale"
+            "Comparing distances using the scale",
         ]
 
     def _get_map_reading_tips(self, age: int) -> List[str]:
@@ -695,73 +613,56 @@ class SocialStudiesReasoner:
             "Always read the title first",
             "Check the legend to understand symbols",
             "Use the compass rose to find directions",
-            "Take your time and look carefully"
+            "Take your time and look carefully",
         ]
 
-    def _organize_chronologically(
-        self,
-        events: List[Dict[str, str]]
-    ) -> List[Dict[str, str]]:
+    def _organize_chronologically(self, events: List[Dict[str, str]]) -> List[Dict[str, str]]:
         """Organize events in chronological order."""
         # Simple organization - production would parse dates
         return events
 
-    def _identify_time_relationships(
-        self,
-        events: List[Dict],
-        age: int
-    ) -> List[str]:
+    def _identify_time_relationships(self, events: List[Dict], age: int) -> List[str]:
         """Identify how events relate in time."""
         return [
             "This happened first, then this happened next",
             "These events happened around the same time",
-            "This event led to this other event"
+            "This event led to this other event",
         ]
 
     def _identify_cause_effect(self, events: List[Dict]) -> List[Dict[str, str]]:
         """Identify cause and effect relationships."""
-        return [
-            {'cause': 'This happened', 'effect': 'So this happened next'}
-        ]
+        return [{"cause": "This happened", "effect": "So this happened next"}]
 
-    def _create_timeline_memory_aids(
-        self,
-        events: List[Dict],
-        age: int
-    ) -> List[str]:
+    def _create_timeline_memory_aids(self, events: List[Dict], age: int) -> List[str]:
         """Create aids for remembering sequence."""
         return [
             "Make up a story connecting the events",
             "Draw pictures of each event in order",
-            "Create a rhyme or song about the sequence"
+            "Create a rhyme or song about the sequence",
         ]
 
-    def _generate_timeline_questions(
-        self,
-        events: List[Dict],
-        age: int
-    ) -> List[str]:
+    def _generate_timeline_questions(self, events: List[Dict], age: int) -> List[str]:
         """Generate questions about timeline."""
         return [
             "Which event happened first?",
             "What happened after that?",
             "Why did events happen in this order?",
-            "How are these events connected?"
+            "How are these events connected?",
         ]
 
     def _explain_time_concepts(self, age: int) -> Dict[str, str]:
         """Explain time concepts for age."""
         if age <= 7:
             return {
-                'past': 'Things that already happened',
-                'present': 'Right now',
-                'future': 'Things that haven\'t happened yet'
+                "past": "Things that already happened",
+                "present": "Right now",
+                "future": "Things that haven't happened yet",
             }
         else:
             return {
-                'chronological': 'In time order',
-                'sequence': 'What happened first, next, then, last',
-                'cause and effect': 'One thing makes another thing happen'
+                "chronological": "In time order",
+                "sequence": "What happened first, next, then, last",
+                "cause and effect": "One thing makes another thing happen",
             }
 
     def _explain_perspectives_concept(self, age: int) -> str:
@@ -775,17 +676,13 @@ class SocialStudiesReasoner:
         """Explain why perspectives matter."""
         return "Understanding different perspectives helps us be kind and fair to everyone!"
 
-    def _generate_perspective_questions(
-        self,
-        topic: str,
-        age: int
-    ) -> List[str]:
+    def _generate_perspective_questions(self, topic: str, age: int) -> List[str]:
         """Generate questions about perspectives."""
         return [
             "How might different people feel about this?",
             "Why might someone think differently than you?",
             "What experiences might change how someone sees this?",
-            "How would you feel if you were in their shoes?"
+            "How would you feel if you were in their shoes?",
         ]
 
     def _create_empathy_guidance(self, age: int) -> List[str]:
@@ -794,7 +691,7 @@ class SocialStudiesReasoner:
             "Try to imagine how the other person feels",
             "Think about their experiences and background",
             "Listen to their ideas without judging",
-            "Ask questions to understand better"
+            "Ask questions to understand better",
         ]
 
     def _create_discussion_prompts(self, topic: str, age: int) -> List[str]:
@@ -803,7 +700,7 @@ class SocialStudiesReasoner:
             f"One way to think about {topic} is...",
             "Another person might see it differently because...",
             "I can understand why someone might think...",
-            "This reminds me of..."
+            "This reminds me of...",
         ]
 
     def _get_perspective_thinking_stems(self, age: int) -> List[str]:
@@ -812,7 +709,7 @@ class SocialStudiesReasoner:
             "From my point of view...",
             "I think... because...",
             "Someone else might think...",
-            "This could also mean..."
+            "This could also mean...",
         ]
 
     def _find_community_examples(self, concept: str, age: int) -> List[str]:
@@ -821,20 +718,16 @@ class SocialStudiesReasoner:
             "In your neighborhood",
             "At local businesses",
             "At community centers",
-            "In local government"
+            "In local government",
         ]
 
-    def _create_personal_life_connections(
-        self,
-        concept: str,
-        age: int
-    ) -> List[str]:
+    def _create_personal_life_connections(self, concept: str, age: int) -> List[str]:
         """Create personal connections."""
         return [
             "At home with your family",
             "At school with your classmates",
             "Playing with friends",
-            "In your daily activities"
+            "In your daily activities",
         ]
 
     def _identify_community_helpers(self, concept: str) -> List[str]:
@@ -843,7 +736,7 @@ class SocialStudiesReasoner:
             "Teachers and principals",
             "Police officers and firefighters",
             "Doctors and nurses",
-            "Community leaders"
+            "Community leaders",
         ]
 
     def _suggest_participation(self, concept: str, age: int) -> List[str]:
@@ -852,20 +745,16 @@ class SocialStudiesReasoner:
             "Follow rules and be respectful",
             "Help others in your community",
             "Take care of shared spaces",
-            "Speak up about what's important"
+            "Speak up about what's important",
         ]
 
-    def _create_observation_activities(
-        self,
-        concept: str,
-        age: int
-    ) -> List[str]:
+    def _create_observation_activities(self, concept: str, age: int) -> List[str]:
         """Create activities to observe concept."""
         return [
             f"Look for examples of {concept} in your neighborhood",
             f"Draw or take pictures of {concept} you see",
             f"Talk to family about {concept}",
-            f"Think about how {concept} affects your day"
+            f"Think about how {concept} affects your day",
         ]
 
     def _create_community_questions(self, concept: str, age: int) -> List[str]:
@@ -874,7 +763,7 @@ class SocialStudiesReasoner:
             f"Where do you see {concept} in your community?",
             f"Who helps with {concept} where you live?",
             f"How does {concept} make your community better?",
-            f"What can you do to help with {concept}?"
+            f"What can you do to help with {concept}?",
         ]
 
     def _identify_time_period(self, event: str) -> str:
@@ -898,12 +787,7 @@ class SocialStudiesReasoner:
         """Connect historical event to present."""
         return f"This event from the past still affects us today!"
 
-    def _create_age_appropriate_explanation(
-        self,
-        event: str,
-        period: str,
-        age: int
-    ) -> str:
+    def _create_age_appropriate_explanation(self, event: str, period: str, age: int) -> str:
         """Create age-appropriate explanation."""
         if age <= 7:
             return f"{event} happened a long time ago and is important to remember."
@@ -914,23 +798,19 @@ class SocialStudiesReasoner:
         """Create respectful cultural overview."""
         return f"{topic} is a special part of culture that people value and celebrate."
 
-    def _create_respectful_comparisons(
-        self,
-        topic: str,
-        age: int
-    ) -> Dict[str, List[str]]:
+    def _create_respectful_comparisons(self, topic: str, age: int) -> Dict[str, List[str]]:
         """Create respectful similarities/differences."""
         return {
-            'similarities': [
+            "similarities": [
                 "All people have traditions",
                 "Everyone celebrates special occasions",
-                "Families are important in all cultures"
+                "Families are important in all cultures",
             ],
-            'differences': [
+            "differences": [
                 "Different ways of celebrating",
                 "Different foods and customs",
-                "Different languages and expressions"
-            ]
+                "Different languages and expressions",
+            ],
         }
 
     def _guide_cultural_appreciation(self, age: int) -> List[str]:
@@ -939,7 +819,7 @@ class SocialStudiesReasoner:
             "Show respect for all cultures",
             "Be curious and ask questions politely",
             "Celebrate differences while recognizing similarities",
-            "Learn from people who are different from you"
+            "Learn from people who are different from you",
         ]
 
     def _create_cultural_questions(self, topic: str, age: int) -> List[str]:
@@ -948,7 +828,7 @@ class SocialStudiesReasoner:
             f"What is special about {topic}?",
             "How is this similar to or different from your own traditions?",
             "What can we learn from this?",
-            "How does this show what people value?"
+            "How does this show what people value?",
         ]
 
     def _suggest_cultural_learning(self, topic: str, age: int) -> List[str]:
@@ -957,7 +837,7 @@ class SocialStudiesReasoner:
             "Read books about different cultures",
             "Try foods from different places",
             "Learn words in different languages",
-            "Celebrate cultural holidays with respect"
+            "Celebrate cultural holidays with respect",
         ]
 
     def _identify_cultural_values(self, age: int) -> List[str]:
@@ -966,36 +846,36 @@ class SocialStudiesReasoner:
             "Respect for all people",
             "Curiosity about differences",
             "Kindness and understanding",
-            "Appreciation of diversity"
+            "Appreciation of diversity",
         ]
 
     def _initialize_historical_periods(self) -> Dict[str, str]:
         """Initialize historical periods information."""
         return {
-            'long_ago': 'A very long time in the past',
-            'recent_past': 'Not too long ago, maybe when your parents were young',
-            'present': 'Right now, today',
-            'future': 'Time that hasn\'t happened yet'
+            "long_ago": "A very long time in the past",
+            "recent_past": "Not too long ago, maybe when your parents were young",
+            "present": "Right now, today",
+            "future": "Time that hasn't happened yet",
         }
 
     def _initialize_geographic_terms(self) -> Dict[str, str]:
         """Initialize geographic terminology."""
         return {
-            'map': 'A drawing that shows where places are',
-            'globe': 'A round model of Earth',
-            'location': 'Where something is',
-            'region': 'An area with similar features',
-            'landform': 'Natural features of land like mountains or valleys'
+            "map": "A drawing that shows where places are",
+            "globe": "A round model of Earth",
+            "location": "Where something is",
+            "region": "An area with similar features",
+            "landform": "Natural features of land like mountains or valleys",
         }
 
     def _initialize_civic_vocabulary(self) -> Dict[str, str]:
         """Initialize civic education vocabulary."""
         return {
-            'citizen': 'A person who belongs to a community or country',
-            'rights': 'Things people should be able to do',
-            'responsibilities': 'Things people should do to help',
-            'community': 'A group of people who live in the same area',
-            'government': 'People who make rules and decisions for everyone'
+            "citizen": "A person who belongs to a community or country",
+            "rights": "Things people should be able to do",
+            "responsibilities": "Things people should do to help",
+            "community": "A group of people who live in the same area",
+            "government": "People who make rules and decisions for everyone",
         }
 
 
@@ -1024,7 +904,7 @@ if __name__ == "__main__":
         topic="American Revolution",
         domain=SocialStudiesDomain.HISTORY,
         grade_level="5",
-        student_age=10
+        student_age=10,
     )
     print(f"Topic: {context['topic']}")
     print(f"Background: {context['background']}")
@@ -1034,37 +914,33 @@ if __name__ == "__main__":
     # Example 2: Map analysis
     print("--- Example 2: Map Reading Guidance ---")
     map_help = reasoner.analyze_maps(
-        map_description="Political map of United States",
-        map_type="political",
-        student_age=8
+        map_description="Political map of United States", map_type="political", student_age=8
     )
     print("What to look for:")
-    for feature in map_help['what_to_look_for'][:3]:
+    for feature in map_help["what_to_look_for"][:3]:
         print(f"  - {feature}")
     print()
 
     # Example 3: Timeline support
     print("--- Example 3: Timeline Support ---")
     events = [
-        {'name': 'Colonies formed', 'date': '1600s'},
-        {'name': 'Declaration of Independence', 'date': '1776'},
-        {'name': 'Constitution written', 'date': '1787'}
+        {"name": "Colonies formed", "date": "1600s"},
+        {"name": "Declaration of Independence", "date": "1776"},
+        {"name": "Constitution written", "date": "1787"},
     ]
     timeline = reasoner.timeline_support(events, student_age=10)
     print("Time Relationships:")
-    for rel in timeline['time_relationships'][:2]:
+    for rel in timeline["time_relationships"][:2]:
         print(f"  - {rel}")
     print()
 
     # Example 4: Community connections
     print("--- Example 4: Community Connections ---")
     community = reasoner.community_connections(
-        concept="citizenship",
-        student_age=8,
-        grade_level="3"
+        concept="citizenship", student_age=8, grade_level="3"
     )
     print("In My Community:")
-    for example in community['in_my_community'][:2]:
+    for example in community["in_my_community"][:2]:
         print(f"  - {example}")
     print()
 

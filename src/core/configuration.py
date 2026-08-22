@@ -27,7 +27,6 @@ from typing import Any, Dict, Optional, TypeVar, cast
 import yaml
 from pydantic import BaseModel, Field, ValidationError, validator
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -35,23 +34,28 @@ logger = logging.getLogger(__name__)
 # Configuration Exceptions
 # ============================================================================
 
+
 class ConfigurationError(Exception):
     """Base exception for configuration errors"""
+
     pass
 
 
 class ConfigValidationError(ConfigurationError):
     """Configuration validation error"""
+
     pass
 
 
 class ConfigNotFoundError(ConfigurationError):
     """Configuration file not found"""
+
     pass
 
 
 class SecretError(ConfigurationError):
     """Secret management error"""
+
     pass
 
 
@@ -59,8 +63,10 @@ class SecretError(ConfigurationError):
 # Configuration Schemas (Pydantic Models)
 # ============================================================================
 
+
 class CameraConfig(BaseModel):
     """Camera configuration"""
+
     fps: int = Field(default=30, ge=1, le=120)
     resolution_width: int = Field(default=1920, ge=640)
     resolution_height: int = Field(default=1080, ge=480)
@@ -71,6 +77,7 @@ class CameraConfig(BaseModel):
 
 class AudioConfig(BaseModel):
     """Audio configuration"""
+
     sample_rate: int = Field(default=16000, ge=8000, le=48000)
     channels: int = Field(default=1, ge=1, le=2)
     chunk_duration_ms: int = Field(default=100, ge=10, le=1000)
@@ -80,6 +87,7 @@ class AudioConfig(BaseModel):
 
 class VisionPipelineConfig(BaseModel):
     """Vision pipeline configuration"""
+
     object_detection_enabled: bool = True
     object_detection_threshold: float = Field(default=0.5, ge=0.0, le=1.0)
     ocr_enabled: bool = True
@@ -90,6 +98,7 @@ class VisionPipelineConfig(BaseModel):
 
 class AudioPipelineConfig(BaseModel):
     """Audio pipeline configuration"""
+
     speech_recognition_enabled: bool = True
     speaker_identification_enabled: bool = False
     language: str = "en"
@@ -98,6 +107,7 @@ class AudioPipelineConfig(BaseModel):
 
 class PrivacyConfig(BaseModel):
     """Privacy configuration"""
+
     pii_detection_enabled: bool = True
     face_blur_enabled: bool = True
     blur_sigma: float = Field(default=50.0, ge=1.0, le=100.0)
@@ -108,6 +118,7 @@ class PrivacyConfig(BaseModel):
 
 class AIEngineConfig(BaseModel):
     """AI engine configuration"""
+
     llm_provider: str = "anthropic"  # anthropic, openai, local
     llm_model: str = "claude-3-5-sonnet-20241022"
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
@@ -119,6 +130,7 @@ class AIEngineConfig(BaseModel):
 
 class StorageConfig(BaseModel):
     """Storage configuration"""
+
     database_type: str = "sqlite"  # sqlite, postgresql
     database_path: str = "./data/edulens.db"
     cache_enabled: bool = True
@@ -128,6 +140,7 @@ class StorageConfig(BaseModel):
 
 class CloudConfig(BaseModel):
     """Cloud services configuration"""
+
     enabled: bool = False
     api_endpoint: str = "https://api.edulens.com"
     sync_interval_seconds: int = Field(default=300, ge=60)
@@ -137,6 +150,7 @@ class CloudConfig(BaseModel):
 
 class LoggingConfig(BaseModel):
     """Logging configuration"""
+
     level: str = "INFO"
     format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     log_to_file: bool = True
@@ -147,6 +161,7 @@ class LoggingConfig(BaseModel):
 
 class PerformanceConfig(BaseModel):
     """Performance configuration"""
+
     max_workers: int = Field(default=4, ge=1)
     batch_size: int = Field(default=1, ge=1)
     model_quantization: bool = True
@@ -156,6 +171,7 @@ class PerformanceConfig(BaseModel):
 
 class SystemConfig(BaseModel):
     """Complete system configuration"""
+
     environment: str = "development"  # development, staging, production
     debug: bool = False
     camera: CameraConfig = Field(default_factory=CameraConfig)
@@ -295,7 +311,7 @@ class ConfigManager:
         for key, value in os.environ.items():
             if key.startswith(self._env_prefix):
                 # Convert EDULENS_CAMERA_FPS to camera.fps
-                config_key = key[len(self._env_prefix):].lower().replace("_", ".")
+                config_key = key[len(self._env_prefix) :].lower().replace("_", ".")
                 self.set(config_key, self._parse_env_value(value))
                 logger.debug(f"Environment override: {config_key} = {value}")
 
@@ -335,13 +351,10 @@ class ConfigManager:
         Args:
             new_config: Configuration to merge
         """
+
         def merge_dict(base: Dict[str, Any], update: Dict[str, Any]) -> None:
             for key, value in update.items():
-                if (
-                    key in base
-                    and isinstance(base[key], dict)
-                    and isinstance(value, dict)
-                ):
+                if key in base and isinstance(base[key], dict) and isinstance(value, dict):
                     merge_dict(base[key], value)
                 else:
                     base[key] = value
@@ -465,9 +478,7 @@ class ConfigManager:
             ConfigurationError: If config not validated yet
         """
         if self._system_config is None:
-            raise ConfigurationError(
-                "Configuration not validated. Call validate() first."
-            )
+            raise ConfigurationError("Configuration not validated. Call validate() first.")
         return self._system_config
 
     def set_secret(self, key: str, value: str) -> None:
@@ -507,7 +518,7 @@ class ConfigManager:
 
         for key, value in os.environ.items():
             if key.startswith(secret_prefix):
-                secret_key = key[len(secret_prefix):].lower()
+                secret_key = key[len(secret_prefix) :].lower()
                 self.set_secret(secret_key, value)
                 logger.info(f"Loaded secret from environment: {secret_key}")
 
@@ -595,6 +606,7 @@ def reset_config() -> None:
 # ============================================================================
 # Configuration Utilities
 # ============================================================================
+
 
 def load_default_config() -> ConfigManager:
     """

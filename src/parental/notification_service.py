@@ -7,16 +7,16 @@ Sends notifications to parents about their child's activities and progress.
 import json
 import logging
 from datetime import datetime, time
-from typing import Dict, List, Optional, Set
 from enum import Enum
 from pathlib import Path
-
+from typing import Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
 
 class NotificationType(Enum):
     """Types of notifications"""
+
     DAILY_SUMMARY = "daily_summary"
     WEEKLY_SUMMARY = "weekly_summary"
     MILESTONE = "milestone"
@@ -28,6 +28,7 @@ class NotificationType(Enum):
 
 class NotificationChannel(Enum):
     """Notification delivery channels"""
+
     EMAIL = "email"
     PUSH = "push"
     SMS = "sms"
@@ -36,6 +37,7 @@ class NotificationChannel(Enum):
 
 class NotificationPriority(Enum):
     """Priority levels for notifications"""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -51,7 +53,7 @@ class Notification:
         title: str,
         message: str,
         priority: NotificationPriority = NotificationPriority.NORMAL,
-        data: Optional[Dict] = None
+        data: Optional[Dict] = None,
     ):
         self.notification_id = str(datetime.now().timestamp())
         self.notification_type = notification_type
@@ -67,16 +69,16 @@ class Notification:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         return {
-            'notification_id': self.notification_id,
-            'notification_type': self.notification_type.value,
-            'title': self.title,
-            'message': self.message,
-            'priority': self.priority.value,
-            'data': self.data,
-            'created_at': self.created_at.isoformat(),
-            'sent': self.sent,
-            'sent_at': self.sent_at.isoformat() if self.sent_at else None,
-            'channels_used': self.channels_used
+            "notification_id": self.notification_id,
+            "notification_type": self.notification_type.value,
+            "title": self.title,
+            "message": self.message,
+            "priority": self.priority.value,
+            "data": self.data,
+            "created_at": self.created_at.isoformat(),
+            "sent": self.sent,
+            "sent_at": self.sent_at.isoformat() if self.sent_at else None,
+            "channels_used": self.channels_used,
         }
 
 
@@ -89,7 +91,7 @@ class NotificationPreferences:
             NotificationType.DAILY_SUMMARY,
             NotificationType.MILESTONE,
             NotificationType.CONCERN,
-            NotificationType.LIMIT_REACHED
+            NotificationType.LIMIT_REACHED,
         }
 
         # Channel preferences per notification type
@@ -100,13 +102,13 @@ class NotificationPreferences:
             NotificationType.CONCERN: {NotificationChannel.EMAIL, NotificationChannel.PUSH},
             NotificationType.LIMIT_REACHED: {NotificationChannel.PUSH, NotificationChannel.IN_APP},
             NotificationType.DEVICE_STATUS: {NotificationChannel.PUSH},
-            NotificationType.CONTENT_BLOCKED: {NotificationChannel.IN_APP}
+            NotificationType.CONTENT_BLOCKED: {NotificationChannel.IN_APP},
         }
 
         # Quiet hours (no notifications during this time)
         self.quiet_hours_enabled = True
         self.quiet_hours_start = time(22, 0)  # 10 PM
-        self.quiet_hours_end = time(7, 0)     # 7 AM
+        self.quiet_hours_end = time(7, 0)  # 7 AM
 
         # Daily summary timing
         self.daily_summary_time = time(20, 0)  # 8 PM
@@ -126,48 +128,46 @@ class NotificationPreferences:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         return {
-            'enabled_types': [nt.value for nt in self.enabled_types],
-            'channel_preferences': {
+            "enabled_types": [nt.value for nt in self.enabled_types],
+            "channel_preferences": {
                 nt.value: [ch.value for ch in channels]
                 for nt, channels in self.channel_preferences.items()
             },
-            'quiet_hours_enabled': self.quiet_hours_enabled,
-            'quiet_hours_start': self.quiet_hours_start.isoformat(),
-            'quiet_hours_end': self.quiet_hours_end.isoformat(),
-            'daily_summary_time': self.daily_summary_time.isoformat(),
-            'weekly_summary_day': self.weekly_summary_day,
-            'weekly_summary_time': self.weekly_summary_time.isoformat(),
-            'notification_throttle': self.notification_throttle,
-            'email_address': self.email_address,
-            'phone_number': self.phone_number,
-            'push_token': self.push_token
+            "quiet_hours_enabled": self.quiet_hours_enabled,
+            "quiet_hours_start": self.quiet_hours_start.isoformat(),
+            "quiet_hours_end": self.quiet_hours_end.isoformat(),
+            "daily_summary_time": self.daily_summary_time.isoformat(),
+            "weekly_summary_day": self.weekly_summary_day,
+            "weekly_summary_time": self.weekly_summary_time.isoformat(),
+            "notification_throttle": self.notification_throttle,
+            "email_address": self.email_address,
+            "phone_number": self.phone_number,
+            "push_token": self.push_token,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'NotificationPreferences':
+    def from_dict(cls, data: Dict) -> "NotificationPreferences":
         """Create from dictionary."""
         prefs = cls()
 
-        prefs.enabled_types = {
-            NotificationType(nt) for nt in data.get('enabled_types', [])
-        }
+        prefs.enabled_types = {NotificationType(nt) for nt in data.get("enabled_types", [])}
 
-        channel_prefs = data.get('channel_preferences', {})
+        channel_prefs = data.get("channel_preferences", {})
         prefs.channel_preferences = {
             NotificationType(nt): {NotificationChannel(ch) for ch in channels}
             for nt, channels in channel_prefs.items()
         }
 
-        prefs.quiet_hours_enabled = data.get('quiet_hours_enabled', True)
-        prefs.quiet_hours_start = time.fromisoformat(data.get('quiet_hours_start', '22:00:00'))
-        prefs.quiet_hours_end = time.fromisoformat(data.get('quiet_hours_end', '07:00:00'))
-        prefs.daily_summary_time = time.fromisoformat(data.get('daily_summary_time', '20:00:00'))
-        prefs.weekly_summary_day = data.get('weekly_summary_day', 6)
-        prefs.weekly_summary_time = time.fromisoformat(data.get('weekly_summary_time', '18:00:00'))
-        prefs.notification_throttle = data.get('notification_throttle', 60)
-        prefs.email_address = data.get('email_address')
-        prefs.phone_number = data.get('phone_number')
-        prefs.push_token = data.get('push_token')
+        prefs.quiet_hours_enabled = data.get("quiet_hours_enabled", True)
+        prefs.quiet_hours_start = time.fromisoformat(data.get("quiet_hours_start", "22:00:00"))
+        prefs.quiet_hours_end = time.fromisoformat(data.get("quiet_hours_end", "07:00:00"))
+        prefs.daily_summary_time = time.fromisoformat(data.get("daily_summary_time", "20:00:00"))
+        prefs.weekly_summary_day = data.get("weekly_summary_day", 6)
+        prefs.weekly_summary_time = time.fromisoformat(data.get("weekly_summary_time", "18:00:00"))
+        prefs.notification_throttle = data.get("notification_throttle", 60)
+        prefs.email_address = data.get("email_address")
+        prefs.phone_number = data.get("phone_number")
+        prefs.push_token = data.get("push_token")
 
         return prefs
 
@@ -208,10 +208,7 @@ class NotificationService:
         self._load_state()
 
     def send_daily_summary(
-        self,
-        user_id: str,
-        summary_data: Dict,
-        force: bool = False
+        self, user_id: str, summary_data: Dict, force: bool = False
     ) -> Optional[str]:
         """
         Send daily activity summary to parent.
@@ -227,7 +224,9 @@ class NotificationService:
         notification_type = NotificationType.DAILY_SUMMARY
 
         if not self._should_send(notification_type, force):
-            logger.info(f"Daily summary skipped for parent {self.parent_id} (throttled or disabled)")
+            logger.info(
+                f"Daily summary skipped for parent {self.parent_id} (throttled or disabled)"
+            )
             return None
 
         # Format summary message
@@ -239,8 +238,8 @@ class NotificationService:
             f"Accuracy: {summary_data.get('overall_accuracy', 0)}%",
         ]
 
-        if summary_data.get('subjects'):
-            subjects = ", ".join(summary_data['subjects'].keys())
+        if summary_data.get("subjects"):
+            subjects = ", ".join(summary_data["subjects"].keys())
             message_parts.append(f"Subjects: {subjects}")
 
         message = "\n".join(message_parts)
@@ -250,16 +249,13 @@ class NotificationService:
             title=title,
             message=message,
             priority=NotificationPriority.LOW,
-            data={'user_id': user_id, 'summary': summary_data}
+            data={"user_id": user_id, "summary": summary_data},
         )
 
         return self._send_notification(notification)
 
     def send_weekly_summary(
-        self,
-        user_id: str,
-        summary_data: Dict,
-        force: bool = False
+        self, user_id: str, summary_data: Dict, force: bool = False
     ) -> Optional[str]:
         """
         Send weekly activity summary to parent.
@@ -275,10 +271,14 @@ class NotificationService:
         notification_type = NotificationType.WEEKLY_SUMMARY
 
         if not self._should_send(notification_type, force):
-            logger.info(f"Weekly summary skipped for parent {self.parent_id} (throttled or disabled)")
+            logger.info(
+                f"Weekly summary skipped for parent {self.parent_id} (throttled or disabled)"
+            )
             return None
 
-        title = f"Weekly Summary ({summary_data.get('start_date')} - {summary_data.get('end_date')})"
+        title = (
+            f"Weekly Summary ({summary_data.get('start_date')} - {summary_data.get('end_date')})"
+        )
 
         message_parts = [
             f"Total time: {summary_data.get('total_duration_minutes', 0)} minutes",
@@ -294,17 +294,13 @@ class NotificationService:
             title=title,
             message=message,
             priority=NotificationPriority.LOW,
-            data={'user_id': user_id, 'summary': summary_data}
+            data={"user_id": user_id, "summary": summary_data},
         )
 
         return self._send_notification(notification)
 
     def send_milestone_alert(
-        self,
-        user_id: str,
-        milestone_type: str,
-        milestone_data: Dict,
-        force: bool = False
+        self, user_id: str, milestone_type: str, milestone_data: Dict, force: bool = False
     ) -> Optional[str]:
         """
         Send notification about achievement milestone.
@@ -321,12 +317,14 @@ class NotificationService:
         notification_type = NotificationType.MILESTONE
 
         if not self._should_send(notification_type, force):
-            logger.info(f"Milestone alert skipped for parent {self.parent_id} (throttled or disabled)")
+            logger.info(
+                f"Milestone alert skipped for parent {self.parent_id} (throttled or disabled)"
+            )
             return None
 
         # Format milestone message
         title = f"Milestone Achieved: {milestone_type}"
-        message = milestone_data.get('description', 'Great progress!')
+        message = milestone_data.get("description", "Great progress!")
 
         notification = Notification(
             notification_type=notification_type,
@@ -334,20 +332,16 @@ class NotificationService:
             message=message,
             priority=NotificationPriority.NORMAL,
             data={
-                'user_id': user_id,
-                'milestone_type': milestone_type,
-                'milestone_data': milestone_data
-            }
+                "user_id": user_id,
+                "milestone_type": milestone_type,
+                "milestone_data": milestone_data,
+            },
         )
 
         return self._send_notification(notification)
 
     def send_concern_alert(
-        self,
-        user_id: str,
-        concern_type: str,
-        concern_data: Dict,
-        force: bool = False
+        self, user_id: str, concern_type: str, concern_data: Dict, force: bool = False
     ) -> Optional[str]:
         """
         Send notification about learning concerns.
@@ -364,23 +358,21 @@ class NotificationService:
         notification_type = NotificationType.CONCERN
 
         if not self._should_send(notification_type, force):
-            logger.info(f"Concern alert skipped for parent {self.parent_id} (throttled or disabled)")
+            logger.info(
+                f"Concern alert skipped for parent {self.parent_id} (throttled or disabled)"
+            )
             return None
 
         # Format concern message
         title = f"Learning Concern: {concern_type}"
-        message = concern_data.get('description', 'May need additional support')
+        message = concern_data.get("description", "May need additional support")
 
         notification = Notification(
             notification_type=notification_type,
             title=title,
             message=message,
             priority=NotificationPriority.HIGH,
-            data={
-                'user_id': user_id,
-                'concern_type': concern_type,
-                'concern_data': concern_data
-            }
+            data={"user_id": user_id, "concern_type": concern_type, "concern_data": concern_data},
         )
 
         return self._send_notification(notification)
@@ -390,7 +382,7 @@ class NotificationService:
         user_id: str,
         limit_type: str,
         limit_data: Dict,
-        force: bool = True  # Usually want to send these
+        force: bool = True,  # Usually want to send these
     ) -> Optional[str]:
         """
         Send notification when usage limit is reached.
@@ -410,28 +402,20 @@ class NotificationService:
             return None
 
         title = f"Usage Limit Reached"
-        message = limit_data.get('message', f"{limit_type} limit reached")
+        message = limit_data.get("message", f"{limit_type} limit reached")
 
         notification = Notification(
             notification_type=notification_type,
             title=title,
             message=message,
             priority=NotificationPriority.NORMAL,
-            data={
-                'user_id': user_id,
-                'limit_type': limit_type,
-                'limit_data': limit_data
-            }
+            data={"user_id": user_id, "limit_type": limit_type, "limit_data": limit_data},
         )
 
         return self._send_notification(notification)
 
     def send_device_status_alert(
-        self,
-        device_id: str,
-        status_type: str,
-        status_data: Dict,
-        force: bool = False
+        self, device_id: str, status_type: str, status_data: Dict, force: bool = False
     ) -> Optional[str]:
         """
         Send notification about device status changes.
@@ -451,29 +435,24 @@ class NotificationService:
             return None
 
         title = f"Device Status: {status_type}"
-        message = status_data.get('message', 'Device status changed')
+        message = status_data.get("message", "Device status changed")
 
-        priority = NotificationPriority.HIGH if status_type == 'offline' else NotificationPriority.NORMAL
+        priority = (
+            NotificationPriority.HIGH if status_type == "offline" else NotificationPriority.NORMAL
+        )
 
         notification = Notification(
             notification_type=notification_type,
             title=title,
             message=message,
             priority=priority,
-            data={
-                'device_id': device_id,
-                'status_type': status_type,
-                'status_data': status_data
-            }
+            data={"device_id": device_id, "status_type": status_type, "status_data": status_data},
         )
 
         return self._send_notification(notification)
 
     def send_content_blocked_alert(
-        self,
-        user_id: str,
-        content_info: Dict,
-        force: bool = False
+        self, user_id: str, content_info: Dict, force: bool = False
     ) -> Optional[str]:
         """
         Send notification when content is blocked by filters.
@@ -499,10 +478,7 @@ class NotificationService:
             title=title,
             message=message,
             priority=NotificationPriority.LOW,
-            data={
-                'user_id': user_id,
-                'content_info': content_info
-            }
+            data={"user_id": user_id, "content_info": content_info},
         )
 
         return self._send_notification(notification)
@@ -516,7 +492,7 @@ class NotificationService:
         quiet_hours_enabled: Optional[bool] = None,
         quiet_hours_start: Optional[time] = None,
         quiet_hours_end: Optional[time] = None,
-        daily_summary_time: Optional[time] = None
+        daily_summary_time: Optional[time] = None,
     ) -> None:
         """
         Configure notification preferences.
@@ -559,9 +535,7 @@ class NotificationService:
         self._save_state()
 
     def set_channel_preferences(
-        self,
-        notification_type: NotificationType,
-        channels: Set[NotificationChannel]
+        self, notification_type: NotificationType, channels: Set[NotificationChannel]
     ) -> None:
         """
         Set preferred delivery channels for a notification type.
@@ -578,9 +552,7 @@ class NotificationService:
         self._save_state()
 
     def get_notification_history(
-        self,
-        notification_type: Optional[NotificationType] = None,
-        limit: int = 50
+        self, notification_type: Optional[NotificationType] = None, limit: int = 50
     ) -> List[Dict]:
         """
         Get notification history.
@@ -639,8 +611,7 @@ class NotificationService:
         """Send a notification through configured channels."""
         notification_type = notification.notification_type
         channels = self.preferences.channel_preferences.get(
-            notification_type,
-            {NotificationChannel.IN_APP}
+            notification_type, {NotificationChannel.IN_APP}
         )
 
         # Simulate sending through each channel
@@ -668,11 +639,7 @@ class NotificationService:
             )
             return None
 
-    def _send_via_channel(
-        self,
-        notification: Notification,
-        channel: NotificationChannel
-    ) -> bool:
+    def _send_via_channel(self, notification: Notification, channel: NotificationChannel) -> bool:
         """
         Send notification via specific channel.
 
@@ -706,60 +673,56 @@ class NotificationService:
     def _save_state(self) -> None:
         """Save service state to disk."""
         state = {
-            'parent_id': self.parent_id,
-            'preferences': self.preferences.to_dict(),
-            'notification_history': [
+            "parent_id": self.parent_id,
+            "preferences": self.preferences.to_dict(),
+            "notification_history": [
                 n.to_dict() for n in self.notification_history[-100:]  # Keep last 100
             ],
-            'last_notification_time': {
-                nt.value: dt.isoformat()
-                for nt, dt in self.last_notification_time.items()
-            }
+            "last_notification_time": {
+                nt.value: dt.isoformat() for nt, dt in self.last_notification_time.items()
+            },
         }
 
-        state_file = self.storage_path / 'notification_state.json'
-        with open(state_file, 'w') as f:
+        state_file = self.storage_path / "notification_state.json"
+        with open(state_file, "w") as f:
             json.dump(state, f, indent=2)
 
     def _load_state(self) -> None:
         """Load service state from disk."""
-        state_file = self.storage_path / 'notification_state.json'
+        state_file = self.storage_path / "notification_state.json"
 
         if not state_file.exists():
             return
 
         try:
-            with open(state_file, 'r') as f:
+            with open(state_file, "r") as f:
                 state = json.load(f)
 
-            self.preferences = NotificationPreferences.from_dict(
-                state.get('preferences', {})
-            )
+            self.preferences = NotificationPreferences.from_dict(state.get("preferences", {}))
 
             # Load notification history
             self.notification_history = []
-            for notif_data in state.get('notification_history', []):
+            for notif_data in state.get("notification_history", []):
                 notif = Notification(
-                    notification_type=NotificationType(notif_data['notification_type']),
-                    title=notif_data['title'],
-                    message=notif_data['message'],
-                    priority=NotificationPriority(notif_data['priority']),
-                    data=notif_data.get('data', {})
+                    notification_type=NotificationType(notif_data["notification_type"]),
+                    title=notif_data["title"],
+                    message=notif_data["message"],
+                    priority=NotificationPriority(notif_data["priority"]),
+                    data=notif_data.get("data", {}),
                 )
-                notif.notification_id = notif_data['notification_id']
-                notif.created_at = datetime.fromisoformat(notif_data['created_at'])
-                notif.sent = notif_data.get('sent', False)
-                if notif_data.get('sent_at'):
-                    notif.sent_at = datetime.fromisoformat(notif_data['sent_at'])
-                notif.channels_used = notif_data.get('channels_used', [])
+                notif.notification_id = notif_data["notification_id"]
+                notif.created_at = datetime.fromisoformat(notif_data["created_at"])
+                notif.sent = notif_data.get("sent", False)
+                if notif_data.get("sent_at"):
+                    notif.sent_at = datetime.fromisoformat(notif_data["sent_at"])
+                notif.channels_used = notif_data.get("channels_used", [])
 
                 self.notification_history.append(notif)
 
             # Load last notification times
-            last_times = state.get('last_notification_time', {})
+            last_times = state.get("last_notification_time", {})
             self.last_notification_time = {
-                NotificationType(nt): datetime.fromisoformat(dt)
-                for nt, dt in last_times.items()
+                NotificationType(nt): datetime.fromisoformat(dt) for nt, dt in last_times.items()
             }
 
             logger.info(f"Loaded notification state for parent {self.parent_id}")

@@ -20,7 +20,7 @@ import uuid
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import AsyncIterator, Callable, Optional, Dict, Any
+from typing import Any, AsyncIterator, Callable, Dict, Optional
 
 import numpy as np
 
@@ -30,15 +30,11 @@ from .interruption_handler import (
     AsyncInterruptionHandler,
     InterruptionConfig,
     InterruptionEvent,
-    InterruptionType
+    InterruptionType,
 )
-from .latency_monitor import (
-    AsyncLatencyMonitor,
-    PipelineStage,
-    LatencyMetrics
-)
-from .speech_recognizer import SpeechRecognizer, SpeechConfig, TranscriptionResult
-from .tts_engine import TTSEngine, TTSConfig, AudioOutput
+from .latency_monitor import AsyncLatencyMonitor, LatencyMetrics, PipelineStage
+from .speech_recognizer import SpeechConfig, SpeechRecognizer, TranscriptionResult
+from .tts_engine import AudioOutput, TTSConfig, TTSEngine
 from .wake_word_engine import AsyncWakeWordDetector, DetectionResult
 
 logger = logging.getLogger(__name__)
@@ -46,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 class PipelineState(Enum):
     """Audio pipeline states."""
+
     IDLE = "idle"  # Waiting for wake word
     WAKE_DETECTED = "wake_detected"  # Wake word detected, preparing to listen
     LISTENING = "listening"  # Actively listening for user speech
@@ -58,6 +55,7 @@ class PipelineState(Enum):
 @dataclass
 class PipelineConfig:
     """Configuration for audio pipeline."""
+
     # Audio settings
     sample_rate: int = 16000
     channels: int = 1
@@ -89,7 +87,7 @@ class PipelineConfig:
     buffer_duration: float = 30.0
 
     @classmethod
-    def from_yaml(cls, config_path: Path) -> 'PipelineConfig':
+    def from_yaml(cls, config_path: Path) -> "PipelineConfig":
         """
         Load configuration from YAML file.
 
@@ -101,7 +99,7 @@ class PipelineConfig:
         """
         import yaml
 
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             config_dict = yaml.safe_load(f)
 
         return cls(**config_dict)
@@ -110,6 +108,7 @@ class PipelineConfig:
 @dataclass
 class PipelineEvent:
     """Event from pipeline state change."""
+
     state: PipelineState
     previous_state: PipelineState
     timestamp: float
@@ -153,9 +152,7 @@ class AudioPipeline:
         self._audio_queue: asyncio.Queue = asyncio.Queue()
 
         # Event callbacks
-        self._state_callbacks: Dict[PipelineState, list] = {
-            state: [] for state in PipelineState
-        }
+        self._state_callbacks: Dict[PipelineState, list] = {state: [] for state in PipelineState}
         self._event_callbacks = []
 
         # Pipeline tasks
@@ -175,14 +172,14 @@ class AudioPipeline:
         # Initialize wake word detector
         self._wake_detector = AsyncWakeWordDetector(
             model_path=self.config.wake_word_model_path,
-            sensitivity=self.config.wake_word_sensitivity
+            sensitivity=self.config.wake_word_sensitivity,
         )
 
         # Initialize speech recognizer
         speech_config = SpeechConfig(
             model_size=self.config.asr_model_size,
             language=self.config.asr_language,
-            sample_rate=self.config.sample_rate
+            sample_rate=self.config.sample_rate,
         )
         self._speech_recognizer = SpeechRecognizer(speech_config)
         await self._speech_recognizer.initialize()
@@ -192,7 +189,7 @@ class AudioPipeline:
             backend=TTSConfig.backend.__class__(self.config.tts_backend),
             voice_id=self.config.tts_voice_id,
             speaking_rate=self.config.tts_speed,
-            sample_rate=self.config.sample_rate
+            sample_rate=self.config.sample_rate,
         )
         self._tts_engine = TTSEngine(tts_config)
 
@@ -200,21 +197,17 @@ class AudioPipeline:
         buffer_config = BufferConfig(
             max_duration=self.config.buffer_duration,
             sample_rate=self.config.sample_rate,
-            silence_duration=self.config.silence_timeout
+            silence_duration=self.config.silence_timeout,
         )
         self._audio_buffer = AsyncAudioBuffer(buffer_config)
 
         # Initialize interruption handler
-        interrupt_config = InterruptionConfig(
-            sensitivity=self.config.barge_in_sensitivity
-        )
+        interrupt_config = InterruptionConfig(sensitivity=self.config.barge_in_sensitivity)
         self._interruption_handler = AsyncInterruptionHandler(interrupt_config)
         self._interruption_handler.on_interrupt(self._on_interrupt)
 
         # Initialize latency monitor
-        self._latency_monitor = AsyncLatencyMonitor(
-            threshold_ms=self.config.latency_threshold
-        )
+        self._latency_monitor = AsyncLatencyMonitor(threshold_ms=self.config.latency_threshold)
         self._latency_monitor.register_callback(self._on_latency_alert)
 
         logger.info("Pipeline components initialized successfully")
@@ -235,12 +228,9 @@ class AudioPipeline:
         audio_config = AudioConfig(
             sample_rate=self.config.sample_rate,
             channels=self.config.channels,
-            chunk_size=self.config.chunk_size
+            chunk_size=self.config.chunk_size,
         )
-        self._microphone = MicrophoneStream(
-            config=audio_config,
-            callback=self._audio_callback
-        )
+        self._microphone = MicrophoneStream(config=audio_config, callback=self._audio_callback)
         self._microphone.start()
 
         # Start wake word detection
@@ -321,15 +311,11 @@ class AudioPipeline:
         # Start latency tracking
         self._latency_monitor.start_timer(self._current_session_id)
         self._latency_monitor.record_checkpoint(
-            self._current_session_id,
-            PipelineStage.WAKE_WORD_DETECTION
+            self._current_session_id, PipelineStage.WAKE_WORD_DETECTION
         )
 
         # Transition to WAKE_DETECTED
-        await self._transition_state(
-            PipelineState.WAKE_DETECTED,
-            data={"detection": detection}
-        )
+        await self._transition_state(PipelineState.WAKE_DETECTED, data={"detection": detection})
 
         # Immediately transition to LISTENING
         await asyncio.sleep(0.1)  # Small delay for audio feedback
@@ -337,8 +323,7 @@ class AudioPipeline:
 
         # Start listening for speech
         self._latency_monitor.record_checkpoint(
-            self._current_session_id,
-            PipelineStage.SPEECH_START
+            self._current_session_id, PipelineStage.SPEECH_START
         )
 
     async def handle_speech_end(self, segment: SpeechSegment) -> None:
@@ -351,42 +336,33 @@ class AudioPipeline:
         logger.info(f"Speech ended: duration={segment.duration:.2f}s")
 
         # Record checkpoint
-        self._latency_monitor.record_checkpoint(
-            self._current_session_id,
-            PipelineStage.SPEECH_END
-        )
+        self._latency_monitor.record_checkpoint(self._current_session_id, PipelineStage.SPEECH_END)
 
         # Transition to PROCESSING
-        await self._transition_state(
-            PipelineState.PROCESSING,
-            data={"segment": segment}
-        )
+        await self._transition_state(PipelineState.PROCESSING, data={"segment": segment})
 
         # Transcribe speech
-        self._latency_monitor.record_checkpoint(
-            self._current_session_id,
-            PipelineStage.ASR_START
-        )
+        self._latency_monitor.record_checkpoint(self._current_session_id, PipelineStage.ASR_START)
 
         try:
-            transcription = await self._speech_recognizer.transcribe(
-                segment.audio_data
-            )
+            transcription = await self._speech_recognizer.transcribe(segment.audio_data)
 
             self._latency_monitor.record_checkpoint(
                 self._current_session_id,
                 PipelineStage.ASR_END,
-                metadata={"text": transcription.text}
+                metadata={"text": transcription.text},
             )
 
             logger.info(f"Transcription: '{transcription.text}'")
 
             # Queue response for processing
-            await self._response_queue.put({
-                "type": "transcription",
-                "data": transcription,
-                "session_id": self._current_session_id
-            })
+            await self._response_queue.put(
+                {
+                    "type": "transcription",
+                    "data": transcription,
+                    "session_id": self._current_session_id,
+                }
+            )
 
         except Exception as e:
             logger.error(f"Speech recognition failed: {e}")
@@ -405,8 +381,7 @@ class AudioPipeline:
         # Record TTS start
         if self._current_session_id:
             self._latency_monitor.record_checkpoint(
-                self._current_session_id,
-                PipelineStage.TTS_START
+                self._current_session_id, PipelineStage.TTS_START
             )
 
         # Synthesize speech
@@ -415,14 +390,12 @@ class AudioPipeline:
 
             if self._current_session_id:
                 self._latency_monitor.record_checkpoint(
-                    self._current_session_id,
-                    PipelineStage.TTS_END
+                    self._current_session_id, PipelineStage.TTS_END
                 )
 
             # Transition to SPEAKING
             await self._transition_state(
-                PipelineState.SPEAKING,
-                data={"text": text, "audio": audio_output}
+                PipelineState.SPEAKING, data={"text": text, "audio": audio_output}
             )
 
             # Play audio
@@ -434,9 +407,7 @@ class AudioPipeline:
             # End latency tracking
             if self._current_session_id:
                 metrics = self._latency_monitor.end_timer(self._current_session_id)
-                logger.info(
-                    f"Session completed: {metrics.total_latency:.1f}ms total latency"
-                )
+                logger.info(f"Session completed: {metrics.total_latency:.1f}ms total latency")
                 self._current_session_id = None
 
         except Exception as e:
@@ -465,17 +436,12 @@ class AudioPipeline:
         self._audio_buffer.clear()
 
         # Transition to LISTENING
-        await self._transition_state(
-            PipelineState.LISTENING,
-            data={"interruption": event}
-        )
+        await self._transition_state(PipelineState.LISTENING, data={"interruption": event})
 
         logger.info("Transitioned to listening after barge-in")
 
     def on_state_change(
-        self,
-        state: PipelineState,
-        callback: Callable[[PipelineEvent], None]
+        self, state: PipelineState, callback: Callable[[PipelineEvent], None]
     ) -> None:
         """
         Register callback for specific state.
@@ -525,9 +491,9 @@ class AudioPipeline:
             True if healthy, False otherwise
         """
         return (
-            self._is_running and
-            self._state not in (PipelineState.ERROR, PipelineState.STOPPED) and
-            self._latency_monitor.is_healthy()
+            self._is_running
+            and self._state not in (PipelineState.ERROR, PipelineState.STOPPED)
+            and self._latency_monitor.is_healthy()
         )
 
     async def _run_pipeline(self) -> None:
@@ -544,10 +510,7 @@ class AudioPipeline:
 
                 # Process responses
                 try:
-                    response = await asyncio.wait_for(
-                        self._response_queue.get(),
-                        timeout=0.1
-                    )
+                    response = await asyncio.wait_for(self._response_queue.get(), timeout=0.1)
 
                     if response["type"] == "transcription":
                         # In real implementation, this would go to NLU/dialogue manager
@@ -573,10 +536,7 @@ class AudioPipeline:
             while self._is_running:
                 # Get audio from queue
                 try:
-                    audio_data = await asyncio.wait_for(
-                        self._audio_queue.get(),
-                        timeout=0.1
-                    )
+                    audio_data = await asyncio.wait_for(self._audio_queue.get(), timeout=0.1)
                 except asyncio.TimeoutError:
                     continue
 
@@ -584,13 +544,9 @@ class AudioPipeline:
                 await self._audio_buffer.add_samples(audio_data)
 
                 # Check for interruptions during speaking
-                if (
-                    self._state == PipelineState.SPEAKING and
-                    self.config.enable_barge_in
-                ):
+                if self._state == PipelineState.SPEAKING and self.config.enable_barge_in:
                     interrupt = await self._interruption_handler.detect_interruption(
-                        audio_data,
-                        self.config.sample_rate
+                        audio_data, self.config.sample_rate
                     )
                     if interrupt:
                         await self.handle_barge_in(interrupt)
@@ -631,8 +587,7 @@ class AudioPipeline:
         # Record playback start
         if self._current_session_id:
             self._latency_monitor.record_checkpoint(
-                self._current_session_id,
-                PipelineStage.PLAYBACK_START
+                self._current_session_id, PipelineStage.PLAYBACK_START
             )
 
         # Set interruption handler state
@@ -645,16 +600,13 @@ class AudioPipeline:
         # Record playback end
         if self._current_session_id:
             self._latency_monitor.record_checkpoint(
-                self._current_session_id,
-                PipelineStage.PLAYBACK_END
+                self._current_session_id, PipelineStage.PLAYBACK_END
             )
 
         self._interruption_handler.set_playback_state(False)
 
     async def _transition_state(
-        self,
-        new_state: PipelineState,
-        data: Optional[Dict[str, Any]] = None
+        self, new_state: PipelineState, data: Optional[Dict[str, Any]] = None
     ) -> None:
         """
         Transition to new pipeline state.
@@ -672,12 +624,13 @@ class AudioPipeline:
 
         # Create event
         import time
+
         event = PipelineEvent(
             state=new_state,
             previous_state=previous,
             timestamp=time.time(),
             session_id=self._current_session_id or "",
-            data=data
+            data=data,
         )
 
         logger.info(f"State transition: {previous.value} -> {new_state.value}")

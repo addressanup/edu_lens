@@ -9,27 +9,22 @@ Author: Vision Processing Agent (VIS-001)
 Task: VIS-001-T3
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import List, Dict, Tuple, Optional, Any, Set
-import numpy as np
-from pathlib import Path
 import logging
 import re
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+import numpy as np
 
 try:
     import cv2
 except ImportError:
     cv2 = None
 
-from src.vision.ocr_engine import BoundingBox, TextRegion, OCRResult
-from src.vision.layout_analyzer import (
-    LayoutAnalyzer,
-    LayoutRegion,
-    RegionType,
-    DocumentStructure
-)
-
+from src.vision.layout_analyzer import DocumentStructure, LayoutAnalyzer, LayoutRegion, RegionType
+from src.vision.ocr_engine import BoundingBox, OCRResult, TextRegion
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 class ProblemFormat(Enum):
     """Types of problem formats supported."""
+
     MULTIPLE_CHOICE = "multiple_choice"
     FILL_IN_BLANK = "fill_in_blank"
     SHORT_ANSWER = "short_answer"
@@ -51,6 +47,7 @@ class ProblemFormat(Enum):
 
 class ProblemDifficulty(Enum):
     """Estimated problem difficulty levels."""
+
     ELEMENTARY = "elementary"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"
@@ -68,6 +65,7 @@ class ProblemPart:
         bounding_box: Spatial location
         metadata: Additional part-specific information
     """
+
     part_type: str
     content: str
     bounding_box: BoundingBox
@@ -79,7 +77,7 @@ class ProblemPart:
             "part_type": self.part_type,
             "content": self.content,
             "bounding_box": self.bounding_box.to_dict(),
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -101,6 +99,7 @@ class Problem:
         difficulty: Estimated difficulty level
         metadata: Additional problem metadata
     """
+
     problem_id: str
     problem_number: str
     problem_format: ProblemFormat
@@ -126,7 +125,7 @@ class Problem:
             "parts": [p.to_dict() for p in self.parts],
             "bounding_box": self.bounding_box.to_dict() if self.bounding_box else None,
             "difficulty": self.difficulty.value,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -141,6 +140,7 @@ class WorksheetProblems:
         format_distribution: Count of each problem format
         metadata: Worksheet-level metadata
     """
+
     problems: List[Problem] = field(default_factory=list)
     total_count: int = 0
     format_distribution: Dict[ProblemFormat, int] = field(default_factory=dict)
@@ -152,7 +152,7 @@ class WorksheetProblems:
             "problems": [p.to_dict() for p in self.problems],
             "total_count": self.total_count,
             "format_distribution": {k.value: v for k, v in self.format_distribution.items()},
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -165,9 +165,7 @@ class ProblemSegmenter:
     """
 
     def __init__(
-        self,
-        layout_analyzer: Optional[LayoutAnalyzer] = None,
-        min_problem_size: int = 200
+        self, layout_analyzer: Optional[LayoutAnalyzer] = None, min_problem_size: int = 200
     ):
         """
         Initialize the ProblemSegmenter.
@@ -182,25 +180,25 @@ class ProblemSegmenter:
 
         # Problem number patterns
         self.number_patterns = [
-            r'^\s*(\d+)[\.\)]\s*',  # 1. or 1)
-            r'^\s*(\d+[a-z])[\.\)]\s*',  # 1a. or 1a)
-            r'^\s*([A-Z])[\.\)]\s*',  # A. or A)
-            r'^\s*Question\s+(\d+)',  # Question 1
-            r'^\s*Problem\s+(\d+)',  # Problem 1
-            r'^\s*Exercise\s+(\d+)',  # Exercise 1
+            r"^\s*(\d+)[\.\)]\s*",  # 1. or 1)
+            r"^\s*(\d+[a-z])[\.\)]\s*",  # 1a. or 1a)
+            r"^\s*([A-Z])[\.\)]\s*",  # A. or A)
+            r"^\s*Question\s+(\d+)",  # Question 1
+            r"^\s*Problem\s+(\d+)",  # Problem 1
+            r"^\s*Exercise\s+(\d+)",  # Exercise 1
         ]
 
         # Multiple choice patterns
         self.choice_patterns = [
-            r'^\s*([A-D])[\.\)]\s+(.+)',  # A. text or A) text
-            r'^\s*\(([A-D])\)\s+(.+)',  # (A) text
+            r"^\s*([A-D])[\.\)]\s+(.+)",  # A. text or A) text
+            r"^\s*\(([A-D])\)\s+(.+)",  # (A) text
         ]
 
     def segment_problems(
         self,
         image: np.ndarray,
         ocr_result: Optional[OCRResult] = None,
-        document_structure: Optional[DocumentStructure] = None
+        document_structure: Optional[DocumentStructure] = None,
     ) -> WorksheetProblems:
         """
         Segment a worksheet image into individual problems.
@@ -236,10 +234,12 @@ class ProblemSegmenter:
                 problems.append(problem)
 
         # Sort problems by position (reading order)
-        problems.sort(key=lambda p: (
-            p.bounding_box.y if p.bounding_box else 0,
-            p.bounding_box.x if p.bounding_box else 0
-        ))
+        problems.sort(
+            key=lambda p: (
+                p.bounding_box.y if p.bounding_box else 0,
+                p.bounding_box.x if p.bounding_box else 0,
+            )
+        )
 
         # Build format distribution
         format_dist = {}
@@ -252,17 +252,15 @@ class ProblemSegmenter:
             format_distribution=format_dist,
             metadata={
                 "image_shape": image.shape,
-                "num_regions_analyzed": len(all_question_regions)
-            }
+                "num_regions_analyzed": len(all_question_regions),
+            },
         )
 
         logger.info(f"Segmentation complete: {len(problems)} problems detected")
         return result
 
     def extract_problem_parts(
-        self,
-        region: LayoutRegion,
-        document_structure: DocumentStructure
+        self, region: LayoutRegion, document_structure: DocumentStructure
     ) -> List[ProblemPart]:
         """
         Extract individual parts of a problem (question, choices, answer space).
@@ -280,12 +278,14 @@ class ProblemSegmenter:
         # Extract problem number
         problem_number = self.detect_problem_numbers(text)
         if problem_number:
-            parts.append(ProblemPart(
-                part_type="number",
-                content=problem_number,
-                bounding_box=region.bounding_box,
-                metadata={"position": "prefix"}
-            ))
+            parts.append(
+                ProblemPart(
+                    part_type="number",
+                    content=problem_number,
+                    bounding_box=region.bounding_box,
+                    metadata={"position": "prefix"},
+                )
+            )
 
         # Check for multiple choice
         choices = self._extract_multiple_choice(text, region.bounding_box)
@@ -295,30 +295,36 @@ class ProblemSegmenter:
             # Extract question text (before choices)
             question_text = self._extract_question_before_choices(text)
             if question_text:
-                parts.append(ProblemPart(
-                    part_type="question",
-                    content=question_text,
-                    bounding_box=region.bounding_box,
-                    metadata={"has_choices": True}
-                ))
+                parts.append(
+                    ProblemPart(
+                        part_type="question",
+                        content=question_text,
+                        bounding_box=region.bounding_box,
+                        metadata={"has_choices": True},
+                    )
+                )
         else:
             # No choices, entire text is question
-            parts.append(ProblemPart(
-                part_type="question",
-                content=text,
-                bounding_box=region.bounding_box,
-                metadata={"has_choices": False}
-            ))
+            parts.append(
+                ProblemPart(
+                    part_type="question",
+                    content=text,
+                    bounding_box=region.bounding_box,
+                    metadata={"has_choices": False},
+                )
+            )
 
         # Look for answer space in children
         for child in region.children:
             if child.region_type == RegionType.ANSWER_SPACE:
-                parts.append(ProblemPart(
-                    part_type="answer_space",
-                    content="",
-                    bounding_box=child.bounding_box,
-                    metadata={"area": child.area()}
-                ))
+                parts.append(
+                    ProblemPart(
+                        part_type="answer_space",
+                        content="",
+                        bounding_box=child.bounding_box,
+                        metadata={"area": child.area()},
+                    )
+                )
 
         return parts
 
@@ -339,9 +345,7 @@ class ProblemSegmenter:
         return None
 
     def group_related_content(
-        self,
-        problem: Problem,
-        document_structure: DocumentStructure
+        self, problem: Problem, document_structure: DocumentStructure
     ) -> Problem:
         """
         Associate diagrams and other related content with a problem.
@@ -363,7 +367,7 @@ class ProblemSegmenter:
 
         # Find closest visual region
         closest_diagram = None
-        min_distance = float('inf')
+        min_distance = float("inf")
 
         p_center_x = problem.bounding_box.x + problem.bounding_box.width // 2
         p_center_y = problem.bounding_box.y + problem.bounding_box.height // 2
@@ -372,7 +376,7 @@ class ProblemSegmenter:
             v_center_x = visual.bounding_box.x + visual.bounding_box.width // 2
             v_center_y = visual.bounding_box.y + visual.bounding_box.height // 2
 
-            distance = np.sqrt((p_center_x - v_center_x)**2 + (p_center_y - v_center_y)**2)
+            distance = np.sqrt((p_center_x - v_center_x) ** 2 + (p_center_y - v_center_y) ** 2)
 
             # Only consider if within reasonable distance
             if distance < 400 and distance < min_distance:
@@ -381,16 +385,13 @@ class ProblemSegmenter:
 
         if closest_diagram:
             problem.diagram = closest_diagram
-            problem.metadata['has_diagram'] = True
-            problem.metadata['diagram_distance'] = min_distance
+            problem.metadata["has_diagram"] = True
+            problem.metadata["diagram_distance"] = min_distance
 
         return problem
 
     def _region_to_problem(
-        self,
-        region: LayoutRegion,
-        document_structure: DocumentStructure,
-        image: np.ndarray
+        self, region: LayoutRegion, document_structure: DocumentStructure, image: np.ndarray
     ) -> Optional[Problem]:
         """Convert a LayoutRegion to a Problem object."""
         # Extract problem parts
@@ -425,7 +426,7 @@ class ProblemSegmenter:
             choices=choice_parts,
             answer_space=answer_space,
             parts=parts,
-            bounding_box=region.bounding_box
+            bounding_box=region.bounding_box,
         )
 
         # Associate related content (diagrams, etc.)
@@ -438,9 +439,7 @@ class ProblemSegmenter:
         return problem
 
     def _classify_problem_format(
-        self,
-        region: LayoutRegion,
-        parts: List[ProblemPart]
+        self, region: LayoutRegion, parts: List[ProblemPart]
     ) -> ProblemFormat:
         """Classify the format of a problem."""
         text = region.text_content.lower()
@@ -451,45 +450,52 @@ class ProblemSegmenter:
             return ProblemFormat.MULTIPLE_CHOICE
 
         # Check for true/false
-        if 'true or false' in text or 'true/false' in text or 't/f' in text:
+        if "true or false" in text or "true/false" in text or "t/f" in text:
             return ProblemFormat.TRUE_FALSE
 
         # Check for fill in blank
-        if '____' in region.text_content or '_____' in region.text_content:
+        if "____" in region.text_content or "_____" in region.text_content:
             return ProblemFormat.FILL_IN_BLANK
 
         # Check for matching
-        if 'match' in text and ('column' in text or 'following' in text):
+        if "match" in text and ("column" in text or "following" in text):
             return ProblemFormat.MATCHING
 
         # Check for calculation (math keywords)
-        math_keywords = ['solve', 'calculate', 'compute', 'add', 'subtract', 'multiply', 'divide', '=', '+', '-']
+        math_keywords = [
+            "solve",
+            "calculate",
+            "compute",
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "=",
+            "+",
+            "-",
+        ]
         if any(keyword in text for keyword in math_keywords):
             return ProblemFormat.CALCULATION
 
         # Check for diagram labeling
         if region.children and any(c.region_type == RegionType.DIAGRAM for c in region.children):
-            if 'label' in text or 'name the' in text or 'identify' in text:
+            if "label" in text or "name the" in text or "identify" in text:
                 return ProblemFormat.DIAGRAM_LABELING
 
         # Check for essay (long answer)
         has_answer_space = any(p.part_type == "answer_space" for p in parts)
         if has_answer_space:
             answer_spaces = [p for p in parts if p.part_type == "answer_space"]
-            if answer_spaces and answer_spaces[0].metadata.get('area', 0) > 5000:
+            if answer_spaces and answer_spaces[0].metadata.get("area", 0) > 5000:
                 return ProblemFormat.ESSAY
 
         # Default to short answer
         return ProblemFormat.SHORT_ANSWER
 
-    def _extract_multiple_choice(
-        self,
-        text: str,
-        bbox: BoundingBox
-    ) -> List[ProblemPart]:
+    def _extract_multiple_choice(self, text: str, bbox: BoundingBox) -> List[ProblemPart]:
         """Extract multiple choice options from text."""
         choices = []
-        lines = text.split('\n')
+        lines = text.split("\n")
 
         for line in lines:
             for pattern in self.choice_patterns:
@@ -498,15 +504,14 @@ class ProblemSegmenter:
                     choice_label = match.group(1)
                     choice_text = match.group(2).strip()
 
-                    choices.append(ProblemPart(
-                        part_type="choice",
-                        content=f"{choice_label}. {choice_text}",
-                        bounding_box=bbox,
-                        metadata={
-                            "label": choice_label,
-                            "text": choice_text
-                        }
-                    ))
+                    choices.append(
+                        ProblemPart(
+                            part_type="choice",
+                            content=f"{choice_label}. {choice_text}",
+                            bounding_box=bbox,
+                            metadata={"label": choice_label, "text": choice_text},
+                        )
+                    )
                     break
 
         # Validate we have at least 2 choices
@@ -516,7 +521,7 @@ class ProblemSegmenter:
 
     def _extract_question_before_choices(self, text: str) -> str:
         """Extract question text that appears before multiple choice options."""
-        lines = text.split('\n')
+        lines = text.split("\n")
         question_lines = []
 
         for line in lines:
@@ -532,7 +537,7 @@ class ProblemSegmenter:
 
             question_lines.append(line)
 
-        return '\n'.join(question_lines).strip()
+        return "\n".join(question_lines).strip()
 
     def _estimate_difficulty(self, problem: Problem) -> ProblemDifficulty:
         """
@@ -553,14 +558,14 @@ class ProblemSegmenter:
         if word_count < 15 and problem.problem_format in [
             ProblemFormat.MULTIPLE_CHOICE,
             ProblemFormat.TRUE_FALSE,
-            ProblemFormat.FILL_IN_BLANK
+            ProblemFormat.FILL_IN_BLANK,
         ]:
             return ProblemDifficulty.ELEMENTARY
 
         # Advanced: long questions, complex formats
         if word_count > 40 or problem.problem_format in [
             ProblemFormat.ESSAY,
-            ProblemFormat.MATCHING
+            ProblemFormat.MATCHING,
         ]:
             return ProblemDifficulty.ADVANCED
 
@@ -575,9 +580,9 @@ class ProblemSegmenter:
 
 # Convenience functions
 
+
 def segment_worksheet(
-    image: np.ndarray,
-    ocr_result: Optional[OCRResult] = None
+    image: np.ndarray, ocr_result: Optional[OCRResult] = None
 ) -> WorksheetProblems:
     """
     Convenience function to segment a worksheet in one call.
@@ -594,8 +599,7 @@ def segment_worksheet(
 
 
 def extract_problem_by_number(
-    problems: WorksheetProblems,
-    problem_number: str
+    problems: WorksheetProblems, problem_number: str
 ) -> Optional[Problem]:
     """
     Extract a specific problem by its number.
@@ -614,8 +618,7 @@ def extract_problem_by_number(
 
 
 def get_problems_by_format(
-    problems: WorksheetProblems,
-    problem_format: ProblemFormat
+    problems: WorksheetProblems, problem_format: ProblemFormat
 ) -> List[Problem]:
     """
     Get all problems of a specific format.

@@ -11,22 +11,23 @@ Tests privacy controls including:
 Author: Testing Agent (TST-001)
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
+import pytest
+
 from src.privacy.data_handler import (
-    DataHandler,
-    DataClassification,
-    ProcessingLocation,
-    ConsentStatus,
-    RetentionPolicy,
-    PrivacyPolicy,
     ConsentRecord,
-    DataItem,
-    PrivacyViolationError,
     ConsentRequiredError,
+    ConsentStatus,
+    DataClassification,
+    DataHandler,
+    DataItem,
     DataRetentionViolationError,
+    PrivacyPolicy,
+    PrivacyViolationError,
+    ProcessingLocation,
+    RetentionPolicy,
     classify_data,
 )
 
@@ -72,7 +73,7 @@ class TestRetentionPolicy:
         policy = RetentionPolicy(
             classification=DataClassification.DEVICE_METADATA,
             max_retention_days=365,
-            description="1 year retention"
+            description="1 year retention",
         )
 
         assert policy.max_retention_days == 365
@@ -81,8 +82,7 @@ class TestRetentionPolicy:
     def test_is_expired_true(self):
         """Test data expiration check (expired)."""
         policy = RetentionPolicy(
-            classification=DataClassification.ANONYMOUS_TELEMETRY,
-            max_retention_days=90
+            classification=DataClassification.ANONYMOUS_TELEMETRY, max_retention_days=90
         )
 
         old_timestamp = datetime.utcnow() - timedelta(days=100)
@@ -92,8 +92,7 @@ class TestRetentionPolicy:
     def test_is_expired_false(self):
         """Test data expiration check (not expired)."""
         policy = RetentionPolicy(
-            classification=DataClassification.ANONYMOUS_TELEMETRY,
-            max_retention_days=90
+            classification=DataClassification.ANONYMOUS_TELEMETRY, max_retention_days=90
         )
 
         recent_timestamp = datetime.utcnow() - timedelta(days=30)
@@ -103,8 +102,7 @@ class TestRetentionPolicy:
     def test_immediate_deletion_policy(self):
         """Test immediate deletion policy."""
         policy = RetentionPolicy(
-            classification=DataClassification.SENSITIVE_VISUAL,
-            max_retention_days=0
+            classification=DataClassification.SENSITIVE_VISUAL, max_retention_days=0
         )
 
         assert policy.is_expired(datetime.utcnow()) is True
@@ -112,8 +110,7 @@ class TestRetentionPolicy:
     def test_days_until_expiration(self):
         """Test calculating days until expiration."""
         policy = RetentionPolicy(
-            classification=DataClassification.DEVICE_METADATA,
-            max_retention_days=30
+            classification=DataClassification.DEVICE_METADATA, max_retention_days=30
         )
 
         recent_timestamp = datetime.utcnow() - timedelta(days=10)
@@ -135,7 +132,7 @@ class TestConsentRecord:
             status=ConsentStatus.GRANTED,
             timestamp=datetime.utcnow(),
             consent_method="IN_APP_EXPLICIT_CLICK",
-            verification_method="MFA_EMAIL_SMS"
+            verification_method="MFA_EMAIL_SMS",
         )
 
         assert record.status == ConsentStatus.GRANTED
@@ -152,7 +149,7 @@ class TestConsentRecord:
             timestamp=datetime.utcnow(),
             consent_method="IN_APP",
             verification_method="MFA",
-            expires_at=datetime.utcnow() + timedelta(days=365)
+            expires_at=datetime.utcnow() + timedelta(days=365),
         )
 
         assert record.is_valid() is True
@@ -168,7 +165,7 @@ class TestConsentRecord:
             timestamp=datetime.utcnow() - timedelta(days=400),
             consent_method="IN_APP",
             verification_method="MFA",
-            expires_at=datetime.utcnow() - timedelta(days=1)
+            expires_at=datetime.utcnow() - timedelta(days=1),
         )
 
         assert record.is_valid() is False
@@ -184,7 +181,7 @@ class TestConsentRecord:
             timestamp=datetime.utcnow(),
             consent_method="IN_APP",
             verification_method="MFA",
-            revoked_at=datetime.utcnow()
+            revoked_at=datetime.utcnow(),
         )
 
         assert record.is_valid() is False
@@ -200,7 +197,7 @@ class TestDataItem:
             classification=DataClassification.DEVICE_METADATA,
             content={"device_type": "tablet"},
             created_at=datetime.utcnow(),
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
         assert item.data_id == "data_123"
@@ -209,8 +206,7 @@ class TestDataItem:
     def test_should_be_deleted_true(self):
         """Test deletion check (should delete)."""
         policy = RetentionPolicy(
-            classification=DataClassification.ANONYMOUS_TELEMETRY,
-            max_retention_days=90
+            classification=DataClassification.ANONYMOUS_TELEMETRY, max_retention_days=90
         )
 
         old_item = DataItem(
@@ -218,7 +214,7 @@ class TestDataItem:
             classification=DataClassification.ANONYMOUS_TELEMETRY,
             content="test",
             created_at=datetime.utcnow() - timedelta(days=100),
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
         assert old_item.should_be_deleted(policy) is True
@@ -226,8 +222,7 @@ class TestDataItem:
     def test_should_be_deleted_false(self):
         """Test deletion check (should not delete)."""
         policy = RetentionPolicy(
-            classification=DataClassification.DEVICE_METADATA,
-            max_retention_days=365
+            classification=DataClassification.DEVICE_METADATA, max_retention_days=365
         )
 
         recent_item = DataItem(
@@ -235,7 +230,7 @@ class TestDataItem:
             classification=DataClassification.DEVICE_METADATA,
             content="test",
             created_at=datetime.utcnow() - timedelta(days=30),
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
         assert recent_item.should_be_deleted(policy) is False
@@ -332,7 +327,7 @@ class TestDataMinimization:
             content={"event": "test", "metadata": "extra"},
             created_at=datetime.utcnow(),
             processing_location=ProcessingLocation.EDGE_DEVICE,
-            anonymized=False
+            anonymized=False,
         )
 
         minimized = handler.apply_minimization(item)
@@ -350,8 +345,8 @@ class TestDataMinimization:
             metadata={
                 "subject_area": "math",
                 "unnecessary_field": "value",
-                "another_extra": "data"
-            }
+                "another_extra": "data",
+            },
         )
 
         minimized = handler.apply_minimization(item)
@@ -375,7 +370,7 @@ class TestRetentionChecking:
             classification=DataClassification.DEVICE_METADATA,
             content="test",
             created_at=datetime.utcnow() - timedelta(days=30),
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
         is_valid = handler.check_retention(item)
@@ -389,7 +384,7 @@ class TestRetentionChecking:
             classification=DataClassification.ANONYMOUS_TELEMETRY,
             content="test",
             created_at=datetime.utcnow() - timedelta(days=100),
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
         with pytest.raises(DataRetentionViolationError):
@@ -402,7 +397,7 @@ class TestRetentionChecking:
             classification=DataClassification.SENSITIVE_VISUAL,
             content="image",
             created_at=datetime.utcnow(),
-            processing_location=ProcessingLocation.VOLATILE_RAM
+            processing_location=ProcessingLocation.VOLATILE_RAM,
         )
 
         with pytest.raises(DataRetentionViolationError):
@@ -423,7 +418,7 @@ class TestConsentManagement:
             child_pseudonym="child_abc",
             category=DataClassification.ANONYMOUS_TELEMETRY,
             consent_method="IN_APP_EXPLICIT_CLICK",
-            verification_method="MFA_EMAIL_SMS"
+            verification_method="MFA_EMAIL_SMS",
         )
 
         assert isinstance(record, ConsentRecord)
@@ -436,13 +431,11 @@ class TestConsentManagement:
             child_pseudonym="child_abc",
             category=DataClassification.VOICE_DATA,
             consent_method="IN_APP",
-            verification_method="MFA"
+            verification_method="MFA",
         )
 
         status = handler.get_consent_status(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA
+            "parent_001", "child_abc", DataClassification.VOICE_DATA
         )
 
         assert status == ConsentStatus.GRANTED
@@ -450,9 +443,7 @@ class TestConsentManagement:
     def test_get_consent_status_not_requested(self, handler):
         """Test getting consent status when not requested."""
         status = handler.get_consent_status(
-            "parent_999",
-            "child_999",
-            DataClassification.VOICE_DATA
+            "parent_999", "child_999", DataClassification.VOICE_DATA
         )
 
         assert status == ConsentStatus.NOT_REQUESTED
@@ -460,17 +451,11 @@ class TestConsentManagement:
     def test_verify_consent_granted(self, handler):
         """Test verifying granted consent."""
         handler.grant_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.ANONYMOUS_TELEMETRY,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_abc", DataClassification.ANONYMOUS_TELEMETRY, "IN_APP", "MFA"
         )
 
         is_valid = handler.verify_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.ANONYMOUS_TELEMETRY
+            "parent_001", "child_abc", DataClassification.ANONYMOUS_TELEMETRY
         )
 
         assert is_valid is True
@@ -478,56 +463,34 @@ class TestConsentManagement:
     def test_verify_consent_not_granted(self, handler):
         """Test verifying consent when not granted."""
         with pytest.raises(ConsentRequiredError):
-            handler.verify_consent(
-                "parent_999",
-                "child_999",
-                DataClassification.VOICE_DATA
-            )
+            handler.verify_consent("parent_999", "child_999", DataClassification.VOICE_DATA)
 
     def test_verify_consent_not_required(self, handler):
         """Test verifying consent when not required."""
         # PUBLIC data doesn't require consent
-        is_valid = handler.verify_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.PUBLIC
-        )
+        is_valid = handler.verify_consent("parent_001", "child_abc", DataClassification.PUBLIC)
 
         assert is_valid is True
 
     def test_revoke_consent(self, handler):
         """Test revoking consent."""
         handler.grant_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_abc", DataClassification.VOICE_DATA, "IN_APP", "MFA"
         )
 
-        revoked = handler.revoke_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA
-        )
+        revoked = handler.revoke_consent("parent_001", "child_abc", DataClassification.VOICE_DATA)
 
         assert revoked is True
 
         status = handler.get_consent_status(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA
+            "parent_001", "child_abc", DataClassification.VOICE_DATA
         )
 
         assert status == ConsentStatus.REVOKED
 
     def test_revoke_nonexistent_consent(self, handler):
         """Test revoking nonexistent consent."""
-        revoked = handler.revoke_consent(
-            "parent_999",
-            "child_999",
-            DataClassification.VOICE_DATA
-        )
+        revoked = handler.revoke_consent("parent_999", "child_999", DataClassification.VOICE_DATA)
 
         assert revoked is False
 
@@ -548,10 +511,10 @@ class TestAnonymization:
                 "event": "click",
                 "name": "John Doe",
                 "email": "john@example.com",
-                "device_id": "device123"
+                "device_id": "device123",
             },
             created_at=datetime.utcnow(),
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
         anonymized = handler.anonymize(item)
@@ -569,7 +532,7 @@ class TestAnonymization:
             content={"event": "click"},
             created_at=datetime.utcnow(),
             processing_location=ProcessingLocation.EDGE_DEVICE,
-            anonymized=True
+            anonymized=True,
         )
 
         result = handler.anonymize(item)
@@ -592,13 +555,10 @@ class TestProcessingLocationValidation:
             classification=DataClassification.DEVICE_METADATA,
             content="test",
             created_at=datetime.utcnow(),
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
-        is_valid = handler.validate_processing_location(
-            item,
-            ProcessingLocation.EDGE_DEVICE
-        )
+        is_valid = handler.validate_processing_location(item, ProcessingLocation.EDGE_DEVICE)
 
         assert is_valid is True
 
@@ -609,13 +569,12 @@ class TestProcessingLocationValidation:
             classification=DataClassification.SENSITIVE_VISUAL,
             content="image",
             created_at=datetime.utcnow(),
-            processing_location=ProcessingLocation.VOLATILE_RAM
+            processing_location=ProcessingLocation.VOLATILE_RAM,
         )
 
         with pytest.raises(PrivacyViolationError):
             handler.validate_processing_location(
-                item,
-                ProcessingLocation.CLOUD_STORAGE  # Not allowed for sensitive visual
+                item, ProcessingLocation.CLOUD_STORAGE  # Not allowed for sensitive visual
             )
 
 
@@ -631,7 +590,7 @@ class TestDataItemCreation:
         item = handler.create_data_item(
             content="test content",
             classification=DataClassification.DEVICE_METADATA,
-            processing_location=ProcessingLocation.EDGE_DEVICE
+            processing_location=ProcessingLocation.EDGE_DEVICE,
         )
 
         assert isinstance(item, DataItem)
@@ -641,11 +600,7 @@ class TestDataItemCreation:
         """Test creating data item with consent verification."""
         # Grant consent first
         handler.grant_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.ANONYMOUS_TELEMETRY,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_abc", DataClassification.ANONYMOUS_TELEMETRY, "IN_APP", "MFA"
         )
 
         item = handler.create_data_item(
@@ -653,7 +608,7 @@ class TestDataItemCreation:
             classification=DataClassification.ANONYMOUS_TELEMETRY,
             processing_location=ProcessingLocation.EDGE_DEVICE,
             parent_account_id="parent_001",
-            child_pseudonym="child_abc"
+            child_pseudonym="child_abc",
         )
 
         assert item.consent_verified is True
@@ -666,7 +621,7 @@ class TestDataItemCreation:
                 classification=DataClassification.VOICE_DATA,
                 processing_location=ProcessingLocation.SECURE_ENCLAVE,
                 parent_account_id="parent_001",
-                child_pseudonym="child_abc"
+                child_pseudonym="child_abc",
             )
 
     def test_create_data_item_invalid_location(self, handler):
@@ -675,7 +630,7 @@ class TestDataItemCreation:
             handler.create_data_item(
                 content="image",
                 classification=DataClassification.SENSITIVE_VISUAL,
-                processing_location=ProcessingLocation.CLOUD_STORAGE
+                processing_location=ProcessingLocation.CLOUD_STORAGE,
             )
 
 
@@ -691,11 +646,7 @@ class TestAuditLogging:
         initial_count = len(handler.audit_log)
 
         handler.grant_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_abc", DataClassification.VOICE_DATA, "IN_APP", "MFA"
         )
 
         assert len(handler.audit_log) > initial_count
@@ -703,11 +654,7 @@ class TestAuditLogging:
     def test_get_audit_log(self, handler):
         """Test retrieving audit log."""
         handler.grant_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_abc", DataClassification.VOICE_DATA, "IN_APP", "MFA"
         )
 
         logs = handler.get_audit_log(limit=10)
@@ -717,19 +664,11 @@ class TestAuditLogging:
     def test_export_consent_records(self, handler):
         """Test exporting consent records."""
         handler.grant_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_abc", DataClassification.VOICE_DATA, "IN_APP", "MFA"
         )
 
         handler.grant_consent(
-            "parent_001",
-            "child_xyz",
-            DataClassification.ANONYMOUS_TELEMETRY,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_xyz", DataClassification.ANONYMOUS_TELEMETRY, "IN_APP", "MFA"
         )
 
         records = handler.export_consent_records("parent_001")
@@ -750,7 +689,7 @@ class TestPrivacyViolationDetection:
             handler.create_data_item(
                 content="image",
                 classification=DataClassification.SENSITIVE_VISUAL,
-                processing_location=ProcessingLocation.CLOUD_STORAGE
+                processing_location=ProcessingLocation.CLOUD_STORAGE,
             )
 
     def test_voice_data_storage_violation(self, handler):
@@ -759,7 +698,7 @@ class TestPrivacyViolationDetection:
             handler.create_data_item(
                 content="audio",
                 classification=DataClassification.VOICE_DATA,
-                processing_location=ProcessingLocation.CLOUD_STORAGE
+                processing_location=ProcessingLocation.CLOUD_STORAGE,
             )
 
 
@@ -768,10 +707,7 @@ class TestConvenienceFunctions:
 
     def test_classify_data_function(self):
         """Test standalone classify_data function."""
-        classification = classify_data(
-            content="image",
-            metadata={"source": "camera"}
-        )
+        classification = classify_data(content="image", metadata={"source": "camera"})
 
         assert classification == DataClassification.SENSITIVE_VISUAL
 
@@ -787,11 +723,7 @@ class TestEdgeCases:
         """Test consent expiration handling."""
         # Grant consent that expires immediately
         record = handler.grant_consent(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA,
-            "IN_APP",
-            "MFA"
+            "parent_001", "child_abc", DataClassification.VOICE_DATA, "IN_APP", "MFA"
         )
 
         # Manually set expiration to past
@@ -799,9 +731,7 @@ class TestEdgeCases:
         handler.consent_records[consent_key].expires_at = datetime.utcnow() - timedelta(days=1)
 
         status = handler.get_consent_status(
-            "parent_001",
-            "child_abc",
-            DataClassification.VOICE_DATA
+            "parent_001", "child_abc", DataClassification.VOICE_DATA
         )
 
         assert status == ConsentStatus.EXPIRED
@@ -811,23 +741,13 @@ class TestEdgeCases:
         categories = [
             DataClassification.VOICE_DATA,
             DataClassification.ANONYMOUS_TELEMETRY,
-            DataClassification.PARENTAL_ACCOUNT
+            DataClassification.PARENTAL_ACCOUNT,
         ]
 
         for category in categories:
-            handler.grant_consent(
-                "parent_001",
-                "child_abc",
-                category,
-                "IN_APP",
-                "MFA"
-            )
+            handler.grant_consent("parent_001", "child_abc", category, "IN_APP", "MFA")
 
         # All should be granted
         for category in categories:
-            status = handler.get_consent_status(
-                "parent_001",
-                "child_abc",
-                category
-            )
+            status = handler.get_consent_status("parent_001", "child_abc", category)
             assert status == ConsentStatus.GRANTED

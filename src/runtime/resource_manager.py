@@ -17,14 +17,14 @@ Author: Vision Processing Agent (VIS-001)
 """
 
 import logging
-import time
-import platform
 import os
-from typing import Dict, Any, Optional, Callable, List
+import platform
+import time
+import warnings
 from dataclasses import dataclass, field
 from enum import Enum
-from threading import Thread, Lock
-import warnings
+from threading import Lock, Thread
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     import psutil
@@ -39,32 +39,36 @@ logger = logging.getLogger(__name__)
 
 class ResourceLevel(Enum):
     """System resource availability levels."""
+
     CRITICAL = "critical"  # <10% available
-    LOW = "low"           # 10-30% available
+    LOW = "low"  # 10-30% available
     MODERATE = "moderate"  # 30-60% available
-    GOOD = "good"         # 60-85% available
+    GOOD = "good"  # 60-85% available
     EXCELLENT = "excellent"  # >85% available
 
 
 class DeviceProfile(Enum):
     """Device capability profiles."""
-    LOW_END = "low_end"      # <2GB RAM, ARM Cortex-A53
+
+    LOW_END = "low_end"  # <2GB RAM, ARM Cortex-A53
     MID_RANGE = "mid_range"  # 2-4GB RAM, ARM Cortex-A72
-    HIGH_END = "high_end"    # >4GB RAM, ARM Cortex-A76+
+    HIGH_END = "high_end"  # >4GB RAM, ARM Cortex-A76+
 
 
 class QualityLevel(Enum):
     """Processing quality levels."""
-    MINIMAL = "minimal"      # Lowest quality, fastest
+
+    MINIMAL = "minimal"  # Lowest quality, fastest
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
-    MAXIMUM = "maximum"      # Highest quality, slowest
+    MAXIMUM = "maximum"  # Highest quality, slowest
 
 
 @dataclass
 class ResourceSnapshot:
     """Snapshot of system resource usage."""
+
     timestamp: float
     cpu_percent: float
     memory_percent: float
@@ -88,24 +92,26 @@ class ResourceSnapshot:
             "cpu_temp_celsius": self.cpu_temp_celsius,
             "battery_percent": self.battery_percent,
             "battery_plugged": self.battery_plugged,
-            "throttling_active": self.throttling_active
+            "throttling_active": self.throttling_active,
         }
 
 
 @dataclass
 class ResourceLimits:
     """Resource usage limits."""
+
     max_memory_mb: float = 500.0
     max_cpu_percent: float = 80.0
     max_temp_celsius: float = 75.0
     min_battery_percent: float = 15.0
     throttle_memory_threshold: float = 0.85  # Throttle at 85% of max
-    throttle_cpu_threshold: float = 0.90     # Throttle at 90% of max
+    throttle_cpu_threshold: float = 0.90  # Throttle at 90% of max
 
 
 @dataclass
 class DeviceCapabilities:
     """Device hardware capabilities."""
+
     profile: DeviceProfile
     cpu_count: int
     memory_total_mb: float
@@ -123,7 +129,7 @@ class DeviceCapabilities:
             "has_gpu": self.has_gpu,
             "has_npu": self.has_npu,
             "architecture": self.architecture,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -154,7 +160,7 @@ class ResourceManager:
         self,
         limits: Optional[ResourceLimits] = None,
         monitor_interval_sec: float = 1.0,
-        enable_auto_throttle: bool = True
+        enable_auto_throttle: bool = True,
     ):
         """
         Initialize the resource manager.
@@ -226,7 +232,7 @@ class ResourceManager:
 
         # Detect architecture
         arch = platform.machine().lower()
-        is_arm = 'arm' in arch or 'aarch' in arch
+        is_arm = "arm" in arch or "aarch" in arch
 
         # Classify device profile
         if memory_total_mb < 2048:
@@ -244,8 +250,8 @@ class ResourceManager:
             metadata={
                 "platform": platform.system(),
                 "platform_version": platform.version(),
-                "is_arm": is_arm
-            }
+                "is_arm": is_arm,
+            },
         )
 
         logger.info(f"Detected device: {capabilities.to_dict()}")
@@ -263,7 +269,7 @@ class ResourceManager:
                 "used_mb": 0.0,
                 "available_mb": self.limits.max_memory_mb,
                 "total_mb": self.device_capabilities.memory_total_mb,
-                "percent": 0.0
+                "percent": 0.0,
             }
 
         try:
@@ -272,7 +278,7 @@ class ResourceManager:
                 "used_mb": memory.used / (1024 * 1024),
                 "available_mb": memory.available / (1024 * 1024),
                 "total_mb": memory.total / (1024 * 1024),
-                "percent": memory.percent
+                "percent": memory.percent,
             }
         except Exception as e:
             logger.error(f"Memory monitoring failed: {e}")
@@ -280,7 +286,7 @@ class ResourceManager:
                 "used_mb": 0.0,
                 "available_mb": self.limits.max_memory_mb,
                 "total_mb": self.device_capabilities.memory_total_mb,
-                "percent": 0.0
+                "percent": 0.0,
             }
 
     def monitor_cpu(self) -> Dict[str, float]:
@@ -291,24 +297,15 @@ class ResourceManager:
             Dictionary with CPU usage information (percentages)
         """
         if psutil is None:
-            return {
-                "percent": 0.0,
-                "per_cpu": [0.0] * self.device_capabilities.cpu_count
-            }
+            return {"percent": 0.0, "per_cpu": [0.0] * self.device_capabilities.cpu_count}
 
         try:
             cpu_percent = psutil.cpu_percent(interval=0.1)
             per_cpu = psutil.cpu_percent(interval=0.1, percpu=True)
-            return {
-                "percent": cpu_percent,
-                "per_cpu": per_cpu
-            }
+            return {"percent": cpu_percent, "per_cpu": per_cpu}
         except Exception as e:
             logger.error(f"CPU monitoring failed: {e}")
-            return {
-                "percent": 0.0,
-                "per_cpu": [0.0] * self.device_capabilities.cpu_count
-            }
+            return {"percent": 0.0, "per_cpu": [0.0] * self.device_capabilities.cpu_count}
 
     def monitor_thermal(self) -> Optional[float]:
         """
@@ -327,7 +324,7 @@ class ResourceManager:
 
             # Try to get CPU temperature
             for name, entries in temps.items():
-                if 'cpu' in name.lower() or 'core' in name.lower():
+                if "cpu" in name.lower() or "core" in name.lower():
                     if entries:
                         return entries[0].current
 
@@ -360,7 +357,9 @@ class ResourceManager:
             return {
                 "percent": battery.percent,
                 "plugged": battery.power_plugged,
-                "time_left_sec": battery.secsleft if battery.secsleft != psutil.POWER_TIME_UNLIMITED else None
+                "time_left_sec": (
+                    battery.secsleft if battery.secsleft != psutil.POWER_TIME_UNLIMITED else None
+                ),
             }
         except Exception as e:
             logger.debug(f"Battery monitoring not available: {e}")
@@ -388,7 +387,7 @@ class ResourceManager:
             cpu_temp_celsius=temp,
             battery_percent=battery["percent"] if battery else None,
             battery_plugged=battery["plugged"] if battery else None,
-            throttling_active=self.throttling_active
+            throttling_active=self.throttling_active,
         )
 
         with self.lock:
@@ -451,16 +450,17 @@ class ResourceManager:
             if snapshot.battery_percent < self.limits.min_battery_percent:
                 if not self.throttling_active:
                     logger.warning(
-                        f"Low battery ({snapshot.battery_percent:.1f}%). "
-                        "Activating throttling."
+                        f"Low battery ({snapshot.battery_percent:.1f}%). " "Activating throttling."
                     )
                     self._activate_throttling()
                 return True
 
         # If throttling was active but conditions improved, deactivate
         if self.throttling_active:
-            if (memory_usage_ratio < self.limits.throttle_memory_threshold * 0.8 and
-                cpu_usage_ratio < self.limits.throttle_cpu_threshold * 0.8):
+            if (
+                memory_usage_ratio < self.limits.throttle_memory_threshold * 0.8
+                and cpu_usage_ratio < self.limits.throttle_cpu_threshold * 0.8
+            ):
                 logger.info("Resource usage normalized. Deactivating throttling.")
                 self._deactivate_throttling()
 
@@ -501,7 +501,7 @@ class ResourceManager:
             QualityLevel.HIGH,
             QualityLevel.MEDIUM,
             QualityLevel.LOW,
-            QualityLevel.MINIMAL
+            QualityLevel.MINIMAL,
         ]
 
         current_idx = quality_levels.index(self.current_quality)
@@ -567,7 +567,7 @@ class ResourceManager:
             ResourceLevel.LOW: QualityLevel.LOW,
             ResourceLevel.MODERATE: QualityLevel.MEDIUM,
             ResourceLevel.GOOD: QualityLevel.HIGH,
-            ResourceLevel.EXCELLENT: QualityLevel.MAXIMUM
+            ResourceLevel.EXCELLENT: QualityLevel.MAXIMUM,
         }
 
         # Also consider device profile
@@ -651,22 +651,22 @@ class ResourceManager:
                 "avg": float(np.mean(cpu_values)),
                 "max": float(np.max(cpu_values)),
                 "min": float(np.min(cpu_values)),
-                "std": float(np.std(cpu_values))
+                "std": float(np.std(cpu_values)),
             },
             "memory": {
                 "current": memory_values[-1],
                 "avg": float(np.mean(memory_values)),
                 "max": float(np.max(memory_values)),
                 "min": float(np.min(memory_values)),
-                "std": float(np.std(memory_values))
+                "std": float(np.std(memory_values)),
             },
             "throttling": {
                 "currently_active": self.throttling_active,
-                "activations": sum(1 for s in self.history if s.throttling_active)
+                "activations": sum(1 for s in self.history if s.throttling_active),
             },
             "resource_level": self.resource_level.value,
             "current_quality": self.current_quality.value,
-            "samples": len(self.history)
+            "samples": len(self.history),
         }
 
         return stats

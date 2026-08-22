@@ -21,10 +21,10 @@ Security Features:
 - Key rotation
 """
 
-from .crypto_utils import CryptoUtils, SymmetricKey, KeyPair
-from .certificate_manager import CertificateManager, CertificateInfo, PinnedCertificate
-from .pairing_protocol import PairingProtocol, PairingState, PairedDevice, format_pairing_code
-from .secure_channel import SecureChannel, ChannelState, ChannelConfig, MessageType
+from .certificate_manager import CertificateInfo, CertificateManager, PinnedCertificate
+from .crypto_utils import CryptoUtils, KeyPair, SymmetricKey
+from .pairing_protocol import PairedDevice, PairingProtocol, PairingState, format_pairing_code
+from .secure_channel import ChannelConfig, ChannelState, MessageType, SecureChannel
 
 __version__ = "1.0.0"
 __author__ = "EduLens Security Team"
@@ -34,18 +34,15 @@ __all__ = [
     "CryptoUtils",
     "SymmetricKey",
     "KeyPair",
-
     # Certificate management
     "CertificateManager",
     "CertificateInfo",
     "PinnedCertificate",
-
     # Pairing protocol
     "PairingProtocol",
     "PairingState",
     "PairedDevice",
     "format_pairing_code",
-
     # Secure channel
     "SecureChannel",
     "ChannelState",

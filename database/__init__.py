@@ -6,14 +6,14 @@ configurations for persistent storage.
 """
 
 from database.models import (
-    Base,
-    Project,
     AgentExecution,
+    AuditLog,
+    Base,
     Decision,
     Error,
+    Project,
     TokenUsage,
     ValidationResult,
-    AuditLog,
 )
 
 __all__ = [

@@ -11,10 +11,10 @@ This agent handles Phase 4 code generation for:
 from typing import Any, Dict, List, Optional
 
 from agents.base_agent import (
-    BaseAgent,
     AgentCapability,
     AgentContext,
     AgentResult,
+    BaseAgent,
 )
 
 
@@ -89,83 +89,95 @@ class BackendEngineerAgent(BaseAgent):
         # Add API requirements
         api_spec = context.input_data.get("api_specification", {})
         if api_spec:
-            prompt_parts.extend([
-                "## API Specification",
-                f"Style: {api_spec.get('style', 'REST')}",
-                f"Base Path: {api_spec.get('base_path', '/api/v1')}",
-                "",
-                "### Endpoints",
-            ])
+            prompt_parts.extend(
+                [
+                    "## API Specification",
+                    f"Style: {api_spec.get('style', 'REST')}",
+                    f"Base Path: {api_spec.get('base_path', '/api/v1')}",
+                    "",
+                    "### Endpoints",
+                ]
+            )
             for endpoint in api_spec.get("endpoints", []):
-                prompt_parts.append(f"- {endpoint.get('method', 'GET')} {endpoint.get('path', '/')}: {endpoint.get('description', '')}")
+                prompt_parts.append(
+                    f"- {endpoint.get('method', 'GET')} {endpoint.get('path', '/')}: {endpoint.get('description', '')}"
+                )
             prompt_parts.append("")
 
         # Add database schema
         db_schema = context.input_data.get("database_schema", {})
         if db_schema:
-            prompt_parts.extend([
-                "## Database Schema",
-                str(db_schema),
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Database Schema",
+                    str(db_schema),
+                    "",
+                ]
+            )
 
         # Add technology stack
         tech_stack = context.input_data.get("technology_stack", {})
         if tech_stack.get("backend"):
-            prompt_parts.extend([
-                "## Technology Stack",
-                f"Language: {tech_stack['backend'].get('language', 'Python')}",
-                f"Framework: {tech_stack['backend'].get('framework', 'FastAPI')}",
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Technology Stack",
+                    f"Language: {tech_stack['backend'].get('language', 'Python')}",
+                    f"Framework: {tech_stack['backend'].get('framework', 'FastAPI')}",
+                    "",
+                ]
+            )
 
         # Add authentication requirements
         auth_config = context.input_data.get("authentication", {})
         if auth_config:
-            prompt_parts.extend([
-                "## Authentication",
-                f"Type: {auth_config.get('type', 'JWT')}",
-                f"Provider: {auth_config.get('provider', 'Custom')}",
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Authentication",
+                    f"Type: {auth_config.get('type', 'JWT')}",
+                    f"Provider: {auth_config.get('provider', 'Custom')}",
+                    "",
+                ]
+            )
 
-        prompt_parts.extend([
-            "## Required Output",
-            "",
-            "Generate complete backend code in JSON format:",
-            "",
-            "```json",
-            "{",
-            '  "files": {',
-            '    "src/main.py": "# Main application entry point\\n...",',
-            '    "src/routes/api.py": "# API routes\\n...",',
-            '    "src/models/models.py": "# Database models\\n...",',
-            '    "src/services/service.py": "# Business logic\\n...",',
-            '    "src/middleware/auth.py": "# Authentication middleware\\n..."',
-            "  },",
-            '  "dependencies": {',
-            '    "requirements.txt": "fastapi\\nuvicorn\\n..."',
-            "  },",
-            '  "configuration": {',
-            '    "config.py": "# Configuration settings\\n..."',
-            "  },",
-            '  "tests": {',
-            '    "tests/test_api.py": "# API tests\\n..."',
-            "  },",
-            '  "documentation": {',
-            '    "openapi.json": "{...}",',
-            '    "README.md": "# Backend Documentation\\n..."',
-            "  }",
-            "}",
-            "```",
-            "",
-            "Ensure all code is:",
-            "- Production-ready with proper error handling",
-            "- Well-documented with docstrings",
-            "- Following best practices and design patterns",
-            "- Type-hinted (for Python)",
-            "- Secure (no hardcoded secrets, proper validation)",
-        ])
+        prompt_parts.extend(
+            [
+                "## Required Output",
+                "",
+                "Generate complete backend code in JSON format:",
+                "",
+                "```json",
+                "{",
+                '  "files": {',
+                '    "src/main.py": "# Main application entry point\\n...",',
+                '    "src/routes/api.py": "# API routes\\n...",',
+                '    "src/models/models.py": "# Database models\\n...",',
+                '    "src/services/service.py": "# Business logic\\n...",',
+                '    "src/middleware/auth.py": "# Authentication middleware\\n..."',
+                "  },",
+                '  "dependencies": {',
+                '    "requirements.txt": "fastapi\\nuvicorn\\n..."',
+                "  },",
+                '  "configuration": {',
+                '    "config.py": "# Configuration settings\\n..."',
+                "  },",
+                '  "tests": {',
+                '    "tests/test_api.py": "# API tests\\n..."',
+                "  },",
+                '  "documentation": {',
+                '    "openapi.json": "{...}",',
+                '    "README.md": "# Backend Documentation\\n..."',
+                "  }",
+                "}",
+                "```",
+                "",
+                "Ensure all code is:",
+                "- Production-ready with proper error handling",
+                "- Well-documented with docstrings",
+                "- Following best practices and design patterns",
+                "- Type-hinted (for Python)",
+                "- Secure (no hardcoded secrets, proper validation)",
+            ]
+        )
 
         return "\n".join(prompt_parts)
 
@@ -177,6 +189,7 @@ class BackendEngineerAgent(BaseAgent):
 
             if "text" in response:
                 import json
+
                 try:
                     text = response["text"]
                     start = text.find("{")

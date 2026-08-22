@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
+
 import httpx
 
 
@@ -169,6 +170,7 @@ class MCPClient:
                 headers["Authorization"] = f"Bearer {config.credentials.get('token', '')}"
             elif config.auth_type == AuthType.BASIC:
                 import base64
+
                 credentials = f"{config.credentials.get('username', '')}:{config.credentials.get('password', '')}"
                 encoded = base64.b64encode(credentials.encode()).decode()
                 headers["Authorization"] = f"Basic {encoded}"
@@ -221,6 +223,7 @@ class MCPClient:
     ) -> HealthStatus:
         """Perform health check on server."""
         import time
+
         start = time.time()
 
         try:
@@ -269,9 +272,7 @@ class MCPClient:
 
         if server_name:
             if server_name in self._connections:
-                results[server_name] = await self._health_check(
-                    self._connections[server_name]
-                )
+                results[server_name] = await self._health_check(self._connections[server_name])
         else:
             for name, client in self._connections.items():
                 results[name] = await self._health_check(client)
@@ -356,6 +357,7 @@ class MCPClient:
         # Execute query
         client = self._connections[server_name]
         import time
+
         start = time.time()
 
         for attempt in range(self._retry_attempts):
@@ -398,7 +400,7 @@ class MCPClient:
                     )
 
             # Exponential backoff
-            await asyncio.sleep(2 ** attempt)
+            await asyncio.sleep(2**attempt)
 
         return MCPResponse(success=False, error="Max retries exceeded")
 
@@ -434,8 +436,5 @@ class MCPClient:
         Returns:
             List of responses
         """
-        tasks = [
-            self.query(server_name, q["tool"], q.get("params", {}))
-            for q in queries
-        ]
+        tasks = [self.query(server_name, q["tool"], q.get("params", {})) for q in queries]
         return await asyncio.gather(*tasks)

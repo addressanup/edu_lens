@@ -105,16 +105,10 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, env="DEBUG")
 
     # Database
-    database_url: str = Field(
-        default="sqlite:///./state.db",
-        env="DATABASE_URL"
-    )
+    database_url: str = Field(default="sqlite:///./state.db", env="DATABASE_URL")
 
     # Redis
-    redis_url: str = Field(
-        default="redis://localhost:6379/0",
-        env="REDIS_URL"
-    )
+    redis_url: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
 
     # Claude CLI
     claude_cli_path: str = Field(default="claude", env="CLAUDE_CLI_PATH")
@@ -185,18 +179,16 @@ class ConfigManager:
         self._settings = Settings()
 
         # Initialize sub-configs
-        self._context_budget = ContextBudgetConfig(
-            total_budget=self._settings.context_budget
-        )
+        self._context_budget = ContextBudgetConfig(total_budget=self._settings.context_budget)
         self._validation = ValidationGateConfig(
             pass_threshold=self._settings.gate_pass_threshold,
             review_threshold=self._settings.gate_review_threshold,
-            strictness=self._settings.validation_strictness
+            strictness=self._settings.validation_strictness,
         )
         self._logging = LoggingConfig(
             level=self._settings.log_level,
             format=self._settings.log_format,
-            directory=self._settings.log_dir
+            directory=self._settings.log_dir,
         )
         self._error_recovery = ErrorRecoveryConfig()
 
@@ -244,7 +236,7 @@ class ConfigManager:
                 enabled=True,
                 timeout=self._settings.agent_timeout,
                 max_retries=self._settings.max_retries,
-                skills_file=skills_file
+                skills_file=skills_file,
             )
 
     def load_from_file(self, file_path: str) -> None:
@@ -390,11 +382,11 @@ class ConfigManager:
 
         # Validate context budget percentages
         total_percent = (
-            self._context_budget.system_percent +
-            self._context_budget.historical_percent +
-            self._context_budget.task_percent +
-            self._context_budget.processing_percent +
-            self._context_budget.reserved_percent
+            self._context_budget.system_percent
+            + self._context_budget.historical_percent
+            + self._context_budget.task_percent
+            + self._context_budget.processing_percent
+            + self._context_budget.reserved_percent
         )
         if total_percent != 100:
             errors.append(f"Context budget percentages must sum to 100 (got {total_percent})")

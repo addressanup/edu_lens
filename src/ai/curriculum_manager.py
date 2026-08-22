@@ -11,8 +11,8 @@ Version: 1.0.0
 
 import json
 import os
-from typing import Dict, List, Optional, Set, Any
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 
 class CurriculumManager:
@@ -52,7 +52,7 @@ class CurriculumManager:
         if not kb_path.exists():
             raise FileNotFoundError(f"Knowledge base not found at {kb_path}")
 
-        with open(kb_path, 'r', encoding='utf-8') as f:
+        with open(kb_path, "r", encoding="utf-8") as f:
             self.knowledge_base = json.load(f)
 
     def _load_concept_graphs(self):
@@ -63,33 +63,33 @@ class CurriculumManager:
             raise FileNotFoundError(f"Concept graphs directory not found at {graph_dir}")
 
         graph_files = {
-            'math': 'math_concepts.json',
-            'reading': 'reading_concepts.json',
-            'science': 'science_concepts.json',
-            'social_studies': 'social_studies_concepts.json'
+            "math": "math_concepts.json",
+            "reading": "reading_concepts.json",
+            "science": "science_concepts.json",
+            "social_studies": "social_studies_concepts.json",
         }
 
         for subject, filename in graph_files.items():
             filepath = graph_dir / filename
             if filepath.exists():
-                with open(filepath, 'r', encoding='utf-8') as f:
+                with open(filepath, "r", encoding="utf-8") as f:
                     self.concept_graphs[subject] = json.load(f)
 
     def _build_concept_index(self):
         """Build an index mapping concept IDs to their full data for fast lookup."""
-        for subject_name, subject_data in self.knowledge_base['subjects'].items():
-            for grade, grade_data in subject_data['grade_levels'].items():
-                for domain_name, domain_data in grade_data.get('domains', {}).items():
-                    for concept_key, concept_data in domain_data.get('concepts', {}).items():
+        for subject_name, subject_data in self.knowledge_base["subjects"].items():
+            for grade, grade_data in subject_data["grade_levels"].items():
+                for domain_name, domain_data in grade_data.get("domains", {}).items():
+                    for concept_key, concept_data in domain_data.get("concepts", {}).items():
                         # Use the 'id' field from concept_data as the index key
-                        concept_id = concept_data.get('id', concept_key)
+                        concept_id = concept_data.get("id", concept_key)
                         # Store full concept data with metadata
                         self.concept_index[concept_id] = {
                             **concept_data,
-                            'subject': subject_name,
-                            'grade': grade,
-                            'domain': domain_name,
-                            'standard_code': domain_data.get('standard_code', '')
+                            "subject": subject_name,
+                            "grade": grade,
+                            "domain": domain_name,
+                            "standard_code": domain_data.get("standard_code", ""),
                         }
 
     def get_concept(self, subject: str, concept_id: str) -> Optional[Dict]:
@@ -106,7 +106,7 @@ class CurriculumManager:
         if concept_id in self.concept_index:
             concept = self.concept_index[concept_id]
             # Verify subject matches
-            if concept['subject'] == subject:
+            if concept["subject"] == subject:
                 return concept
 
         return None
@@ -137,7 +137,7 @@ class CurriculumManager:
         if not concept:
             return []
 
-        prereq_ids = concept.get('prerequisites', [])
+        prereq_ids = concept.get("prerequisites", [])
         prerequisites = []
 
         for prereq_id in prereq_ids:
@@ -170,7 +170,7 @@ class CurriculumManager:
 
                 concept = self.get_concept_by_id(cid)
                 if concept:
-                    prereq_ids = concept.get('prerequisites', [])
+                    prereq_ids = concept.get("prerequisites", [])
                     next_level.extend([pid for pid in prereq_ids if pid not in visited])
 
             if next_level:
@@ -192,18 +192,20 @@ class CurriculumManager:
         """
         concepts = []
 
-        subject_data = self.knowledge_base['subjects'].get(subject, {})
-        grade_data = subject_data.get('grade_levels', {}).get(grade, {})
+        subject_data = self.knowledge_base["subjects"].get(subject, {})
+        grade_data = subject_data.get("grade_levels", {}).get(grade, {})
 
-        for domain_name, domain_data in grade_data.get('domains', {}).items():
-            for concept_id, concept_data in domain_data.get('concepts', {}).items():
-                concepts.append({
-                    'concept_id': concept_id,
-                    **concept_data,
-                    'domain': domain_name,
-                    'domain_name': domain_data.get('name', ''),
-                    'standard_code': domain_data.get('standard_code', '')
-                })
+        for domain_name, domain_data in grade_data.get("domains", {}).items():
+            for concept_id, concept_data in domain_data.get("concepts", {}).items():
+                concepts.append(
+                    {
+                        "concept_id": concept_id,
+                        **concept_data,
+                        "domain": domain_name,
+                        "domain_name": domain_data.get("name", ""),
+                        "standard_code": domain_data.get("standard_code", ""),
+                    }
+                )
 
         return concepts
 
@@ -222,47 +224,39 @@ class CurriculumManager:
         if not concept:
             return []
 
-        subject = concept['subject']
+        subject = concept["subject"]
         related = []
 
         # Get concepts from concept graph if available
         if subject in self.concept_graphs:
-            prereq_graph = self.concept_graphs[subject].get('prerequisite_graph', {})
+            prereq_graph = self.concept_graphs[subject].get("prerequisite_graph", {})
 
             # Find concepts this one enables (forward dependencies)
             for cid, data in prereq_graph.items():
-                prereqs = data.get('prerequisites', [])
+                prereqs = data.get("prerequisites", [])
                 if concept_id in prereqs:
                     related_concept = self.get_concept_by_id(cid)
                     if related_concept:
-                        related.append({
-                            **related_concept,
-                            'relationship': 'enables',
-                            'distance': 1
-                        })
+                        related.append(
+                            {**related_concept, "relationship": "enables", "distance": 1}
+                        )
 
             # Find prerequisite concepts (backward dependencies)
-            prereqs = concept.get('prerequisites', [])
+            prereqs = concept.get("prerequisites", [])
             for prereq_id in prereqs:
                 prereq_concept = self.get_concept_by_id(prereq_id)
                 if prereq_concept:
-                    related.append({
-                        **prereq_concept,
-                        'relationship': 'prerequisite',
-                        'distance': 1
-                    })
+                    related.append(
+                        {**prereq_concept, "relationship": "prerequisite", "distance": 1}
+                    )
 
         # Also find concepts in same domain/grade
-        same_grade_concepts = self.get_grade_level_topics(concept['grade'], subject)
+        same_grade_concepts = self.get_grade_level_topics(concept["grade"], subject)
         for same_concept in same_grade_concepts:
-            if same_concept['id'] != concept_id:
+            if same_concept["id"] != concept_id:
                 # Check if not already in related
-                if not any(r.get('id') == same_concept['id'] for r in related):
-                    related.append({
-                        **same_concept,
-                        'relationship': 'same_grade',
-                        'distance': 1
-                    })
+                if not any(r.get("id") == same_concept["id"] for r in related):
+                    related.append({**same_concept, "relationship": "same_grade", "distance": 1})
 
         return related
 
@@ -280,10 +274,11 @@ class CurriculumManager:
         if not concept:
             return []
 
-        return concept.get('common_misconceptions', [])
+        return concept.get("common_misconceptions", [])
 
-    def search_concepts(self, query: str, subject: Optional[str] = None,
-                       grade: Optional[str] = None) -> List[Dict]:
+    def search_concepts(
+        self, query: str, subject: Optional[str] = None, grade: Optional[str] = None
+    ) -> List[Dict]:
         """
         Search for concepts matching a query string.
 
@@ -300,44 +295,41 @@ class CurriculumManager:
 
         for concept_id, concept in self.concept_index.items():
             # Apply filters
-            if subject and concept['subject'] != subject:
+            if subject and concept["subject"] != subject:
                 continue
-            if grade and concept['grade'] != grade:
+            if grade and concept["grade"] != grade:
                 continue
 
             # Search in various fields
             score = 0
 
             # Name match (highest weight)
-            if query_lower in concept.get('name', '').lower():
+            if query_lower in concept.get("name", "").lower():
                 score += 10
 
             # Definition match
-            if query_lower in concept.get('definition', '').lower():
+            if query_lower in concept.get("definition", "").lower():
                 score += 5
 
             # Examples match
-            examples = concept.get('examples', [])
+            examples = concept.get("examples", [])
             for example in examples:
                 if query_lower in str(example).lower():
                     score += 2
                     break
 
             # Learning objectives match
-            objectives = concept.get('learning_objectives', [])
+            objectives = concept.get("learning_objectives", [])
             for obj in objectives:
                 if query_lower in obj.lower():
                     score += 3
                     break
 
             if score > 0:
-                matches.append({
-                    **concept,
-                    'search_score': score
-                })
+                matches.append({**concept, "search_score": score})
 
         # Sort by score (descending)
-        matches.sort(key=lambda x: x['search_score'], reverse=True)
+        matches.sort(key=lambda x: x["search_score"], reverse=True)
 
         return matches
 
@@ -355,14 +347,14 @@ class CurriculumManager:
         if subject not in self.concept_graphs:
             return None
 
-        pathways = self.concept_graphs[subject].get('learning_pathways', {})
+        pathways = self.concept_graphs[subject].get("learning_pathways", {})
         pathway_data = pathways.get(pathway_name)
 
         if not pathway_data:
             return None
 
         # Get sequence of concept IDs
-        sequence = pathway_data.get('sequence', [])
+        sequence = pathway_data.get("sequence", [])
 
         # Retrieve full concept data
         concepts = []
@@ -386,21 +378,24 @@ class CurriculumManager:
         if subject not in self.concept_graphs:
             return []
 
-        pathways = self.concept_graphs[subject].get('learning_pathways', {})
+        pathways = self.concept_graphs[subject].get("learning_pathways", {})
 
         pathway_list = []
         for pathway_id, pathway_data in pathways.items():
-            pathway_list.append({
-                'id': pathway_id,
-                'name': pathway_data.get('name', pathway_id),
-                'description': pathway_data.get('description', ''),
-                'sequence_length': len(pathway_data.get('sequence', []))
-            })
+            pathway_list.append(
+                {
+                    "id": pathway_id,
+                    "name": pathway_data.get("name", pathway_id),
+                    "description": pathway_data.get("description", ""),
+                    "sequence_length": len(pathway_data.get("sequence", [])),
+                }
+            )
 
         return pathway_list
 
-    def assess_readiness(self, student_mastered_concepts: List[str],
-                        target_concept_id: str) -> Dict:
+    def assess_readiness(
+        self, student_mastered_concepts: List[str], target_concept_id: str
+    ) -> Dict:
         """
         Assess if a student is ready for a target concept based on mastered prerequisites.
 
@@ -413,17 +408,17 @@ class CurriculumManager:
         """
         concept = self.get_concept_by_id(target_concept_id)
         if not concept:
-            return {'ready': False, 'error': 'Concept not found'}
+            return {"ready": False, "error": "Concept not found"}
 
-        prereqs = concept.get('prerequisites', [])
+        prereqs = concept.get("prerequisites", [])
 
         # If no prerequisites, student is ready
         if not prereqs:
             return {
-                'ready': True,
-                'missing_prerequisites': [],
-                'mastered_prerequisites': [],
-                'readiness_percentage': 100
+                "ready": True,
+                "missing_prerequisites": [],
+                "mastered_prerequisites": [],
+                "readiness_percentage": 100,
             }
 
         # Check which prerequisites are mastered
@@ -440,15 +435,16 @@ class CurriculumManager:
                 missing_concepts.append(prereq)
 
         return {
-            'ready': len(missing) == 0,
-            'missing_prerequisites': missing_concepts,
-            'mastered_prerequisites': mastered,
-            'readiness_percentage': readiness_pct,
-            'total_prerequisites': len(prereqs)
+            "ready": len(missing) == 0,
+            "missing_prerequisites": missing_concepts,
+            "mastered_prerequisites": mastered,
+            "readiness_percentage": readiness_pct,
+            "total_prerequisites": len(prereqs),
         }
 
-    def get_next_concepts(self, student_mastered_concepts: List[str],
-                         subject: str, grade: str) -> List[Dict]:
+    def get_next_concepts(
+        self, student_mastered_concepts: List[str], subject: str, grade: str
+    ) -> List[Dict]:
         """
         Suggest next concepts a student should learn based on what they've mastered.
 
@@ -464,7 +460,7 @@ class CurriculumManager:
         suggestions = []
 
         for concept in grade_concepts:
-            concept_id = concept.get('id')
+            concept_id = concept.get("id")
 
             # Skip if already mastered
             if concept_id in student_mastered_concepts:
@@ -474,15 +470,11 @@ class CurriculumManager:
             readiness = self.assess_readiness(student_mastered_concepts, concept_id)
 
             # Only suggest if ready or close to ready (80%+)
-            if readiness['readiness_percentage'] >= 80:
-                suggestions.append({
-                    **concept,
-                    'readiness': readiness
-                })
+            if readiness["readiness_percentage"] >= 80:
+                suggestions.append({**concept, "readiness": readiness})
 
         # Sort by readiness percentage (descending)
-        suggestions.sort(key=lambda x: x['readiness']['readiness_percentage'],
-                        reverse=True)
+        suggestions.sort(key=lambda x: x["readiness"]["readiness_percentage"], reverse=True)
 
         return suggestions
 
@@ -493,7 +485,7 @@ class CurriculumManager:
         Returns:
             Dictionary containing metadata information
         """
-        return self.knowledge_base.get('metadata', {})
+        return self.knowledge_base.get("metadata", {})
 
     def get_all_subjects(self) -> List[str]:
         """
@@ -502,7 +494,7 @@ class CurriculumManager:
         Returns:
             List of subject identifiers
         """
-        return list(self.knowledge_base.get('subjects', {}).keys())
+        return list(self.knowledge_base.get("subjects", {}).keys())
 
     def get_subject_info(self, subject: str) -> Optional[Dict]:
         """
@@ -514,16 +506,16 @@ class CurriculumManager:
         Returns:
             Dictionary with subject information, or None if not found
         """
-        subjects = self.knowledge_base.get('subjects', {})
+        subjects = self.knowledge_base.get("subjects", {})
         if subject not in subjects:
             return None
 
         subject_data = subjects[subject]
         return {
-            'name': subject_data.get('name'),
-            'description': subject_data.get('description'),
-            'standards_framework': subject_data.get('standards_framework'),
-            'grade_levels': list(subject_data.get('grade_levels', {}).keys())
+            "name": subject_data.get("name"),
+            "description": subject_data.get("description"),
+            "standards_framework": subject_data.get("standards_framework"),
+            "grade_levels": list(subject_data.get("grade_levels", {}).keys()),
         }
 
     def get_concept_difficulty(self, concept_id: str) -> Optional[int]:
@@ -538,7 +530,7 @@ class CurriculumManager:
         """
         concept = self.get_concept_by_id(concept_id)
         if concept:
-            return concept.get('difficulty')
+            return concept.get("difficulty")
         return None
 
     def get_examples(self, concept_id: str) -> List[str]:
@@ -555,7 +547,7 @@ class CurriculumManager:
         if not concept:
             return []
 
-        return concept.get('examples', [])
+        return concept.get("examples", [])
 
     def get_learning_objectives(self, concept_id: str) -> List[str]:
         """
@@ -571,7 +563,7 @@ class CurriculumManager:
         if not concept:
             return []
 
-        return concept.get('learning_objectives', [])
+        return concept.get("learning_objectives", [])
 
 
 # Convenience function for easy instantiation
@@ -604,7 +596,7 @@ if __name__ == "__main__":
 
     # Example: Get a specific concept
     print("--- Example 1: Get Concept ---")
-    concept = manager.get_concept('math', 'math_3_oa_001')
+    concept = manager.get_concept("math", "math_3_oa_001")
     if concept:
         print(f"Concept: {concept['name']}")
         print(f"Grade: {concept['grade']}")
@@ -613,7 +605,7 @@ if __name__ == "__main__":
 
     # Example: Get prerequisites
     print("--- Example 2: Prerequisites ---")
-    prereqs = manager.get_prerequisites('math_3_oa_001')
+    prereqs = manager.get_prerequisites("math_3_oa_001")
     print(f"Prerequisites for 'Understanding multiplication':")
     for prereq in prereqs:
         print(f"  - {prereq['name']} ({prereq['id']})")
@@ -621,7 +613,7 @@ if __name__ == "__main__":
 
     # Example: Search concepts
     print("--- Example 3: Search Concepts ---")
-    results = manager.search_concepts('fraction', subject='math')
+    results = manager.search_concepts("fraction", subject="math")
     print(f"Search results for 'fraction' in math:")
     for i, result in enumerate(results[:5], 1):
         print(f"  {i}. {result['name']} (Grade {result['grade']})")
@@ -629,13 +621,13 @@ if __name__ == "__main__":
 
     # Example: Get grade level topics
     print("--- Example 4: Grade Level Topics ---")
-    grade_3_math = manager.get_grade_level_topics('3', 'math')
+    grade_3_math = manager.get_grade_level_topics("3", "math")
     print(f"Grade 3 Math has {len(grade_3_math)} concepts")
     print()
 
     # Example: Get common misconceptions
     print("--- Example 5: Common Misconceptions ---")
-    misconceptions = manager.get_common_misconceptions('math_3_oa_001')
+    misconceptions = manager.get_common_misconceptions("math_3_oa_001")
     print(f"Common misconceptions for 'Understanding multiplication':")
     for misc in misconceptions:
         print(f"  - {misc}")
@@ -643,7 +635,7 @@ if __name__ == "__main__":
 
     # Example: Learning pathway
     print("--- Example 6: Learning Pathway ---")
-    pathways = manager.get_available_pathways('math')
+    pathways = manager.get_available_pathways("math")
     print(f"Available math pathways:")
     for pathway in pathways:
         print(f"  - {pathway['name']}: {pathway['description']}")
@@ -651,14 +643,16 @@ if __name__ == "__main__":
 
     # Example: Assess readiness
     print("--- Example 7: Assess Readiness ---")
-    mastered = ['math_2_oa_002']  # Student has mastered arrays and repeated addition
-    readiness = manager.assess_readiness(mastered, 'math_3_oa_001')
-    if 'error' not in readiness:
-        print(f"Readiness for 'Understanding multiplication': {readiness.get('readiness_percentage', 0):.0f}%")
+    mastered = ["math_2_oa_002"]  # Student has mastered arrays and repeated addition
+    readiness = manager.assess_readiness(mastered, "math_3_oa_001")
+    if "error" not in readiness:
+        print(
+            f"Readiness for 'Understanding multiplication': {readiness.get('readiness_percentage', 0):.0f}%"
+        )
         print(f"Ready: {readiness.get('ready', False)}")
-        if readiness.get('missing_prerequisites'):
+        if readiness.get("missing_prerequisites"):
             print("Still need to master:")
-            for prereq in readiness['missing_prerequisites']:
+            for prereq in readiness["missing_prerequisites"]:
                 print(f"  - {prereq.get('name', 'Unknown')}")
     else:
         print(f"Error: {readiness['error']}")

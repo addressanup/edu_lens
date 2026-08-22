@@ -11,12 +11,13 @@ Author: Vision Processing Agent (VIS-001)
 Target: 95% accuracy on printed educational materials
 """
 
-import unittest
-import numpy as np
-import time
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional
 import json
+import time
+import unittest
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     import cv2
@@ -24,12 +25,12 @@ except ImportError:
     cv2 = None
 
 from src.vision.ocr_engine import (
-    OCREngine,
-    OCRBackend,
-    DocumentType,
     BoundingBox,
+    DocumentType,
+    OCRBackend,
+    OCREngine,
+    OCRResult,
     TextRegion,
-    OCRResult
 )
 from src.vision.preprocessing import ImagePreprocessor
 
@@ -44,7 +45,7 @@ class TestFixtures:
         height: int = 200,
         font_scale: float = 1.5,
         noise_level: float = 0.0,
-        rotation: float = 0.0
+        rotation: float = 0.0,
     ) -> np.ndarray:
         """
         Create a synthetic image with text for testing.
@@ -71,25 +72,14 @@ class TestFixtures:
         thickness = 2
 
         # Get text size
-        (text_width, text_height), baseline = cv2.getTextSize(
-            text, font, font_scale, thickness
-        )
+        (text_width, text_height), baseline = cv2.getTextSize(text, font, font_scale, thickness)
 
         # Center text
         x = (width - text_width) // 2
         y = (height + text_height) // 2
 
         # Draw text
-        cv2.putText(
-            image,
-            text,
-            (x, y),
-            font,
-            font_scale,
-            (0, 0, 0),
-            thickness,
-            cv2.LINE_AA
-        )
+        cv2.putText(image, text, (x, y), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
 
         # Add noise if specified
         if noise_level > 0:
@@ -100,15 +90,15 @@ class TestFixtures:
         if rotation != 0:
             center = (width // 2, height // 2)
             rotation_matrix = cv2.getRotationMatrix2D(center, rotation, 1.0)
-            image = cv2.warpAffine(image, rotation_matrix, (width, height), borderValue=(255, 255, 255))
+            image = cv2.warpAffine(
+                image, rotation_matrix, (width, height), borderValue=(255, 255, 255)
+            )
 
         return image
 
     @staticmethod
     def create_worksheet_image(
-        questions: List[str],
-        width: int = 800,
-        height: int = 600
+        questions: List[str], width: int = 800, height: int = 600
     ) -> np.ndarray:
         """
         Create a synthetic worksheet image for testing.
@@ -148,17 +138,14 @@ class TestFixtures:
                 font_scale,
                 (0, 0, 0),
                 thickness,
-                cv2.LINE_AA
+                cv2.LINE_AA,
             )
 
         return image
 
     @staticmethod
     def create_textbook_page(
-        title: str,
-        paragraphs: List[str],
-        width: int = 800,
-        height: int = 1000
+        title: str, paragraphs: List[str], width: int = 800, height: int = 1000
     ) -> np.ndarray:
         """
         Create a synthetic textbook page for testing.
@@ -185,14 +172,7 @@ class TestFixtures:
         title_scale = 1.2
         title_thickness = 3
         cv2.putText(
-            image,
-            title,
-            (50, y_offset),
-            font,
-            title_scale,
-            (0, 0, 0),
-            title_thickness,
-            cv2.LINE_AA
+            image, title, (50, y_offset), font, title_scale, (0, 0, 0), title_thickness, cv2.LINE_AA
         )
 
         y_offset += 80
@@ -221,7 +201,7 @@ class TestFixtures:
                         para_scale,
                         (0, 0, 0),
                         para_thickness,
-                        cv2.LINE_AA
+                        cv2.LINE_AA,
                     )
                     y_offset += line_height
                     current_line = word
@@ -238,7 +218,7 @@ class TestFixtures:
                     para_scale,
                     (0, 0, 0),
                     para_thickness,
-                    cv2.LINE_AA
+                    cv2.LINE_AA,
                 )
                 y_offset += line_height
 
@@ -251,10 +231,7 @@ class AccuracyMetrics:
     """Utility class for calculating OCR accuracy metrics."""
 
     @staticmethod
-    def calculate_character_accuracy(
-        ground_truth: str,
-        recognized: str
-    ) -> float:
+    def calculate_character_accuracy(ground_truth: str, recognized: str) -> float:
         """
         Calculate character-level accuracy using edit distance.
 
@@ -312,10 +289,7 @@ class AccuracyMetrics:
         return previous_row[-1]
 
     @staticmethod
-    def calculate_word_accuracy(
-        ground_truth: str,
-        recognized: str
-    ) -> float:
+    def calculate_word_accuracy(ground_truth: str, recognized: str) -> float:
         """
         Calculate word-level accuracy.
 
@@ -349,10 +323,7 @@ class PerformanceBenchmark:
         self.results = []
 
     def measure_processing_time(
-        self,
-        ocr_engine: OCREngine,
-        image: np.ndarray,
-        iterations: int = 10
+        self, ocr_engine: OCREngine, image: np.ndarray, iterations: int = 10
     ) -> Dict[str, float]:
         """
         Measure OCR processing time.
@@ -378,14 +349,11 @@ class PerformanceBenchmark:
             "std_ms": np.std(times),
             "min_ms": np.min(times),
             "max_ms": np.max(times),
-            "median_ms": np.median(times)
+            "median_ms": np.median(times),
         }
 
     def measure_throughput(
-        self,
-        ocr_engine: OCREngine,
-        images: List[np.ndarray],
-        duration_seconds: float = 10.0
+        self, ocr_engine: OCREngine, images: List[np.ndarray], duration_seconds: float = 10.0
     ) -> Dict[str, float]:
         """
         Measure OCR throughput (images per second).
@@ -418,7 +386,7 @@ class PerformanceBenchmark:
         return {
             "images_per_second": throughput,
             "total_processed": processed,
-            "duration_seconds": elapsed
+            "duration_seconds": elapsed,
         }
 
 
@@ -444,8 +412,7 @@ class TestOCREngine(unittest.TestCase):
     def test_education_mode_configuration(self):
         """Test educational mode configuration."""
         self.engine.configure_for_education(
-            document_type=DocumentType.WORKSHEET,
-            enable_math_symbols=True
+            document_type=DocumentType.WORKSHEET, enable_math_symbols=True
         )
 
         self.assertTrue(self.engine.education_mode)
@@ -477,7 +444,7 @@ class TestOCREngine(unittest.TestCase):
             "1 2 3 4 5 6 7 8 9 10",
             "red blue green yellow orange",
             "What is your name?",
-            "The sun is bright today"
+            "The sun is bright today",
         ]
 
         total_accuracy = 0.0
@@ -499,11 +466,7 @@ class TestOCREngine(unittest.TestCase):
         """Test recognition of worksheet content."""
         self.engine.configure_for_education(document_type=DocumentType.WORKSHEET)
 
-        questions = [
-            "What is 2 + 2?",
-            "How many apples are there?",
-            "Circle the correct answer"
-        ]
+        questions = ["What is 2 + 2?", "How many apples are there?", "Circle the correct answer"]
 
         image = self.fixtures.create_worksheet_image(questions)
         result = self.engine.extract_structured_content(image)
@@ -522,7 +485,7 @@ class TestOCREngine(unittest.TestCase):
         title = "Chapter 1: Animals"
         paragraphs = [
             "Animals are living things that can move around. They need food and water to live.",
-            "There are many different types of animals. Some animals have fur and some have feathers."
+            "There are many different types of animals. Some animals have fur and some have feathers.",
         ]
 
         image = self.fixtures.create_textbook_page(title, paragraphs)
@@ -532,29 +495,25 @@ class TestOCREngine(unittest.TestCase):
         self.assertGreater(len(result.full_text), 0)
         self.assertGreater(len(result.regions), 0)
 
-        print(f"Textbook page - Regions: {len(result.regions)}, Confidence: {result.average_confidence:.2f}")
+        print(
+            f"Textbook page - Regions: {len(result.regions)}, Confidence: {result.average_confidence:.2f}"
+        )
 
     def test_preprocessing_pipeline(self):
         """Test image preprocessing pipeline."""
         test_text = "Hello World"
-        image = self.fixtures.create_synthetic_text_image(
-            test_text,
-            noise_level=0.3,
-            rotation=5.0
-        )
+        image = self.fixtures.create_synthetic_text_image(test_text, noise_level=0.3, rotation=5.0)
 
         # Test without preprocessing
         result_no_preprocess = self.engine.extract_structured_content(image, preprocess=False)
         accuracy_no_preprocess = self.metrics.calculate_character_accuracy(
-            test_text,
-            result_no_preprocess.full_text
+            test_text, result_no_preprocess.full_text
         )
 
         # Test with preprocessing
         result_with_preprocess = self.engine.extract_structured_content(image, preprocess=True)
         accuracy_with_preprocess = self.metrics.calculate_character_accuracy(
-            test_text,
-            result_with_preprocess.full_text
+            test_text, result_with_preprocess.full_text
         )
 
         print(f"Accuracy without preprocessing: {accuracy_no_preprocess:.2f}%")
@@ -757,18 +716,14 @@ class TestImagePreprocessor(unittest.TestCase):
     def test_full_preprocessing_pipeline(self):
         """Test complete preprocessing pipeline."""
         test_text = "Full pipeline test"
-        image = self.fixtures.create_synthetic_text_image(
-            test_text,
-            noise_level=0.2,
-            rotation=3.0
-        )
+        image = self.fixtures.create_synthetic_text_image(test_text, noise_level=0.2, rotation=3.0)
 
         config = {
             "deskew": True,
             "denoise": True,
             "enhance_contrast": True,
             "sharpen": True,
-            "binarization_method": "adaptive"
+            "binarization_method": "adaptive",
         }
 
         preprocessor = ImagePreprocessor(config=config)
@@ -796,11 +751,7 @@ class TestPerformanceBenchmarks(unittest.TestCase):
         test_text = "Performance benchmark"
         image = self.fixtures.create_synthetic_text_image(test_text)
 
-        timing = self.benchmark.measure_processing_time(
-            self.engine,
-            image,
-            iterations=5
-        )
+        timing = self.benchmark.measure_processing_time(self.engine, image, iterations=5)
 
         print(f"\nProcessing Time Benchmark:")
         print(f"  Mean: {timing['mean_ms']:.2f}ms")
@@ -810,7 +761,7 @@ class TestPerformanceBenchmarks(unittest.TestCase):
         print(f"  Median: {timing['median_ms']:.2f}ms")
 
         # Basic sanity check
-        self.assertGreater(timing['mean_ms'], 0)
+        self.assertGreater(timing["mean_ms"], 0)
 
     def test_accuracy_benchmark(self):
         """Benchmark OCR accuracy on various document types."""
@@ -819,7 +770,7 @@ class TestPerformanceBenchmarks(unittest.TestCase):
             ("Numbers", "1234567890"),
             ("Mixed", "There are 5 apples and 3 oranges"),
             ("Question", "What is 2 plus 2?"),
-            ("Punctuation", "Hello, world! How are you?")
+            ("Punctuation", "Hello, world! How are you?"),
         ]
 
         print("\nAccuracy Benchmark:")
@@ -867,18 +818,22 @@ def run_comprehensive_test_suite():
         "successes": result.testsRun - len(result.failures) - len(result.errors),
         "failures": len(result.failures),
         "errors": len(result.errors),
-        "success_rate": ((result.testsRun - len(result.failures) - len(result.errors)) / result.testsRun * 100) if result.testsRun > 0 else 0
+        "success_rate": (
+            ((result.testsRun - len(result.failures) - len(result.errors)) / result.testsRun * 100)
+            if result.testsRun > 0
+            else 0
+        ),
     }
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("TEST SUMMARY")
-    print("="*70)
+    print("=" * 70)
     print(f"Total Tests: {summary['total_tests']}")
     print(f"Successes: {summary['successes']}")
     print(f"Failures: {summary['failures']}")
     print(f"Errors: {summary['errors']}")
     print(f"Success Rate: {summary['success_rate']:.2f}%")
-    print("="*70)
+    print("=" * 70)
 
     return summary
 

@@ -8,21 +8,23 @@ each child's age, grade level, and learning preferences.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 
 class AgeCategory(Enum):
     """Age-based categories for prompt adaptation."""
+
     EARLY_CHILDHOOD = "early_childhood"  # Ages 3-5 (Pre-K, Kindergarten)
     EARLY_ELEMENTARY = "early_elementary"  # Ages 6-8 (Grades 1-3)
-    LATE_ELEMENTARY = "late_elementary"   # Ages 9-11 (Grades 4-6)
-    MIDDLE_SCHOOL = "middle_school"       # Ages 12-14 (Grades 7-8)
-    HIGH_SCHOOL = "high_school"           # Ages 15-18 (Grades 9-12)
+    LATE_ELEMENTARY = "late_elementary"  # Ages 9-11 (Grades 4-6)
+    MIDDLE_SCHOOL = "middle_school"  # Ages 12-14 (Grades 7-8)
+    HIGH_SCHOOL = "high_school"  # Ages 15-18 (Grades 9-12)
 
 
 @dataclass
 class ChildProfile:
     """Child profile data for prompt personalization."""
+
     name: str
     age: int
     grade: str
@@ -33,17 +35,17 @@ class ChildProfile:
     favorite_subjects: Optional[List[str]] = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ChildProfile':
+    def from_dict(cls, data: Dict[str, Any]) -> "ChildProfile":
         """Create profile from dictionary."""
         return cls(
-            name=data.get('name', 'Student'),
-            age=data.get('age', 8),
-            grade=data.get('grade', '3rd'),
-            language=data.get('language', 'en'),
-            interests=data.get('interests'),
-            learning_style=data.get('learning_style'),
-            special_needs=data.get('special_needs'),
-            favorite_subjects=data.get('favorite_subjects'),
+            name=data.get("name", "Student"),
+            age=data.get("age", 8),
+            grade=data.get("grade", "3rd"),
+            language=data.get("language", "en"),
+            interests=data.get("interests"),
+            learning_style=data.get("learning_style"),
+            special_needs=data.get("special_needs"),
+            favorite_subjects=data.get("favorite_subjects"),
         )
 
 
@@ -288,10 +290,12 @@ CURRENT CONTEXT:
 
     # Language handling
     if child_profile.language != "en":
-        prompt_parts.append(f"""
+        prompt_parts.append(
+            f"""
 LANGUAGE:
 The child's primary language is {child_profile.language}.
-Respond in {child_profile.language} when appropriate, but also help build English skills if this is a learning goal.""")
+Respond in {child_profile.language} when appropriate, but also help build English skills if this is a learning goal."""
+        )
 
     return "\n".join(prompt_parts)
 
@@ -401,13 +405,13 @@ def build_prompt_from_db_child(
 
 # Export key functions and classes
 __all__ = [
-    'ChildProfile',
-    'AgeCategory',
-    'build_system_prompt',
-    'build_voice_system_prompt',
-    'get_default_edulens_prompt',
-    'build_prompt_from_db_child',
-    'get_age_category',
-    'AGE_CONFIGS',
-    'SUBJECT_CONTEXTS',
+    "ChildProfile",
+    "AgeCategory",
+    "build_system_prompt",
+    "build_voice_system_prompt",
+    "get_default_edulens_prompt",
+    "build_prompt_from_db_child",
+    "get_age_category",
+    "AGE_CONFIGS",
+    "SUBJECT_CONTEXTS",
 ]

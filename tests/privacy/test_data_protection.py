@@ -23,30 +23,31 @@ from pathlib import Path
 
 import pytest
 
-# Import modules under test
-from src.privacy.local_storage_manager import (
-    LocalStorageManager,
-    StorageType,
-    StorageStatus,
-    get_storage_manager,
+from src.privacy.auto_deletion import (
+    AutoDeletionManager,
+    DeletionMethod,
+    DeletionStatus,
+    DeletionTrigger,
+    RetentionPolicy,
 )
 from src.privacy.data_minimizer import (
     DataMinimizer,
-    MinimizationLevel,
     DataType,
-)
-from src.privacy.auto_deletion import (
-    AutoDeletionManager,
-    DeletionTrigger,
-    DeletionStatus,
-    DeletionMethod,
-    RetentionPolicy,
+    MinimizationLevel,
 )
 
+# Import modules under test
+from src.privacy.local_storage_manager import (
+    LocalStorageManager,
+    StorageStatus,
+    StorageType,
+    get_storage_manager,
+)
 
 # =============================================================================
 # LocalStorageManager Tests
 # =============================================================================
+
 
 class TestLocalStorageManager:
     """Tests for LocalStorageManager - ephemeral storage and auto-deletion."""
@@ -58,6 +59,7 @@ class TestLocalStorageManager:
         yield temp_path
         # Cleanup
         import shutil
+
         if temp_path.exists():
             shutil.rmtree(temp_path)
 
@@ -65,8 +67,7 @@ class TestLocalStorageManager:
     def storage_manager(self, temp_dir):
         """Create storage manager instance for testing."""
         manager = LocalStorageManager(
-            base_temp_dir=temp_dir,
-            enable_background_purge=False  # Disable for testing
+            base_temp_dir=temp_dir, enable_background_purge=False  # Disable for testing
         )
         yield manager
         manager.shutdown()
@@ -74,9 +75,7 @@ class TestLocalStorageManager:
     def test_create_ephemeral_storage(self, storage_manager):
         """Test creating ephemeral storage container."""
         container_id = storage_manager.create_ephemeral_storage(
-            ttl_seconds=300,
-            storage_type=StorageType.EPHEMERAL,
-            encrypt=True
+            ttl_seconds=300, storage_type=StorageType.EPHEMERAL, encrypt=True
         )
 
         assert container_id is not None
@@ -105,13 +104,14 @@ class TestLocalStorageManager:
     def test_in_memory_only_storage(self, storage_manager):
         """Test volatile in-memory storage (never touches disk)."""
         container_id = storage_manager.create_ephemeral_storage(
-            ttl_seconds=300,
-            storage_type=StorageType.VOLATILE_RAM
+            ttl_seconds=300, storage_type=StorageType.VOLATILE_RAM
         )
 
         # Store data in memory only
         test_data = b"volatile sensitive data"
-        storage_manager.store_encrypted(container_id, "voice_sample", test_data, in_memory_only=True)
+        storage_manager.store_encrypted(
+            container_id, "voice_sample", test_data, in_memory_only=True
+        )
 
         # Verify data is in memory
         container = storage_manager.containers[container_id]
@@ -190,6 +190,7 @@ class TestLocalStorageManager:
 
         # Perform secure wipe
         from src.privacy.local_storage_manager import LocalStorageManager
+
         manager = LocalStorageManager(base_temp_dir=temp_dir, enable_background_purge=False)
         success = manager._secure_delete_file(test_file)
 
@@ -215,9 +216,7 @@ class TestLocalStorageManager:
         """Test background purging of expired containers."""
         # Create manager with background purge enabled
         manager = LocalStorageManager(
-            base_temp_dir=temp_dir,
-            enable_background_purge=True,
-            auto_purge_interval=1
+            base_temp_dir=temp_dir, enable_background_purge=True, auto_purge_interval=1
         )
 
         # Create container with short TTL
@@ -252,6 +251,7 @@ class TestLocalStorageManager:
 # DataMinimizer Tests
 # =============================================================================
 
+
 class TestDataMinimizer:
     """Tests for DataMinimizer - extracting features and discarding raw data."""
 
@@ -270,7 +270,7 @@ class TestDataMinimizer:
             image_data=image_data,
             detected_objects=["textbook", "desk", "pencil"],
             detected_text=["Chapter 5", "Photosynthesis", "Plants"],
-            scene_type="textbook"
+            scene_type="textbook",
         )
 
         # Verify minimized representation
@@ -298,7 +298,7 @@ class TestDataMinimizer:
             transcription="What is photosynthesis?",
             intent="question",
             duration_seconds=2.5,
-            language="en"
+            language="en",
         )
 
         # Verify minimized representation
@@ -346,8 +346,18 @@ class TestDataMinimizer:
     def test_aggregate_learning_data(self, minimizer):
         """Test learning data aggregation and anonymization."""
         events = [
-            {"type": "question", "subject": "science", "success": True, "indicator": "correct_answer"},
-            {"type": "question", "subject": "science", "success": True, "indicator": "correct_answer"},
+            {
+                "type": "question",
+                "subject": "science",
+                "success": True,
+                "indicator": "correct_answer",
+            },
+            {
+                "type": "question",
+                "subject": "science",
+                "success": True,
+                "indicator": "correct_answer",
+            },
             {"type": "hint", "subject": "science", "success": False, "duration_seconds": 5.0},
         ]
 
@@ -416,6 +426,7 @@ class TestDataMinimizer:
 # AutoDeletionManager Tests
 # =============================================================================
 
+
 class TestAutoDeletionManager:
     """Tests for AutoDeletionManager - automatic deletion and secure erasure."""
 
@@ -433,7 +444,7 @@ class TestAutoDeletionManager:
             target_type="image",
             trigger=DeletionTrigger.PROCESS_COMPLETE,
             delay_seconds=5,
-            deletion_method=DeletionMethod.SECURE_WIPE
+            deletion_method=DeletionMethod.SECURE_WIPE,
         )
 
         assert task_id is not None
@@ -456,7 +467,7 @@ class TestAutoDeletionManager:
             target_id="voice_sample_456",
             target_type="audio",
             deletion_callback=deletion_callback,
-            deletion_method=DeletionMethod.SECURE_WIPE
+            deletion_method=DeletionMethod.SECURE_WIPE,
         )
 
         # Verify deletion was executed
@@ -511,7 +522,7 @@ class TestAutoDeletionManager:
             target_id="test_data_999",
             target_type="data",
             trigger=DeletionTrigger.TIME_BASED,
-            delay_seconds=0
+            delay_seconds=0,
         )
 
         # Mark as completed (simulate)
@@ -536,7 +547,7 @@ class TestAutoDeletionManager:
             data_type="test_data",
             max_age_seconds=60,
             deletion_method=DeletionMethod.SIMPLE_DELETE,
-            auto_delete=True
+            auto_delete=True,
         )
         deletion_manager.add_retention_policy(policy)
 
@@ -558,15 +569,11 @@ class TestAutoDeletionManager:
         """Test deletion audit log."""
         # Schedule some deletions
         task_id1 = deletion_manager.schedule_deletion(
-            target_id="data_1",
-            target_type="image",
-            trigger=DeletionTrigger.PROCESS_COMPLETE
+            target_id="data_1", target_type="image", trigger=DeletionTrigger.PROCESS_COMPLETE
         )
 
         task_id2 = deletion_manager.schedule_deletion(
-            target_id="data_2",
-            target_type="audio",
-            trigger=DeletionTrigger.TIME_BASED
+            target_id="data_2", target_type="audio", trigger=DeletionTrigger.TIME_BASED
         )
 
         # Get deletion log
@@ -587,7 +594,9 @@ class TestAutoDeletionManager:
         assert any(p.data_type == "audio" for p in deletion_manager.retention_policies.values())
 
         # Image policy should require immediate deletion
-        image_policy = next(p for p in deletion_manager.retention_policies.values() if p.data_type == "image")
+        image_policy = next(
+            p for p in deletion_manager.retention_policies.values() if p.data_type == "image"
+        )
         assert image_policy.max_age_seconds == 0
         assert image_policy.deletion_method == DeletionMethod.SECURE_WIPE
 
@@ -606,6 +615,7 @@ class TestAutoDeletionManager:
 # Integration Tests
 # =============================================================================
 
+
 class TestDataProtectionIntegration:
     """Integration tests combining multiple components."""
 
@@ -614,8 +624,7 @@ class TestDataProtectionIntegration:
         # 1. Create ephemeral storage
         with LocalStorageManager(enable_background_purge=False) as storage_mgr:
             container_id = storage_mgr.create_ephemeral_storage(
-                ttl_seconds=60,
-                storage_type=StorageType.VOLATILE_RAM
+                ttl_seconds=60, storage_type=StorageType.VOLATILE_RAM
             )
 
             # 2. Store raw image temporarily
@@ -628,7 +637,7 @@ class TestDataProtectionIntegration:
                 image_data=raw_image,
                 detected_objects=["book", "table"],
                 detected_text=["Chapter 7"],
-                scene_type="homework"
+                scene_type="homework",
             )
 
             # 4. Schedule deletion of raw image
@@ -636,13 +645,13 @@ class TestDataProtectionIntegration:
 
             def delete_callback(target_id):
                 # Delete from storage
-                retrieved = storage_mgr.retrieve_decrypted(container_id, target_id, auto_delete=True)
+                retrieved = storage_mgr.retrieve_decrypted(
+                    container_id, target_id, auto_delete=True
+                )
                 return retrieved is None or True
 
             task_id = deletion_mgr.delete_on_process_complete(
-                target_id="raw_image",
-                target_type="image",
-                deletion_callback=delete_callback
+                target_id="raw_image", target_type="image", deletion_callback=delete_callback
             )
 
             # 5. Verify deletion
@@ -660,13 +669,14 @@ class TestDataProtectionIntegration:
         with LocalStorageManager(enable_background_purge=False) as storage_mgr:
             # Create volatile storage
             container_id = storage_mgr.create_ephemeral_storage(
-                ttl_seconds=60,
-                storage_type=StorageType.SECURE_ENCLAVE
+                ttl_seconds=60, storage_type=StorageType.SECURE_ENCLAVE
             )
 
             # Store raw audio
             raw_audio = secrets.token_bytes(16000)  # ~0.5s of audio
-            storage_mgr.store_encrypted(container_id, "voice_sample", raw_audio, in_memory_only=True)
+            storage_mgr.store_encrypted(
+                container_id, "voice_sample", raw_audio, in_memory_only=True
+            )
 
             # Minimize audio
             minimizer = DataMinimizer()
@@ -674,11 +684,13 @@ class TestDataProtectionIntegration:
                 audio_data=raw_audio,
                 transcription="What is the capital of France?",
                 intent="question",
-                duration_seconds=1.5
+                duration_seconds=1.5,
             )
 
             # Delete raw audio immediately
-            retrieved = storage_mgr.retrieve_decrypted(container_id, "voice_sample", auto_delete=True)
+            retrieved = storage_mgr.retrieve_decrypted(
+                container_id, "voice_sample", auto_delete=True
+            )
             assert retrieved is not None
 
             # Verify raw audio is deleted
@@ -693,6 +705,7 @@ class TestDataProtectionIntegration:
 # =============================================================================
 # Performance Tests
 # =============================================================================
+
 
 class TestDataProtectionPerformance:
     """Performance tests for data protection operations."""
@@ -736,7 +749,7 @@ class TestDataProtectionPerformance:
             image_data=image_data,
             detected_objects=["item1", "item2"],
             detected_text=["text1", "text2"],
-            scene_type="test"
+            scene_type="test",
         )
         elapsed = time.time() - start
 

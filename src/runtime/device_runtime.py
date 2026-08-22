@@ -24,10 +24,10 @@ class DeviceState(Enum):
     OFF = auto()
     BOOTING = auto()
     READY = auto()
-    ACTIVE = auto()          # Actively tutoring
-    IDLE = auto()            # Waiting for wake word
-    LOW_POWER = auto()       # Battery saving mode
-    UPDATING = auto()        # Firmware/model update
+    ACTIVE = auto()  # Actively tutoring
+    IDLE = auto()  # Waiting for wake word
+    LOW_POWER = auto()  # Battery saving mode
+    UPDATING = auto()  # Firmware/model update
     ERROR = auto()
     SHUTTING_DOWN = auto()
 
@@ -35,10 +35,10 @@ class DeviceState(Enum):
 class PowerMode(Enum):
     """Power consumption modes."""
 
-    FULL = auto()            # All features active
-    BALANCED = auto()        # Normal operation
-    POWER_SAVER = auto()     # Reduced features
-    ULTRA_LOW = auto()       # Minimum for wake word only
+    FULL = auto()  # All features active
+    BALANCED = auto()  # Normal operation
+    POWER_SAVER = auto()  # Reduced features
+    ULTRA_LOW = auto()  # Minimum for wake word only
 
 
 @dataclass
@@ -413,11 +413,11 @@ class DeviceRuntime:
             state=self._state,
             power_mode=self._power_mode,
             battery_percent=100,  # Placeholder
-            is_charging=False,    # Placeholder
+            is_charging=False,  # Placeholder
             uptime_seconds=uptime,
             temperature_celsius=35.0,  # Placeholder
-            memory_used_mb=256.0,      # Placeholder
-            cpu_percent=25.0,          # Placeholder
+            memory_used_mb=256.0,  # Placeholder
+            cpu_percent=25.0,  # Placeholder
             active_session=self._state == DeviceState.ACTIVE,
             last_activity=self._last_activity,
         )

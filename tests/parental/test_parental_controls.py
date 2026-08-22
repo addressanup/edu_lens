@@ -9,31 +9,37 @@ Tests all components:
 - NotificationService
 """
 
-import unittest
-import tempfile
 import shutil
+import sys
+import tempfile
+import unittest
 from datetime import datetime, time, timedelta
 from pathlib import Path
 
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from parental.usage_controller import (
-    UsageController, DayOfWeek, LimitStatus
-)
-from parental.content_filter import (
-    ContentFilter, FilterMode, DifficultyLevel,
-    ContentType, AgeGroup
-)
 from parental.activity_monitor import ActivityMonitor, SessionData
+from parental.content_filter import (
+    AgeGroup,
+    ContentFilter,
+    ContentType,
+    DifficultyLevel,
+    FilterMode,
+)
 from parental.device_manager import (
-    DeviceManager, DeviceStatus, CommandType,
-    CommandPriority, RemoteCommand
+    CommandPriority,
+    CommandType,
+    DeviceManager,
+    DeviceStatus,
+    RemoteCommand,
 )
 from parental.notification_service import (
-    NotificationService, NotificationType,
-    NotificationChannel, NotificationPriority
+    NotificationChannel,
+    NotificationPriority,
+    NotificationService,
+    NotificationType,
 )
+from parental.usage_controller import DayOfWeek, LimitStatus, UsageController
 
 
 class TestUsageController(unittest.TestCase):
@@ -42,10 +48,7 @@ class TestUsageController(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
-        self.controller = UsageController(
-            user_id="test_user_001",
-            storage_path=Path(self.temp_dir)
-        )
+        self.controller = UsageController(user_id="test_user_001", storage_path=Path(self.temp_dir))
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -77,16 +80,14 @@ class TestUsageController(unittest.TestCase):
         """Test that invalid time ranges are rejected."""
         with self.assertRaises(ValueError):
             self.controller.set_schedule(
-                DayOfWeek.MONDAY,
-                [(time(17, 0), time(15, 0))]  # End before start
+                DayOfWeek.MONDAY, [(time(17, 0), time(15, 0))]  # End before start
             )
 
     def test_set_schedule_overlapping(self):
         """Test that overlapping ranges are rejected."""
         with self.assertRaises(ValueError):
             self.controller.set_schedule(
-                DayOfWeek.MONDAY,
-                [(time(15, 0), time(17, 0)), (time(16, 0), time(18, 0))]
+                DayOfWeek.MONDAY, [(time(15, 0), time(17, 0)), (time(16, 0), time(18, 0))]
             )
 
     def test_check_allowed_no_restrictions(self):
@@ -183,10 +184,7 @@ class TestUsageController(unittest.TestCase):
         self.controller.set_grace_period(10)
 
         # Create new controller with same storage
-        new_controller = UsageController(
-            user_id="test_user_001",
-            storage_path=Path(self.temp_dir)
-        )
+        new_controller = UsageController(user_id="test_user_001", storage_path=Path(self.temp_dir))
 
         self.assertEqual(new_controller.daily_limits[DayOfWeek.MONDAY], 60)
         self.assertEqual(new_controller.grace_period_minutes, 10)
@@ -198,10 +196,7 @@ class TestContentFilter(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
-        self.filter = ContentFilter(
-            user_id="test_user_001",
-            storage_path=Path(self.temp_dir)
-        )
+        self.filter = ContentFilter(user_id="test_user_001", storage_path=Path(self.temp_dir))
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -209,10 +204,7 @@ class TestContentFilter(unittest.TestCase):
 
     def test_subject_whitelist(self):
         """Test subject whitelist filtering."""
-        self.filter.filter_subjects(
-            FilterMode.WHITELIST,
-            ["mathematics", "science"]
-        )
+        self.filter.filter_subjects(FilterMode.WHITELIST, ["mathematics", "science"])
 
         # Allowed subject
         allowed, reason = self.filter.check_content(subject="mathematics")
@@ -224,10 +216,7 @@ class TestContentFilter(unittest.TestCase):
 
     def test_subject_blacklist(self):
         """Test subject blacklist filtering."""
-        self.filter.filter_subjects(
-            FilterMode.BLACKLIST,
-            ["video_games"]
-        )
+        self.filter.filter_subjects(FilterMode.BLACKLIST, ["video_games"])
 
         # Allowed subject
         allowed, reason = self.filter.check_content(subject="mathematics")
@@ -239,39 +228,28 @@ class TestContentFilter(unittest.TestCase):
 
     def test_difficulty_filtering(self):
         """Test difficulty level filtering."""
-        self.filter.filter_difficulty(
-            max_level=DifficultyLevel.MIDDLE_SCHOOL
-        )
+        self.filter.filter_difficulty(max_level=DifficultyLevel.MIDDLE_SCHOOL)
 
         # Allowed difficulty
-        allowed, reason = self.filter.check_content(
-            difficulty=DifficultyLevel.ELEMENTARY
-        )
+        allowed, reason = self.filter.check_content(difficulty=DifficultyLevel.ELEMENTARY)
         self.assertTrue(allowed)
 
         # Too difficult
-        allowed, reason = self.filter.check_content(
-            difficulty=DifficultyLevel.COLLEGE
-        )
+        allowed, reason = self.filter.check_content(difficulty=DifficultyLevel.COLLEGE)
         self.assertFalse(allowed)
 
     def test_content_type_filtering(self):
         """Test content type filtering."""
         self.filter.filter_content_type(
-            FilterMode.WHITELIST,
-            [ContentType.MULTIPLE_CHOICE, ContentType.MATH_PROBLEM]
+            FilterMode.WHITELIST, [ContentType.MULTIPLE_CHOICE, ContentType.MATH_PROBLEM]
         )
 
         # Allowed type
-        allowed, reason = self.filter.check_content(
-            content_type=ContentType.MULTIPLE_CHOICE
-        )
+        allowed, reason = self.filter.check_content(content_type=ContentType.MULTIPLE_CHOICE)
         self.assertTrue(allowed)
 
         # Blocked type
-        allowed, reason = self.filter.check_content(
-            content_type=ContentType.ESSAY
-        )
+        allowed, reason = self.filter.check_content(content_type=ContentType.ESSAY)
         self.assertFalse(allowed)
 
     def test_blocked_keywords(self):
@@ -279,15 +257,11 @@ class TestContentFilter(unittest.TestCase):
         self.filter.add_blocked_keyword("inappropriate")
 
         # Clean content
-        allowed, reason = self.filter.check_content(
-            keywords=["math", "learning"]
-        )
+        allowed, reason = self.filter.check_content(keywords=["math", "learning"])
         self.assertTrue(allowed)
 
         # Blocked keyword
-        allowed, reason = self.filter.check_content(
-            keywords=["inappropriate", "content"]
-        )
+        allowed, reason = self.filter.check_content(keywords=["inappropriate", "content"])
         self.assertFalse(allowed)
 
     def test_age_appropriate_defaults(self):
@@ -317,10 +291,7 @@ class TestContentFilter(unittest.TestCase):
         self.filter.filter_difficulty(max_level=DifficultyLevel.HIGH_SCHOOL)
 
         # Create new filter with same storage
-        new_filter = ContentFilter(
-            user_id="test_user_001",
-            storage_path=Path(self.temp_dir)
-        )
+        new_filter = ContentFilter(user_id="test_user_001", storage_path=Path(self.temp_dir))
 
         self.assertEqual(new_filter.subject_mode, FilterMode.WHITELIST)
         self.assertIn("mathematics", new_filter.allowed_subjects)
@@ -333,10 +304,7 @@ class TestActivityMonitor(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
-        self.monitor = ActivityMonitor(
-            user_id="test_user_001",
-            storage_path=Path(self.temp_dir)
-        )
+        self.monitor = ActivityMonitor(user_id="test_user_001", storage_path=Path(self.temp_dir))
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -355,7 +323,7 @@ class TestActivityMonitor(unittest.TestCase):
             problems_attempted=10,
             problems_correct=8,
             difficulty_level="middle_school",
-            topics_covered=["algebra", "equations"]
+            topics_covered=["algebra", "equations"],
         )
 
         self.assertEqual(len(self.monitor.sessions), 1)
@@ -378,13 +346,13 @@ class TestActivityMonitor(unittest.TestCase):
                 problems_attempted=10,
                 problems_correct=8,
                 difficulty_level="middle_school",
-                topics_covered=["algebra"]
+                topics_covered=["algebra"],
             )
 
         report = self.monitor.get_daily_report(today)
-        self.assertEqual(report['total_sessions'], 3)
-        self.assertEqual(report['total_duration_minutes'], 60)
-        self.assertEqual(report['overall_accuracy'], 80.0)
+        self.assertEqual(report["total_sessions"], 3)
+        self.assertEqual(report["total_duration_minutes"], 60)
+        self.assertEqual(report["overall_accuracy"], 80.0)
 
     def test_weekly_report(self):
         """Test generating weekly report."""
@@ -402,12 +370,12 @@ class TestActivityMonitor(unittest.TestCase):
                 problems_attempted=10,
                 problems_correct=7,
                 difficulty_level="middle_school",
-                topics_covered=["algebra"]
+                topics_covered=["algebra"],
             )
 
         report = self.monitor.get_weekly_report()
-        self.assertEqual(report['total_sessions'], 5)
-        self.assertGreater(report['total_duration_minutes'], 0)
+        self.assertEqual(report["total_sessions"], 5)
+        self.assertGreater(report["total_duration_minutes"], 0)
 
     def test_subject_breakdown(self):
         """Test subject breakdown analysis."""
@@ -425,7 +393,7 @@ class TestActivityMonitor(unittest.TestCase):
                 problems_attempted=10,
                 problems_correct=8,
                 difficulty_level="middle_school",
-                topics_covered=["algebra"]
+                topics_covered=["algebra"],
             )
 
         # Science sessions
@@ -440,7 +408,7 @@ class TestActivityMonitor(unittest.TestCase):
                 problems_attempted=5,
                 problems_correct=4,
                 difficulty_level="middle_school",
-                topics_covered=["biology"]
+                topics_covered=["biology"],
             )
 
         breakdown = self.monitor.get_subject_breakdown()
@@ -470,12 +438,12 @@ class TestActivityMonitor(unittest.TestCase):
                 problems_attempted=10,
                 problems_correct=correct,
                 difficulty_level="middle_school",
-                topics_covered=["algebra"]
+                topics_covered=["algebra"],
             )
 
         metrics = self.monitor.get_progress_metrics(days=10)
-        self.assertEqual(metrics['total_sessions'], 10)
-        self.assertTrue(metrics['trends']['improving'])
+        self.assertEqual(metrics["total_sessions"], 10)
+        self.assertTrue(metrics["trends"]["improving"])
 
     def test_learning_insights(self):
         """Test learning insights generation."""
@@ -493,7 +461,7 @@ class TestActivityMonitor(unittest.TestCase):
                 problems_attempted=10,
                 problems_correct=9,
                 difficulty_level="middle_school",
-                topics_covered=["algebra"]
+                topics_covered=["algebra"],
             )
 
         insights = self.monitor.get_learning_insights(days=7)
@@ -513,14 +481,11 @@ class TestActivityMonitor(unittest.TestCase):
             problems_attempted=10,
             problems_correct=8,
             difficulty_level="middle_school",
-            topics_covered=["algebra"]
+            topics_covered=["algebra"],
         )
 
         # Create new monitor with same storage
-        new_monitor = ActivityMonitor(
-            user_id="test_user_001",
-            storage_path=Path(self.temp_dir)
-        )
+        new_monitor = ActivityMonitor(user_id="test_user_001", storage_path=Path(self.temp_dir))
 
         self.assertEqual(len(new_monitor.sessions), 1)
 
@@ -531,10 +496,7 @@ class TestDeviceManager(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
-        self.manager = DeviceManager(
-            parent_id="parent_001",
-            storage_path=Path(self.temp_dir)
-        )
+        self.manager = DeviceManager(parent_id="parent_001", storage_path=Path(self.temp_dir))
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -547,7 +509,7 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Child's iPad",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         self.assertEqual(device.device_id, "device_001")
@@ -560,7 +522,7 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         result = self.manager.unregister_device("device_001")
@@ -574,7 +536,7 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         command_id = self.manager.lock_device("device_001", "Time limit reached")
@@ -588,7 +550,7 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         command_id = self.manager.unlock_device("device_001")
@@ -601,20 +563,17 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
-        settings = {
-            "daily_limit": 60,
-            "content_filter": "strict"
-        }
+        settings = {"daily_limit": 60, "content_filter": "strict"}
 
         command_id = self.manager.update_settings("device_001", settings)
         self.assertIsNotNone(command_id)
 
         command = self.manager.pending_commands[command_id]
         self.assertEqual(command.command_type, CommandType.UPDATE_SETTINGS)
-        self.assertEqual(command.payload['settings'], settings)
+        self.assertEqual(command.payload["settings"], settings)
 
     def test_get_device_status(self):
         """Test getting device status."""
@@ -623,12 +582,12 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         status = self.manager.get_device_status("device_001")
-        self.assertEqual(status['device_id'], "device_001")
-        self.assertIn('battery_level', status)
+        self.assertEqual(status["device_id"], "device_001")
+        self.assertIn("battery_level", status)
 
     def test_device_heartbeat(self):
         """Test device heartbeat updates."""
@@ -637,14 +596,11 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         self.manager.update_device_heartbeat(
-            device_id="device_001",
-            battery_level=75,
-            is_charging=True,
-            connection_type="wifi"
+            device_id="device_001", battery_level=75, is_charging=True, connection_type="wifi"
         )
 
         device = self.manager.devices["device_001"]
@@ -659,15 +615,13 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         command_id = self.manager.lock_device("device_001")
 
         self.manager.report_command_result(
-            command_id=command_id,
-            success=True,
-            result={"locked": True}
+            command_id=command_id, success=True, result={"locked": True}
         )
 
         # Should be moved to history
@@ -681,14 +635,11 @@ class TestDeviceManager(unittest.TestCase):
             device_name="Test Device",
             user_id="test_user_001",
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         # Create new manager with same storage
-        new_manager = DeviceManager(
-            parent_id="parent_001",
-            storage_path=Path(self.temp_dir)
-        )
+        new_manager = DeviceManager(parent_id="parent_001", storage_path=Path(self.temp_dir))
 
         self.assertIn("device_001", new_manager.devices)
 
@@ -699,10 +650,7 @@ class TestNotificationService(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
-        self.service = NotificationService(
-            parent_id="parent_001",
-            storage_path=Path(self.temp_dir)
-        )
+        self.service = NotificationService(parent_id="parent_001", storage_path=Path(self.temp_dir))
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -711,17 +659,15 @@ class TestNotificationService(unittest.TestCase):
     def test_send_daily_summary(self):
         """Test sending daily summary."""
         summary_data = {
-            'date': '2024-01-15',
-            'total_duration_minutes': 60,
-            'total_sessions': 3,
-            'overall_accuracy': 85.5,
-            'subjects': {'mathematics': {}, 'science': {}}
+            "date": "2024-01-15",
+            "total_duration_minutes": 60,
+            "total_sessions": 3,
+            "overall_accuracy": 85.5,
+            "subjects": {"mathematics": {}, "science": {}},
         }
 
         notification_id = self.service.send_daily_summary(
-            user_id="test_user_001",
-            summary_data=summary_data,
-            force=True
+            user_id="test_user_001", summary_data=summary_data, force=True
         )
 
         self.assertIsNotNone(notification_id)
@@ -729,16 +675,13 @@ class TestNotificationService(unittest.TestCase):
 
     def test_send_milestone_alert(self):
         """Test sending milestone notification."""
-        milestone_data = {
-            'description': 'Completed 7-day practice streak!',
-            'streak_days': 7
-        }
+        milestone_data = {"description": "Completed 7-day practice streak!", "streak_days": 7}
 
         notification_id = self.service.send_milestone_alert(
             user_id="test_user_001",
             milestone_type="Practice Streak",
             milestone_data=milestone_data,
-            force=True
+            force=True,
         )
 
         self.assertIsNotNone(notification_id)
@@ -746,16 +689,16 @@ class TestNotificationService(unittest.TestCase):
     def test_send_concern_alert(self):
         """Test sending concern notification."""
         concern_data = {
-            'description': 'Accuracy dropping in mathematics',
-            'accuracy': 45.0,
-            'subject': 'mathematics'
+            "description": "Accuracy dropping in mathematics",
+            "accuracy": 45.0,
+            "subject": "mathematics",
         }
 
         notification_id = self.service.send_concern_alert(
             user_id="test_user_001",
             concern_type="Low Accuracy",
             concern_data=concern_data,
-            force=True
+            force=True,
         )
 
         self.assertIsNotNone(notification_id)
@@ -767,22 +710,14 @@ class TestNotificationService(unittest.TestCase):
         # Configure short throttle
         self.service.preferences.notification_throttle = 5
 
-        summary_data = {'date': '2024-01-15'}
+        summary_data = {"date": "2024-01-15"}
 
         # First notification should send
-        id1 = self.service.send_daily_summary(
-            "test_user_001",
-            summary_data,
-            force=False
-        )
+        id1 = self.service.send_daily_summary("test_user_001", summary_data, force=False)
         self.assertIsNotNone(id1)
 
         # Second immediate notification should be throttled
-        id2 = self.service.send_daily_summary(
-            "test_user_001",
-            summary_data,
-            force=False
-        )
+        id2 = self.service.send_daily_summary("test_user_001", summary_data, force=False)
         self.assertIsNone(id2)
 
     def test_quiet_hours(self):
@@ -794,11 +729,9 @@ class TestNotificationService(unittest.TestCase):
         self.service.preferences.quiet_hours_end = (now + timedelta(hours=1)).time()
 
         # Try to send non-urgent notification
-        summary_data = {'date': '2024-01-15'}
+        summary_data = {"date": "2024-01-15"}
         notification_id = self.service.send_daily_summary(
-            "test_user_001",
-            summary_data,
-            force=False
+            "test_user_001", summary_data, force=False
         )
 
         # Should be blocked by quiet hours
@@ -806,10 +739,7 @@ class TestNotificationService(unittest.TestCase):
 
     def test_configure_preferences(self):
         """Test configuring notification preferences."""
-        self.service.configure_preferences(
-            email="parent@example.com",
-            quiet_hours_enabled=False
-        )
+        self.service.configure_preferences(email="parent@example.com", quiet_hours_enabled=False)
 
         self.assertEqual(self.service.preferences.email_address, "parent@example.com")
         self.assertFalse(self.service.preferences.quiet_hours_enabled)
@@ -817,8 +747,7 @@ class TestNotificationService(unittest.TestCase):
     def test_channel_preferences(self):
         """Test setting channel preferences."""
         self.service.set_channel_preferences(
-            NotificationType.DAILY_SUMMARY,
-            {NotificationChannel.EMAIL, NotificationChannel.PUSH}
+            NotificationType.DAILY_SUMMARY, {NotificationChannel.EMAIL, NotificationChannel.PUSH}
         )
 
         channels = self.service.preferences.channel_preferences[NotificationType.DAILY_SUMMARY]
@@ -830,9 +759,7 @@ class TestNotificationService(unittest.TestCase):
         # Send several notifications
         for i in range(5):
             self.service.send_daily_summary(
-                "test_user_001",
-                {'date': f'2024-01-{i+1:02d}'},
-                force=True
+                "test_user_001", {"date": f"2024-01-{i+1:02d}"}, force=True
             )
 
         history = self.service.get_notification_history(limit=3)
@@ -841,17 +768,10 @@ class TestNotificationService(unittest.TestCase):
     def test_state_persistence(self):
         """Test that notification state persists."""
         self.service.configure_preferences(email="parent@example.com")
-        self.service.send_daily_summary(
-            "test_user_001",
-            {'date': '2024-01-15'},
-            force=True
-        )
+        self.service.send_daily_summary("test_user_001", {"date": "2024-01-15"}, force=True)
 
         # Create new service with same storage
-        new_service = NotificationService(
-            parent_id="parent_001",
-            storage_path=Path(self.temp_dir)
-        )
+        new_service = NotificationService(parent_id="parent_001", storage_path=Path(self.temp_dir))
 
         self.assertEqual(new_service.preferences.email_address, "parent@example.com")
         self.assertEqual(len(new_service.notification_history), 1)
@@ -868,24 +788,19 @@ class TestIntegration(unittest.TestCase):
 
         # Initialize all components
         self.usage_controller = UsageController(
-            user_id=self.user_id,
-            storage_path=Path(self.temp_dir) / "usage"
+            user_id=self.user_id, storage_path=Path(self.temp_dir) / "usage"
         )
         self.content_filter = ContentFilter(
-            user_id=self.user_id,
-            storage_path=Path(self.temp_dir) / "filters"
+            user_id=self.user_id, storage_path=Path(self.temp_dir) / "filters"
         )
         self.activity_monitor = ActivityMonitor(
-            user_id=self.user_id,
-            storage_path=Path(self.temp_dir) / "activity"
+            user_id=self.user_id, storage_path=Path(self.temp_dir) / "activity"
         )
         self.device_manager = DeviceManager(
-            parent_id=self.parent_id,
-            storage_path=Path(self.temp_dir) / "devices"
+            parent_id=self.parent_id, storage_path=Path(self.temp_dir) / "devices"
         )
         self.notification_service = NotificationService(
-            parent_id=self.parent_id,
-            storage_path=Path(self.temp_dir) / "notifications"
+            parent_id=self.parent_id, storage_path=Path(self.temp_dir) / "notifications"
         )
 
     def tearDown(self):
@@ -904,7 +819,7 @@ class TestIntegration(unittest.TestCase):
             device_name="Child's Tablet",
             user_id=self.user_id,
             platform="iOS",
-            app_version="1.0.0"
+            app_version="1.0.0",
         )
 
         # 3. Simulate learning session
@@ -919,22 +834,19 @@ class TestIntegration(unittest.TestCase):
             problems_attempted=20,
             problems_correct=18,
             difficulty_level="middle_school",
-            topics_covered=["algebra", "equations"]
+            topics_covered=["algebra", "equations"],
         )
 
         # 4. Check content filter
         allowed, reason = self.content_filter.check_content(
-            subject="mathematics",
-            difficulty=DifficultyLevel.MIDDLE_SCHOOL
+            subject="mathematics", difficulty=DifficultyLevel.MIDDLE_SCHOOL
         )
         self.assertTrue(allowed)
 
         # 5. Generate and send daily summary
         daily_report = self.activity_monitor.get_daily_report()
         notification_id = self.notification_service.send_daily_summary(
-            user_id=self.user_id,
-            summary_data=daily_report,
-            force=True
+            user_id=self.user_id, summary_data=daily_report, force=True
         )
         self.assertIsNotNone(notification_id)
 
@@ -963,6 +875,6 @@ def run_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     success = run_tests()
     sys.exit(0 if success else 1)

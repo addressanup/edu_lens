@@ -11,10 +11,10 @@ This agent handles Phase 3 of the orchestration pipeline:
 from typing import Any, Dict, List, Optional
 
 from agents.base_agent import (
-    BaseAgent,
     AgentCapability,
     AgentContext,
     AgentResult,
+    BaseAgent,
 )
 
 
@@ -31,7 +31,9 @@ class IntegrationEngineerAgent(BaseAgent):
     """
 
     agent_name = "integration_engineer"
-    agent_description = "Infrastructure and integration specialist for cloud provisioning and DevOps setup"
+    agent_description = (
+        "Infrastructure and integration specialist for cloud provisioning and DevOps setup"
+    )
     capabilities = [
         AgentCapability.CLOUD_PROVISIONING,
         AgentCapability.DATABASE_SETUP,
@@ -89,83 +91,91 @@ class IntegrationEngineerAgent(BaseAgent):
         # Add technology stack requirements
         tech_stack = context.input_data.get("technology_stack", {})
         if tech_stack:
-            prompt_parts.extend([
-                "## Technology Stack",
-                f"Backend: {tech_stack.get('backend', {})}",
-                f"Frontend: {tech_stack.get('frontend', {})}",
-                f"Database: {tech_stack.get('database', {})}",
-                f"Infrastructure: {tech_stack.get('infrastructure', {})}",
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Technology Stack",
+                    f"Backend: {tech_stack.get('backend', {})}",
+                    f"Frontend: {tech_stack.get('frontend', {})}",
+                    f"Database: {tech_stack.get('database', {})}",
+                    f"Infrastructure: {tech_stack.get('infrastructure', {})}",
+                    "",
+                ]
+            )
 
         # Add architecture requirements
         architecture = context.input_data.get("architecture", {})
         if architecture:
-            prompt_parts.extend([
-                "## Architecture",
-                f"Pattern: {architecture.get('pattern', 'Not specified')}",
-                f"Components: {architecture.get('components', [])}",
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Architecture",
+                    f"Pattern: {architecture.get('pattern', 'Not specified')}",
+                    f"Components: {architecture.get('components', [])}",
+                    "",
+                ]
+            )
 
         # Add constraints
         if context.constraints:
-            prompt_parts.extend([
-                "## Constraints",
-                str(context.constraints),
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Constraints",
+                    str(context.constraints),
+                    "",
+                ]
+            )
 
-        prompt_parts.extend([
-            "## Required Output",
-            "",
-            "Please provide infrastructure configuration in JSON format:",
-            "",
-            "```json",
-            "{",
-            '  "database": {',
-            '    "provisioned": true,',
-            '    "type": "PostgreSQL",',
-            '    "provider": "Supabase|AWS RDS|etc",',
-            '    "connection_string_var": "DATABASE_URL",',
-            '    "setup_commands": ["command1", "command2"],',
-            '    "migrations": ["migration file paths"]',
-            "  },",
-            '  "repository": {',
-            '    "created": true,',
-            '    "provider": "GitHub|GitLab",',
-            '    "name": "repo-name",',
-            '    "branch_protection": true,',
-            '    "setup_commands": ["git commands"]',
-            "  },",
-            '  "cicd": {',
-            '    "configured": true,',
-            '    "provider": "GitHub Actions|GitLab CI",',
-            '    "pipeline_file": ".github/workflows/ci.yml",',
-            '    "stages": ["lint", "test", "build", "deploy"],',
-            '    "pipeline_content": "YAML content"',
-            "  },",
-            '  "infrastructure": {',
-            '    "provider": "AWS|GCP|Azure",',
-            '    "terraform_files": {',
-            '      "main.tf": "terraform content",',
-            '      "variables.tf": "variables content"',
-            "    },",
-            '    "resources": ["list of resources to provision"]',
-            "  },",
-            '  "environment_variables": {',
-            '    "DATABASE_URL": "placeholder",',
-            '    "API_KEY": "placeholder",',
-            '    "SECRET_KEY": "placeholder"',
-            "  },",
-            '  "security": {',
-            '    "ssl_enabled": true,',
-            '    "firewall_configured": true,',
-            '    "secrets_management": "AWS Secrets Manager|Vault"',
-            "  }",
-            "}",
-            "```",
-        ])
+        prompt_parts.extend(
+            [
+                "## Required Output",
+                "",
+                "Please provide infrastructure configuration in JSON format:",
+                "",
+                "```json",
+                "{",
+                '  "database": {',
+                '    "provisioned": true,',
+                '    "type": "PostgreSQL",',
+                '    "provider": "Supabase|AWS RDS|etc",',
+                '    "connection_string_var": "DATABASE_URL",',
+                '    "setup_commands": ["command1", "command2"],',
+                '    "migrations": ["migration file paths"]',
+                "  },",
+                '  "repository": {',
+                '    "created": true,',
+                '    "provider": "GitHub|GitLab",',
+                '    "name": "repo-name",',
+                '    "branch_protection": true,',
+                '    "setup_commands": ["git commands"]',
+                "  },",
+                '  "cicd": {',
+                '    "configured": true,',
+                '    "provider": "GitHub Actions|GitLab CI",',
+                '    "pipeline_file": ".github/workflows/ci.yml",',
+                '    "stages": ["lint", "test", "build", "deploy"],',
+                '    "pipeline_content": "YAML content"',
+                "  },",
+                '  "infrastructure": {',
+                '    "provider": "AWS|GCP|Azure",',
+                '    "terraform_files": {',
+                '      "main.tf": "terraform content",',
+                '      "variables.tf": "variables content"',
+                "    },",
+                '    "resources": ["list of resources to provision"]',
+                "  },",
+                '  "environment_variables": {',
+                '    "DATABASE_URL": "placeholder",',
+                '    "API_KEY": "placeholder",',
+                '    "SECRET_KEY": "placeholder"',
+                "  },",
+                '  "security": {',
+                '    "ssl_enabled": true,',
+                '    "firewall_configured": true,',
+                '    "secrets_management": "AWS Secrets Manager|Vault"',
+                "  }",
+                "}",
+                "```",
+            ]
+        )
 
         return "\n".join(prompt_parts)
 
@@ -183,6 +193,7 @@ class IntegrationEngineerAgent(BaseAgent):
             # Try to extract from text
             if "text" in response:
                 import json
+
                 try:
                     text = response["text"]
                     start = text.find("{")

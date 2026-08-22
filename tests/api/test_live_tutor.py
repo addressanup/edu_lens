@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 
 import pytest
 
-from src.ai.llm_service import LLMResponse, LLMProvider, LLMService
+from src.ai.llm_service import LLMProvider, LLMResponse, LLMService
 from src.api.live_tutor import (
     LiveTutorConfig,
     LiveTutorSession,
@@ -39,9 +39,7 @@ class FakeLLM:
 
     async def generate_with_image(self, **kwargs):
         self.calls.append(kwargs)
-        content = (
-            self.responses.pop(0) if self.responses else '{"scene": "none"}'
-        )
+        content = self.responses.pop(0) if self.responses else '{"scene": "none"}'
         return LLMResponse(
             content=content,
             model=self.vision_model,
@@ -105,15 +103,17 @@ class TestFrameIngestion:
 class TestObservationLoop:
     @pytest.mark.asyncio
     async def test_intervention_emitted_on_struggle(self, session):
-        observation = json.dumps({
-            "scene": "math worksheet",
-            "subject": "math",
-            "child_present": True,
-            "engagement": "stuck",
-            "struggle_detected": True,
-            "confidence": 0.9,
-            "intervention_message": "Try counting the apples one by one!",
-        })
+        observation = json.dumps(
+            {
+                "scene": "math worksheet",
+                "subject": "math",
+                "child_present": True,
+                "engagement": "stuck",
+                "struggle_detected": True,
+                "confidence": 0.9,
+                "intervention_message": "Try counting the apples one by one!",
+            }
+        )
         session.llm.responses.append(observation)
 
         await session.ingest_frame(TINY_JPEG_B64)
@@ -135,12 +135,14 @@ class TestObservationLoop:
 
     @pytest.mark.asyncio
     async def test_no_intervention_below_confidence(self, session):
-        observation = json.dumps({
-            "scene": "worksheet",
-            "struggle_detected": True,
-            "confidence": 0.3,
-            "intervention_message": "hint",
-        })
+        observation = json.dumps(
+            {
+                "scene": "worksheet",
+                "struggle_detected": True,
+                "confidence": 0.3,
+                "intervention_message": "hint",
+            }
+        )
         session.llm.responses.append(observation)
 
         await session.ingest_frame(TINY_JPEG_B64)
@@ -157,12 +159,14 @@ class TestObservationLoop:
 
     @pytest.mark.asyncio
     async def test_cooldown_prevents_spam(self, session):
-        observation = json.dumps({
-            "scene": "worksheet",
-            "struggle_detected": True,
-            "confidence": 0.95,
-            "intervention_message": "hint",
-        })
+        observation = json.dumps(
+            {
+                "scene": "worksheet",
+                "struggle_detected": True,
+                "confidence": 0.95,
+                "intervention_message": "hint",
+            }
+        )
         session.llm.responses = [observation] * 10
         session.config.intervention_cooldown_s = 60.0
 

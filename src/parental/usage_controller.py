@@ -7,16 +7,16 @@ Manages usage limits, schedules, and enforcement of time-based restrictions.
 import json
 import logging
 from datetime import datetime, time, timedelta
-from typing import Dict, List, Optional, Tuple
 from enum import Enum
 from pathlib import Path
-
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class DayOfWeek(Enum):
     """Days of the week enumeration"""
+
     MONDAY = 0
     TUESDAY = 1
     WEDNESDAY = 2
@@ -28,6 +28,7 @@ class DayOfWeek(Enum):
 
 class LimitStatus(Enum):
     """Status of usage limits"""
+
     ALLOWED = "allowed"
     LIMIT_REACHED = "limit_reached"
     OUTSIDE_SCHEDULE = "outside_schedule"
@@ -155,7 +156,9 @@ class UsageController:
         logger.info(f"Set grace period to {minutes} minutes for user {self.user_id}")
         self._save_state()
 
-    def check_allowed(self, current_time: Optional[datetime] = None) -> Tuple[LimitStatus, Optional[str]]:
+    def check_allowed(
+        self, current_time: Optional[datetime] = None
+    ) -> Tuple[LimitStatus, Optional[str]]:
         """
         Check if usage is currently allowed.
 
@@ -192,7 +195,10 @@ class UsageController:
                 if remaining <= 0:
                     return LimitStatus.LIMIT_REACHED, f"Daily limit of {limit} minutes reached"
                 elif remaining <= self.grace_period_minutes:
-                    return LimitStatus.GRACE_PERIOD, f"Only {remaining} minutes remaining (grace period)"
+                    return (
+                        LimitStatus.GRACE_PERIOD,
+                        f"Only {remaining} minutes remaining (grace period)",
+                    )
 
         return LimitStatus.ALLOWED, "Usage is allowed"
 
@@ -394,57 +400,55 @@ class UsageController:
     def _save_state(self) -> None:
         """Save controller state to disk."""
         state = {
-            'daily_limits': {day.value: limit for day, limit in self.daily_limits.items()},
-            'schedules': {
+            "daily_limits": {day.value: limit for day, limit in self.daily_limits.items()},
+            "schedules": {
                 day.value: [(s.isoformat(), e.isoformat()) for s, e in ranges]
                 for day, ranges in self.schedules.items()
             },
-            'grace_period_minutes': self.grace_period_minutes,
-            'is_locked': self.is_locked,
-            'usage_data': self.usage_data,
-            'session_start': self.session_start.isoformat() if self.session_start else None,
-            'grace_period_notified': self.grace_period_notified,
+            "grace_period_minutes": self.grace_period_minutes,
+            "is_locked": self.is_locked,
+            "usage_data": self.usage_data,
+            "session_start": self.session_start.isoformat() if self.session_start else None,
+            "grace_period_notified": self.grace_period_notified,
         }
 
-        state_file = self.storage_path / 'usage_state.json'
-        with open(state_file, 'w') as f:
+        state_file = self.storage_path / "usage_state.json"
+        with open(state_file, "w") as f:
             json.dump(state, f, indent=2)
 
     def _load_state(self) -> None:
         """Load controller state from disk."""
-        state_file = self.storage_path / 'usage_state.json'
+        state_file = self.storage_path / "usage_state.json"
 
         if not state_file.exists():
             return
 
         try:
-            with open(state_file, 'r') as f:
+            with open(state_file, "r") as f:
                 state = json.load(f)
 
             self.daily_limits = {
-                DayOfWeek(day): limit
-                for day, limit in state.get('daily_limits', {}).items()
+                DayOfWeek(day): limit for day, limit in state.get("daily_limits", {}).items()
             }
 
             self.schedules = {
                 DayOfWeek(int(day)): [
-                    (
-                        datetime.fromisoformat(s).time(),
-                        datetime.fromisoformat(e).time()
-                    )
+                    (datetime.fromisoformat(s).time(), datetime.fromisoformat(e).time())
                     for s, e in ranges
                 ]
-                for day, ranges in state.get('schedules', {}).items()
+                for day, ranges in state.get("schedules", {}).items()
             }
 
-            self.grace_period_minutes = state.get('grace_period_minutes', 5)
-            self.is_locked = state.get('is_locked', False)
-            self.usage_data = state.get('usage_data', {})
+            self.grace_period_minutes = state.get("grace_period_minutes", 5)
+            self.is_locked = state.get("is_locked", False)
+            self.usage_data = state.get("usage_data", {})
 
-            session_start_str = state.get('session_start')
-            self.session_start = datetime.fromisoformat(session_start_str) if session_start_str else None
+            session_start_str = state.get("session_start")
+            self.session_start = (
+                datetime.fromisoformat(session_start_str) if session_start_str else None
+            )
 
-            self.grace_period_notified = state.get('grace_period_notified', False)
+            self.grace_period_notified = state.get("grace_period_notified", False)
 
             logger.info(f"Loaded state for user {self.user_id}")
         except Exception as e:
@@ -461,12 +465,12 @@ class UsageController:
         remaining = self.get_remaining_time()
 
         return {
-            'user_id': self.user_id,
-            'status': status.value,
-            'message': message,
-            'remaining_minutes': remaining,
-            'usage_today': self.get_usage_today(),
-            'is_locked': self.is_locked,
-            'session_active': self.session_start is not None,
-            'grace_period_active': status == LimitStatus.GRACE_PERIOD,
+            "user_id": self.user_id,
+            "status": status.value,
+            "message": message,
+            "remaining_minutes": remaining,
+            "usage_today": self.get_usage_today(),
+            "is_locked": self.is_locked,
+            "session_active": self.session_start is not None,
+            "grace_period_active": status == LimitStatus.GRACE_PERIOD,
         }

@@ -16,17 +16,13 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend, SpeakingRate
-from src.audio.voice_persona import (
-    VoicePersonaLibrary,
-    PersonaManager,
-    EmotionalTone
-)
 from src.audio.pronunciation_rules import (
     MathPronunciationEngine,
+    PronunciationRulesEngine,
     SciencePronunciationEngine,
-    PronunciationRulesEngine
 )
+from src.audio.tts_engine import SpeakingRate, TTSBackend, TTSConfig, TTSEngine
+from src.audio.voice_persona import EmotionalTone, PersonaManager, VoicePersonaLibrary
 
 
 async def demo_basic_synthesis():
@@ -174,8 +170,9 @@ async def demo_speed_variation():
     for speed, description in speeds:
         engine.set_speed(speed)
         output = await engine.synthesize(text, use_cache=False)
-        print(f"  {description:20s}: {len(output.audio_data)} bytes, "
-              f"{output.duration_ms:.2f} ms")
+        print(
+            f"  {description:20s}: {len(output.audio_data)} bytes, " f"{output.duration_ms:.2f} ms"
+        )
 
 
 async def demo_pedagogical_pauses():
@@ -314,6 +311,7 @@ async def main():
         except Exception as e:
             print(f"\nError in {name}: {e}")
             import traceback
+
             traceback.print_exc()
 
     print("\n" + "=" * 60)

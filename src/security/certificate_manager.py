@@ -12,21 +12,21 @@ Features:
 - Certificate storage and retrieval
 """
 
-import os
-import json
 import hashlib
-from typing import Optional, List, Dict, Set, Tuple
-from dataclasses import dataclass, asdict
+import json
+import logging
+import os
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-import logging
+from typing import Dict, List, Optional, Set, Tuple
 
 from cryptography import x509
-from cryptography.x509.oid import NameOID, ExtensionOID
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, ec
-from cryptography.hazmat.backends import default_backend
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec, rsa
+from cryptography.x509.oid import ExtensionOID, NameOID
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CertificateInfo:
     """Information about a certificate."""
+
     subject: str
     issuer: str
     serial_number: str
@@ -49,6 +50,7 @@ class CertificateInfo:
 @dataclass
 class PinnedCertificate:
     """Pinned certificate information."""
+
     hostname: str
     fingerprints: List[str]  # SHA-256 fingerprints
     public_key_hashes: List[str]  # SPKI hashes
@@ -82,7 +84,9 @@ class CertificateManager:
         Args:
             cert_directory: Directory for storing certificates
         """
-        self.cert_directory = Path(cert_directory) if cert_directory else Path.home() / ".edulens" / "certs"
+        self.cert_directory = (
+            Path(cert_directory) if cert_directory else Path.home() / ".edulens" / "certs"
+        )
         self.cert_directory.mkdir(parents=True, exist_ok=True)
 
         self.pinned_certs_file = self.cert_directory / "pinned_certificates.json"
@@ -100,7 +104,7 @@ class CertificateManager:
         device_name: str,
         organization: str = "EduLens",
         use_ec: bool = True,
-        validity_days: Optional[int] = None
+        validity_days: Optional[int] = None,
     ) -> Tuple[x509.Certificate, bytes]:
         """
         Generate a self-signed certificate for a device.
@@ -123,24 +127,24 @@ class CertificateManager:
             key_type = "EC"
         else:
             private_key = rsa.generate_private_key(
-                public_exponent=65537,
-                key_size=self.RSA_KEY_SIZE,
-                backend=self.backend
+                public_exponent=65537, key_size=self.RSA_KEY_SIZE, backend=self.backend
             )
             key_type = "RSA"
 
         public_key = private_key.public_key()
 
         # Certificate subject
-        subject = issuer = x509.Name([
-            x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
-            x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "California"),
-            x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
-            x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization),
-            x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "EduLens Devices"),
-            x509.NameAttribute(NameOID.COMMON_NAME, device_name),
-            x509.NameAttribute(NameOID.SERIAL_NUMBER, device_id),
-        ])
+        subject = issuer = x509.Name(
+            [
+                x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+                x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "California"),
+                x509.NameAttribute(NameOID.LOCALITY_NAME, "San Francisco"),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization),
+                x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, "EduLens Devices"),
+                x509.NameAttribute(NameOID.COMMON_NAME, device_name),
+                x509.NameAttribute(NameOID.SERIAL_NUMBER, device_id),
+            ]
+        )
 
         # Calculate validity period
         validity = timedelta(days=validity_days) if validity_days else self.DEVICE_CERT_VALIDITY
@@ -158,10 +162,12 @@ class CertificateManager:
 
         # Add extensions
         cert_builder = cert_builder.add_extension(
-            x509.SubjectAlternativeName([
-                x509.DNSName(f"{device_id}.edulens.local"),
-                x509.DNSName(device_name),
-            ]),
+            x509.SubjectAlternativeName(
+                [
+                    x509.DNSName(f"{device_id}.edulens.local"),
+                    x509.DNSName(device_name),
+                ]
+            ),
             critical=False,
         )
 
@@ -186,10 +192,12 @@ class CertificateManager:
         )
 
         cert_builder = cert_builder.add_extension(
-            x509.ExtendedKeyUsage([
-                x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH,
-                x509.oid.ExtendedKeyUsageOID.SERVER_AUTH,
-            ]),
+            x509.ExtendedKeyUsage(
+                [
+                    x509.oid.ExtendedKeyUsageOID.CLIENT_AUTH,
+                    x509.oid.ExtendedKeyUsageOID.SERVER_AUTH,
+                ]
+            ),
             critical=False,
         )
 
@@ -200,21 +208,20 @@ class CertificateManager:
         private_key_pem = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
+            encryption_algorithm=serialization.NoEncryption(),
         )
 
         # Save certificate and key
         self._save_device_certificate(device_id, certificate, private_key_pem)
 
-        logger.info(f"Generated {key_type} device certificate for {device_id} (valid until {not_valid_after})")
+        logger.info(
+            f"Generated {key_type} device certificate for {device_id} (valid until {not_valid_after})"
+        )
 
         return certificate, private_key_pem
 
     def _save_device_certificate(
-        self,
-        device_id: str,
-        certificate: x509.Certificate,
-        private_key_pem: bytes
+        self, device_id: str, certificate: x509.Certificate, private_key_pem: bytes
     ) -> None:
         """Save device certificate and private key to files."""
         cert_file = self.cert_directory / f"{device_id}_cert.pem"
@@ -237,7 +244,7 @@ class CertificateManager:
         certificate: x509.Certificate,
         trusted_certs: Optional[List[x509.Certificate]] = None,
         check_expiration: bool = True,
-        check_revocation: bool = False
+        check_revocation: bool = False,
     ) -> Tuple[bool, List[str]]:
         """
         Validate a certificate.
@@ -270,7 +277,11 @@ class CertificateManager:
                 public_key.verify(
                     certificate.signature,
                     certificate.tbs_certificate_bytes,
-                    ec.ECDSA(hashes.SHA256()) if isinstance(public_key, ec.EllipticCurvePublicKey) else None
+                    (
+                        ec.ECDSA(hashes.SHA256())
+                        if isinstance(public_key, ec.EllipticCurvePublicKey)
+                        else None
+                    ),
                 )
             elif trusted_certs:
                 # Verify with trusted CA
@@ -303,9 +314,7 @@ class CertificateManager:
         return is_valid, errors
 
     def _verify_chain(
-        self,
-        certificate: x509.Certificate,
-        trusted_certs: List[x509.Certificate]
+        self, certificate: x509.Certificate, trusted_certs: List[x509.Certificate]
     ) -> bool:
         """
         Verify certificate chain against trusted certificates.
@@ -325,7 +334,7 @@ class CertificateManager:
                     issuer_public_key.verify(
                         certificate.signature,
                         certificate.tbs_certificate_bytes,
-                        ec.ECDSA(hashes.SHA256())
+                        ec.ECDSA(hashes.SHA256()),
                     )
                     return True
                 elif isinstance(issuer_public_key, rsa.RSAPublicKey):
@@ -333,7 +342,7 @@ class CertificateManager:
                         certificate.signature,
                         certificate.tbs_certificate_bytes,
                         padding.PKCS1v15(),
-                        hashes.SHA256()
+                        hashes.SHA256(),
                     )
                     return True
             except InvalidSignature:
@@ -350,7 +359,7 @@ class CertificateManager:
         hostname: str,
         certificate: x509.Certificate,
         pin_public_key: bool = True,
-        lifetime: Optional[timedelta] = None
+        lifetime: Optional[timedelta] = None,
     ) -> PinnedCertificate:
         """
         Pin a certificate for a hostname.
@@ -379,7 +388,7 @@ class CertificateManager:
             fingerprints=[cert_fingerprint],
             public_key_hashes=[public_key_hash],
             pinned_at=pinned_at,
-            expires_at=expires_at
+            expires_at=expires_at,
         )
 
         # Store pinned certificate
@@ -390,11 +399,7 @@ class CertificateManager:
 
         return pinned_cert
 
-    def verify_pinned_certificate(
-        self,
-        hostname: str,
-        certificate: x509.Certificate
-    ) -> bool:
+    def verify_pinned_certificate(self, hostname: str, certificate: x509.Certificate) -> bool:
         """
         Verify a certificate against pinned certificates.
 
@@ -422,22 +427,21 @@ class CertificateManager:
 
         # Check against pinned values
         is_valid = (
-            cert_fingerprint in pinned_cert.fingerprints or
-            public_key_hash in pinned_cert.public_key_hashes
+            cert_fingerprint in pinned_cert.fingerprints
+            or public_key_hash in pinned_cert.public_key_hashes
         )
 
         if is_valid:
             logger.info(f"Certificate pin validation successful for {hostname}")
         else:
-            logger.error(f"Certificate pin validation FAILED for {hostname} - possible MITM attack!")
+            logger.error(
+                f"Certificate pin validation FAILED for {hostname} - possible MITM attack!"
+            )
 
         return is_valid
 
     def add_pin_fingerprint(
-        self,
-        hostname: str,
-        fingerprint: str,
-        is_public_key_hash: bool = False
+        self, hostname: str, fingerprint: str, is_public_key_hash: bool = False
     ) -> bool:
         """
         Add a fingerprint to an existing pin.
@@ -490,10 +494,7 @@ class CertificateManager:
     # ==================== Revocation Checking ====================
 
     def check_revocation(
-        self,
-        certificate: x509.Certificate,
-        use_ocsp: bool = True,
-        use_crl: bool = True
+        self, certificate: x509.Certificate, use_ocsp: bool = True, use_crl: bool = True
     ) -> Tuple[bool, str]:
         """
         Check if a certificate has been revoked.
@@ -507,7 +508,9 @@ class CertificateManager:
             Tuple of (is_revoked, reason)
         """
         # Simplified revocation check - production would implement full OCSP/CRL
-        logger.debug(f"Checking revocation status for certificate: {self._get_cert_subject(certificate)}")
+        logger.debug(
+            f"Checking revocation status for certificate: {self._get_cert_subject(certificate)}"
+        )
 
         # Check local revocation list
         if self._is_revoked(certificate):
@@ -532,10 +535,10 @@ class CertificateManager:
             return False
 
         try:
-            with open(revocation_file, 'r') as f:
+            with open(revocation_file, "r") as f:
                 revoked_serials = json.load(f)
 
-            serial_hex = format(certificate.serial_number, 'x')
+            serial_hex = format(certificate.serial_number, "x")
             return serial_hex in revoked_serials
         except Exception as e:
             logger.error(f"Error checking revocation list: {e}")
@@ -574,7 +577,9 @@ class CertificateManager:
         # Extract extended key usage
         extended_key_usage = []
         try:
-            eku = certificate.extensions.get_extension_for_oid(ExtensionOID.EXTENDED_KEY_USAGE).value
+            eku = certificate.extensions.get_extension_for_oid(
+                ExtensionOID.EXTENDED_KEY_USAGE
+            ).value
             for usage in eku:
                 extended_key_usage.append(usage.dotted_string)
         except x509.ExtensionNotFound:
@@ -583,14 +588,14 @@ class CertificateManager:
         return CertificateInfo(
             subject=subject,
             issuer=issuer,
-            serial_number=format(certificate.serial_number, 'x'),
+            serial_number=format(certificate.serial_number, "x"),
             not_valid_before=certificate.not_valid_before,
             not_valid_after=certificate.not_valid_after,
             fingerprint=fingerprint,
             public_key_fingerprint=public_key_fingerprint,
             is_self_signed=self._is_self_signed(certificate),
             key_usage=key_usage,
-            extended_key_usage=extended_key_usage
+            extended_key_usage=extended_key_usage,
         )
 
     # ==================== Helper Methods ====================
@@ -606,7 +611,7 @@ class CertificateManager:
         public_key = certificate.public_key()
         public_key_bytes = public_key.public_bytes(
             encoding=serialization.Encoding.DER,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
         key_hash = hashlib.sha256(public_key_bytes).hexdigest()
         return key_hash
@@ -637,13 +642,13 @@ class CertificateManager:
             return
 
         try:
-            with open(self.pinned_certs_file, 'r') as f:
+            with open(self.pinned_certs_file, "r") as f:
                 data = json.load(f)
 
             for hostname, cert_data in data.items():
-                cert_data['pinned_at'] = datetime.fromisoformat(cert_data['pinned_at'])
-                if cert_data.get('expires_at'):
-                    cert_data['expires_at'] = datetime.fromisoformat(cert_data['expires_at'])
+                cert_data["pinned_at"] = datetime.fromisoformat(cert_data["pinned_at"])
+                if cert_data.get("expires_at"):
+                    cert_data["expires_at"] = datetime.fromisoformat(cert_data["expires_at"])
 
                 self.pinned_certificates[hostname] = PinnedCertificate(**cert_data)
 
@@ -657,13 +662,13 @@ class CertificateManager:
             data = {}
             for hostname, pinned_cert in self.pinned_certificates.items():
                 cert_dict = asdict(pinned_cert)
-                cert_dict['pinned_at'] = pinned_cert.pinned_at.isoformat()
+                cert_dict["pinned_at"] = pinned_cert.pinned_at.isoformat()
                 if pinned_cert.expires_at:
-                    cert_dict['expires_at'] = pinned_cert.expires_at.isoformat()
+                    cert_dict["expires_at"] = pinned_cert.expires_at.isoformat()
 
                 data[hostname] = cert_dict
 
-            with open(self.pinned_certs_file, 'w') as f:
+            with open(self.pinned_certs_file, "w") as f:
                 json.dump(data, f, indent=2)
 
             logger.debug("Saved pinned certificates to file")
@@ -682,7 +687,7 @@ class CertificateManager:
         Returns:
             Certificate object
         """
-        with open(cert_path, 'rb') as f:
+        with open(cert_path, "rb") as f:
             cert_data = f.read()
 
         certificate = x509.load_pem_x509_certificate(cert_data, self.backend)
@@ -701,13 +706,11 @@ class CertificateManager:
         Returns:
             Private key object
         """
-        with open(key_path, 'rb') as f:
+        with open(key_path, "rb") as f:
             key_data = f.read()
 
         private_key = serialization.load_pem_private_key(
-            key_data,
-            password=password,
-            backend=self.backend
+            key_data, password=password, backend=self.backend
         )
         logger.debug(f"Loaded private key from {key_path}")
 

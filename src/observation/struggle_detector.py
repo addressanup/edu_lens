@@ -21,25 +21,28 @@ logger = logging.getLogger(__name__)
 
 class StruggleIndicator(Enum):
     """Types of struggle indicators."""
-    TIME_THRESHOLD = "time_threshold"           # >45 seconds on same problem
-    NO_ACTIVITY = "no_activity"                 # >15 seconds idle
-    ERASING = "erasing"                         # Detected erasing motion
-    CROSSING_OUT = "crossing_out"               # Crossed out work
-    REPEATED_ATTEMPTS = "repeated_attempts"     # Multiple attempts visible
-    CONFUSION_DETECTED = "confusion_detected"   # Visual signs of confusion
+
+    TIME_THRESHOLD = "time_threshold"  # >45 seconds on same problem
+    NO_ACTIVITY = "no_activity"  # >15 seconds idle
+    ERASING = "erasing"  # Detected erasing motion
+    CROSSING_OUT = "crossing_out"  # Crossed out work
+    REPEATED_ATTEMPTS = "repeated_attempts"  # Multiple attempts visible
+    CONFUSION_DETECTED = "confusion_detected"  # Visual signs of confusion
 
 
 class StruggleSeverity(Enum):
     """Severity levels of detected struggle."""
-    LOW = "low"           # Might need help soon
-    MEDIUM = "medium"     # Likely struggling
-    HIGH = "high"         # Definitely needs help
-    CRITICAL = "critical" # Frustration likely
+
+    LOW = "low"  # Might need help soon
+    MEDIUM = "medium"  # Likely struggling
+    HIGH = "high"  # Definitely needs help
+    CRITICAL = "critical"  # Frustration likely
 
 
 @dataclass
 class StruggleDetectionResult:
     """Result of struggle detection."""
+
     is_struggling: bool = False
     severity: str = StruggleSeverity.LOW.value
     reason: Optional[str] = None
@@ -99,11 +102,7 @@ class StruggleDetector:
         self._last_analysis_time = 0
         self._visual_analysis_interval = 2.0  # seconds
 
-    async def detect(
-        self,
-        frame: Any,
-        indicators: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    async def detect(self, frame: Any, indicators: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Detect if child is struggling.
 
@@ -194,14 +193,16 @@ class StruggleDetector:
                     "time_on_problem": indicators.get("time_on_problem", 0),
                     "idle_time": indicators.get("idle_time", 0),
                     "intervention_count": indicators.get("intervention_count", 0),
-                }
+                },
             )
 
             # Record in history
-            self._indicator_history.append({
-                "timestamp": time.time(),
-                "result": result.to_dict(),
-            })
+            self._indicator_history.append(
+                {
+                    "timestamp": time.time(),
+                    "result": result.to_dict(),
+                }
+            )
             if len(self._indicator_history) > 50:
                 self._indicator_history.pop(0)
 
@@ -230,7 +231,7 @@ class StruggleDetector:
                 "details": {
                     "time_on_problem": time_on_problem,
                     "threshold": self.time_threshold,
-                }
+                },
             }
 
         # Warning level (approaching threshold)
@@ -242,7 +243,7 @@ class StruggleDetector:
                     "time_on_problem": time_on_problem,
                     "threshold": self.warning_threshold,
                     "is_warning": True,
-                }
+                },
             }
 
         return None
@@ -261,7 +262,7 @@ class StruggleDetector:
                 "details": {
                     "idle_time": idle_time,
                     "threshold": self.idle_threshold,
-                }
+                },
             }
 
         return None
@@ -282,7 +283,7 @@ class StruggleDetector:
                     "severity_score": severity,
                     "details": {
                         "erasing_count": self._erasing_count,
-                    }
+                    },
                 }
         else:
             # Decay erasing count slowly
@@ -317,7 +318,7 @@ class StruggleDetector:
                     "severity_score": crossing_score,
                     "details": {
                         "crossing_score": crossing_score,
-                    }
+                    },
                 }
 
             return None
@@ -350,10 +351,7 @@ class StruggleDetector:
             edges = cv2.Canny(gray, 50, 150)
 
             # Detect lines
-            lines = cv2.HoughLinesP(
-                edges, 1, np.pi/180, 30,
-                minLineLength=20, maxLineGap=10
-            )
+            lines = cv2.HoughLinesP(edges, 1, np.pi / 180, 30, minLineLength=20, maxLineGap=10)
 
             if lines is None:
                 return 0.0
@@ -364,13 +362,13 @@ class StruggleDetector:
 
             for line in lines:
                 x1, y1, x2, y2 = line[0]
-                length = np.sqrt((x2-x1)**2 + (y2-y1)**2)
+                length = np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
                 if length < 15:
                     continue
 
                 # Calculate angle
-                angle = np.abs(np.arctan2(y2-y1, x2-x1) * 180 / np.pi)
+                angle = np.abs(np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi)
 
                 # Diagonal lines (30-60 degrees or 120-150 degrees)
                 if (30 <= angle <= 60) or (120 <= angle <= 150):
@@ -394,9 +392,7 @@ class StruggleDetector:
             logger.debug(f"Crossing detection error: {e}")
             return 0.0
 
-    def _generate_recommendations(
-        self, indicators: List[str]
-    ) -> List[str]:
+    def _generate_recommendations(self, indicators: List[str]) -> List[str]:
         """Generate intervention recommendations based on indicators."""
         recommendations = []
 

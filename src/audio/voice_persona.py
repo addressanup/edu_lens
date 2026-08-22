@@ -5,17 +5,17 @@ Defines voice personalities optimized for child education with
 age-appropriate characteristics and emotional tones.
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, Optional, List
-import logging
-
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class EmotionalTone(Enum):
     """Emotional tones for voice delivery"""
+
     NEUTRAL = "neutral"
     ENCOURAGING = "encouraging"
     EXPLAINING = "explaining"
@@ -28,14 +28,16 @@ class EmotionalTone(Enum):
 
 class AgeGroup(Enum):
     """Target age groups for voice optimization"""
-    EARLY_ELEMENTARY = "6-8"   # Ages 6-8
-    LATE_ELEMENTARY = "9-10"   # Ages 9-10
-    MIDDLE_SCHOOL = "11-12"    # Ages 11-12
-    ALL_AGES = "6-12"          # General
+
+    EARLY_ELEMENTARY = "6-8"  # Ages 6-8
+    LATE_ELEMENTARY = "9-10"  # Ages 9-10
+    MIDDLE_SCHOOL = "11-12"  # Ages 11-12
+    ALL_AGES = "6-12"  # General
 
 
 class VoiceGender(Enum):
     """Voice gender preferences"""
+
     MALE = "male"
     FEMALE = "female"
     NEUTRAL = "neutral"
@@ -44,28 +46,30 @@ class VoiceGender(Enum):
 @dataclass
 class VoiceCharacteristics:
     """Voice characteristic parameters"""
-    pitch: float = 1.0           # Pitch multiplier (0.5 - 2.0)
-    rate: float = 1.0            # Speaking rate (0.5 - 2.0)
-    volume: float = 1.0          # Volume level (0.0 - 1.0)
-    warmth: float = 0.7          # Voice warmth (0.0 - 1.0)
-    energy: float = 0.6          # Energy level (0.0 - 1.0)
-    clarity: float = 0.9         # Clarity/articulation (0.0 - 1.0)
+
+    pitch: float = 1.0  # Pitch multiplier (0.5 - 2.0)
+    rate: float = 1.0  # Speaking rate (0.5 - 2.0)
+    volume: float = 1.0  # Volume level (0.0 - 1.0)
+    warmth: float = 0.7  # Voice warmth (0.0 - 1.0)
+    energy: float = 0.6  # Energy level (0.0 - 1.0)
+    clarity: float = 0.9  # Clarity/articulation (0.0 - 1.0)
 
     def validate(self) -> bool:
         """Validate characteristic ranges"""
         return (
-            0.5 <= self.pitch <= 2.0 and
-            0.5 <= self.rate <= 2.0 and
-            0.0 <= self.volume <= 1.0 and
-            0.0 <= self.warmth <= 1.0 and
-            0.0 <= self.energy <= 1.0 and
-            0.0 <= self.clarity <= 1.0
+            0.5 <= self.pitch <= 2.0
+            and 0.5 <= self.rate <= 2.0
+            and 0.0 <= self.volume <= 1.0
+            and 0.0 <= self.warmth <= 1.0
+            and 0.0 <= self.energy <= 1.0
+            and 0.0 <= self.clarity <= 1.0
         )
 
 
 @dataclass
 class EmotionalProfile:
     """Emotional tone profile"""
+
     tone: EmotionalTone
     characteristics: VoiceCharacteristics
     phrase_templates: List[str] = field(default_factory=list)
@@ -80,6 +84,7 @@ class VoicePersona:
     Defines all aspects of a voice personality including pitch,
     rate, emotional characteristics, and context-appropriate behaviors.
     """
+
     name: str
     description: str
     base_characteristics: VoiceCharacteristics
@@ -107,16 +112,16 @@ class VoicePersona:
                 volume=base.volume * 1.05,
                 warmth=min(1.0, base.warmth * 1.1),
                 energy=min(1.0, base.energy * 1.2),
-                clarity=base.clarity
+                clarity=base.clarity,
             ),
             phrase_templates=[
                 "Great job!",
                 "You're doing wonderful!",
                 "Keep going!",
                 "Excellent work!",
-                "That's the right idea!"
+                "That's the right idea!",
             ],
-            emphasis_words=["great", "excellent", "wonderful", "amazing", "perfect"]
+            emphasis_words=["great", "excellent", "wonderful", "amazing", "perfect"],
         )
 
         # Explaining tone
@@ -128,16 +133,16 @@ class VoicePersona:
                 volume=base.volume,
                 warmth=base.warmth,
                 energy=base.energy * 0.8,
-                clarity=min(1.0, base.clarity * 1.1)
+                clarity=min(1.0, base.clarity * 1.1),
             ),
             phrase_templates=[
                 "Let me explain...",
                 "Here's how it works...",
                 "Think about it this way...",
                 "Let's break this down...",
-                "So what this means is..."
+                "So what this means is...",
             ],
-            emphasis_words=["important", "key", "notice", "remember", "understand"]
+            emphasis_words=["important", "key", "notice", "remember", "understand"],
         )
 
         # Celebrating tone
@@ -149,16 +154,16 @@ class VoicePersona:
                 volume=base.volume * 1.1,
                 warmth=min(1.0, base.warmth * 1.15),
                 energy=min(1.0, base.energy * 1.3),
-                clarity=base.clarity
+                clarity=base.clarity,
             ),
             phrase_templates=[
                 "Fantastic!",
                 "You did it!",
                 "Amazing achievement!",
                 "Way to go!",
-                "I knew you could do it!"
+                "I knew you could do it!",
             ],
-            emphasis_words=["fantastic", "amazing", "brilliant", "outstanding", "spectacular"]
+            emphasis_words=["fantastic", "amazing", "brilliant", "outstanding", "spectacular"],
         )
 
         # Patient tone
@@ -170,16 +175,16 @@ class VoicePersona:
                 volume=base.volume * 0.95,
                 warmth=min(1.0, base.warmth * 1.2),
                 energy=base.energy * 0.7,
-                clarity=min(1.0, base.clarity * 1.15)
+                clarity=min(1.0, base.clarity * 1.15),
             ),
             phrase_templates=[
                 "It's okay, let's try again...",
                 "Take your time...",
                 "No rush, we'll figure this out...",
                 "Let's look at this together...",
-                "Everyone learns at their own pace..."
+                "Everyone learns at their own pace...",
             ],
-            emphasis_words=["together", "slowly", "carefully", "step", "gentle"]
+            emphasis_words=["together", "slowly", "carefully", "step", "gentle"],
         )
 
         # Reassuring tone
@@ -191,22 +196,19 @@ class VoicePersona:
                 volume=base.volume,
                 warmth=min(1.0, base.warmth * 1.25),
                 energy=base.energy * 0.75,
-                clarity=base.clarity
+                clarity=base.clarity,
             ),
             phrase_templates=[
                 "Don't worry...",
                 "It's perfectly normal...",
                 "You're on the right track...",
                 "Mistakes help us learn...",
-                "That's a common challenge..."
+                "That's a common challenge...",
             ],
-            emphasis_words=["okay", "normal", "fine", "right", "good"]
+            emphasis_words=["okay", "normal", "fine", "right", "good"],
         )
 
-    def get_characteristics(
-        self,
-        tone: Optional[EmotionalTone] = None
-    ) -> VoiceCharacteristics:
+    def get_characteristics(self, tone: Optional[EmotionalTone] = None) -> VoiceCharacteristics:
         """
         Get voice characteristics for a specific emotional tone
 
@@ -227,6 +229,7 @@ class VoicePersona:
             return None
 
         import random
+
         phrases = self.emotional_profiles[tone].phrase_templates
         return random.choice(phrases) if phrases else None
 
@@ -238,11 +241,7 @@ class VoicePersona:
         emphasis_words = self.emotional_profiles[tone].emphasis_words
         return word.lower() in emphasis_words
 
-    def adjust_for_context(
-        self,
-        context: str,
-        difficulty: float = 0.5
-    ) -> VoiceCharacteristics:
+    def adjust_for_context(self, context: str, difficulty: float = 0.5) -> VoiceCharacteristics:
         """
         Adjust voice characteristics based on context and difficulty
 
@@ -267,7 +266,7 @@ class VoicePersona:
             volume=base.volume,
             warmth=base.warmth,
             energy=base.energy,
-            clarity=min(1.0, base.clarity * clarity_adjustment)
+            clarity=min(1.0, base.clarity * clarity_adjustment),
         )
 
 
@@ -286,16 +285,11 @@ class VoicePersonaLibrary:
             name="Friendly Tutor",
             description="Warm, encouraging voice perfect for patient instruction",
             base_characteristics=VoiceCharacteristics(
-                pitch=1.05,
-                rate=0.95,
-                volume=0.85,
-                warmth=0.85,
-                energy=0.7,
-                clarity=0.95
+                pitch=1.05, rate=0.95, volume=0.85, warmth=0.85, energy=0.7, clarity=0.95
             ),
             age_group=AgeGroup.ALL_AGES,
             gender=VoiceGender.FEMALE,
-            tags=["patient", "warm", "educational"]
+            tags=["patient", "warm", "educational"],
         )
 
         # Patient Helper - Very calm, slow-paced, reassuring
@@ -303,16 +297,11 @@ class VoicePersonaLibrary:
             name="Patient Helper",
             description="Calm, reassuring voice for struggling students",
             base_characteristics=VoiceCharacteristics(
-                pitch=0.98,
-                rate=0.85,
-                volume=0.80,
-                warmth=0.90,
-                energy=0.6,
-                clarity=1.0
+                pitch=0.98, rate=0.85, volume=0.80, warmth=0.90, energy=0.6, clarity=1.0
             ),
             age_group=AgeGroup.ALL_AGES,
             gender=VoiceGender.NEUTRAL,
-            tags=["calm", "reassuring", "slow"]
+            tags=["calm", "reassuring", "slow"],
         )
 
         # Cheerful Guide - Upbeat, energetic, fun
@@ -320,16 +309,11 @@ class VoicePersonaLibrary:
             name="Cheerful Guide",
             description="Energetic, fun voice to keep students engaged",
             base_characteristics=VoiceCharacteristics(
-                pitch=1.10,
-                rate=1.05,
-                volume=0.90,
-                warmth=0.80,
-                energy=0.85,
-                clarity=0.90
+                pitch=1.10, rate=1.05, volume=0.90, warmth=0.80, energy=0.85, clarity=0.90
             ),
             age_group=AgeGroup.EARLY_ELEMENTARY,
             gender=VoiceGender.FEMALE,
-            tags=["energetic", "fun", "engaging"]
+            tags=["energetic", "fun", "engaging"],
         )
 
         # Wise Mentor - Authoritative, clear, measured
@@ -337,16 +321,11 @@ class VoicePersonaLibrary:
             name="Wise Mentor",
             description="Clear, authoritative voice for older students",
             base_characteristics=VoiceCharacteristics(
-                pitch=0.95,
-                rate=1.0,
-                volume=0.85,
-                warmth=0.70,
-                energy=0.65,
-                clarity=0.95
+                pitch=0.95, rate=1.0, volume=0.85, warmth=0.70, energy=0.65, clarity=0.95
             ),
             age_group=AgeGroup.MIDDLE_SCHOOL,
             gender=VoiceGender.MALE,
-            tags=["clear", "authoritative", "measured"]
+            tags=["clear", "authoritative", "measured"],
         )
 
         # Science Explorer - Curious, precise, engaging
@@ -354,16 +333,11 @@ class VoicePersonaLibrary:
             name="Science Explorer",
             description="Curious, precise voice for science topics",
             base_characteristics=VoiceCharacteristics(
-                pitch=1.02,
-                rate=0.95,
-                volume=0.85,
-                warmth=0.75,
-                energy=0.80,
-                clarity=0.98
+                pitch=1.02, rate=0.95, volume=0.85, warmth=0.75, energy=0.80, clarity=0.98
             ),
             age_group=AgeGroup.LATE_ELEMENTARY,
             gender=VoiceGender.NEUTRAL,
-            tags=["curious", "precise", "scientific"]
+            tags=["curious", "precise", "scientific"],
         )
 
         # Math Master - Clear, methodical, encouraging
@@ -371,16 +345,11 @@ class VoicePersonaLibrary:
             name="Math Master",
             description="Clear, methodical voice for math instruction",
             base_characteristics=VoiceCharacteristics(
-                pitch=1.0,
-                rate=0.90,
-                volume=0.85,
-                warmth=0.75,
-                energy=0.70,
-                clarity=1.0
+                pitch=1.0, rate=0.90, volume=0.85, warmth=0.75, energy=0.70, clarity=1.0
             ),
             age_group=AgeGroup.ALL_AGES,
             gender=VoiceGender.MALE,
-            tags=["methodical", "clear", "mathematical"]
+            tags=["methodical", "clear", "mathematical"],
         )
 
     def get_persona(self, name: str) -> Optional[VoicePersona]:
@@ -388,9 +357,7 @@ class VoicePersonaLibrary:
         return self.personas.get(name)
 
     def list_personas(
-        self,
-        age_group: Optional[AgeGroup] = None,
-        tags: Optional[List[str]] = None
+        self, age_group: Optional[AgeGroup] = None, tags: Optional[List[str]] = None
     ) -> List[VoicePersona]:
         """
         List available personas with optional filtering
@@ -406,15 +373,11 @@ class VoicePersonaLibrary:
 
         if age_group:
             personas = [
-                p for p in personas
-                if p.age_group == age_group or p.age_group == AgeGroup.ALL_AGES
+                p for p in personas if p.age_group == age_group or p.age_group == AgeGroup.ALL_AGES
             ]
 
         if tags:
-            personas = [
-                p for p in personas
-                if any(tag in p.tags for tag in tags)
-            ]
+            personas = [p for p in personas if any(tag in p.tags for tag in tags)]
 
         return personas
 
@@ -482,10 +445,7 @@ class PersonaManager:
         return self.current_persona.get_characteristics(self.current_tone)
 
     def select_persona_for_content(
-        self,
-        subject: str,
-        age: int,
-        difficulty: float = 0.5
+        self, subject: str, age: int, difficulty: float = 0.5
     ) -> VoicePersona:
         """
         Auto-select appropriate persona for content
@@ -510,7 +470,7 @@ class PersonaManager:
         subject_personas = {
             "math": "math_master",
             "science": "science_explorer",
-            "reading": "friendly_tutor"
+            "reading": "friendly_tutor",
         }
 
         persona_name = subject_personas.get(subject.lower(), "friendly_tutor")
@@ -531,9 +491,7 @@ class PersonaManager:
         return self.current_persona
 
     def adapt_to_performance(
-        self,
-        correct_rate: float,
-        struggle_indicators: int = 0
+        self, correct_rate: float, struggle_indicators: int = 0
     ) -> EmotionalTone:
         """
         Adapt emotional tone based on student performance

@@ -16,9 +16,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 from src.pipeline.session_manager import (
+    InteractionType,
     SessionManager,
     SessionState,
-    InteractionType,
     TutoringSession,
 )
 

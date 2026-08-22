@@ -8,13 +8,13 @@ This module implements a 3-level error recovery system:
 """
 
 import asyncio
+import json
 import traceback
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Set
-import json
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 
 class RecoveryLevel(str, Enum):
@@ -415,21 +415,28 @@ class ErrorRecovery:
             try:
                 # Exponential backoff
                 if attempt_num > 1:
-                    wait_seconds = min(2 ** attempt_num, 60)
+                    wait_seconds = min(2**attempt_num, 60)
                     await asyncio.sleep(wait_seconds)
 
                 # Execute with timeout
                 timeout = self.level1_timeout_minutes * 60
                 result = await asyncio.wait_for(
-                    operation(**context) if asyncio.iscoroutinefunction(operation)
-                    else asyncio.get_event_loop().run_in_executor(None, lambda: operation(**context)),
+                    (
+                        operation(**context)
+                        if asyncio.iscoroutinefunction(operation)
+                        else asyncio.get_event_loop().run_in_executor(
+                            None, lambda: operation(**context)
+                        )
+                    ),
                     timeout=timeout,
                 )
 
                 attempt.status = RecoveryStatus.SUCCESS
                 attempt.result_message = "Operation succeeded"
                 attempt.completed_at = datetime.now(timezone.utc)
-                attempt.duration_seconds = (attempt.completed_at - attempt.started_at).total_seconds()
+                attempt.duration_seconds = (
+                    attempt.completed_at - attempt.started_at
+                ).total_seconds()
                 attempts.append(attempt)
 
                 return True, attempts, result
@@ -509,14 +516,18 @@ class ErrorRecovery:
                     attempt.result_message = "No rollback handler (no cleanup needed)"
 
                 attempt.completed_at = datetime.now(timezone.utc)
-                attempt.duration_seconds = (attempt.completed_at - attempt.started_at).total_seconds()
+                attempt.duration_seconds = (
+                    attempt.completed_at - attempt.started_at
+                ).total_seconds()
                 attempts.append(attempt)
 
                 return True, attempts
 
             except asyncio.TimeoutError:
                 attempt.status = RecoveryStatus.FAILED
-                attempt.result_message = f"Rollback timeout after {self.level2_timeout_minutes} minutes"
+                attempt.result_message = (
+                    f"Rollback timeout after {self.level2_timeout_minutes} minutes"
+                )
 
             except Exception as e:
                 attempt.status = RecoveryStatus.FAILED
@@ -560,10 +571,16 @@ class ErrorRecovery:
                         None, lambda: handler(error_record)
                     )
 
-            attempt.status = RecoveryStatus.HUMAN_REQUIRED if self.level3_require_human \
+            attempt.status = (
+                RecoveryStatus.HUMAN_REQUIRED
+                if self.level3_require_human
                 else RecoveryStatus.SUCCESS
-            attempt.result_message = "Full rollback completed - human review required" \
-                if self.level3_require_human else "Full rollback completed"
+            )
+            attempt.result_message = (
+                "Full rollback completed - human review required"
+                if self.level3_require_human
+                else "Full rollback completed"
+            )
 
         except Exception as e:
             attempt.status = RecoveryStatus.FAILED
@@ -613,9 +630,7 @@ class ErrorRecovery:
 
         # Level 1: Retry
         if starting_level == RecoveryLevel.LEVEL_1_RETRY and operation:
-            success, attempts, _ = await self._level_1_retry(
-                operation, error_record, context or {}
-            )
+            success, attempts, _ = await self._level_1_retry(operation, error_record, context or {})
             all_attempts.extend(attempts)
 
             if success:
@@ -635,9 +650,7 @@ class ErrorRecovery:
 
         # Level 2: Phase rollback
         if starting_level == RecoveryLevel.LEVEL_2_ROLLBACK:
-            success, attempts = await self._level_2_rollback(
-                error_record, checkpoint_id
-            )
+            success, attempts = await self._level_2_rollback(error_record, checkpoint_id)
             all_attempts.extend(attempts)
 
             if success:
@@ -673,8 +686,11 @@ class ErrorRecovery:
             final_status=final_status,
             error_record=error_record,
             checkpoint_id=checkpoint_id,
-            message="Full rollback completed - human intervention required" if requires_human
-                else "Recovery completed",
+            message=(
+                "Full rollback completed - human intervention required"
+                if requires_human
+                else "Recovery completed"
+            ),
             requires_human=requires_human,
             suggested_actions=suggested_actions,
         )

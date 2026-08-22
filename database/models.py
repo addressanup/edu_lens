@@ -5,27 +5,28 @@ This module defines the database models for persisting orchestration state,
 agent executions, decisions, errors, and audit logs.
 """
 
+import enum
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
     DateTime,
+)
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import (
     Float,
     ForeignKey,
+    Index,
     Integer,
     String,
     Text,
-    Index,
-    JSON,
-    Enum as SQLEnum,
 )
-from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.dialects.postgresql import UUID
-import enum
-
+from sqlalchemy.orm import declarative_base, relationship
 
 # Create declarative base
 Base = declarative_base()
@@ -88,30 +89,27 @@ class Project(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     spec = Column(JSON, nullable=False, default=dict)
-    status = Column(
-        SQLEnum(ProjectStatus),
-        nullable=False,
-        default=ProjectStatus.CREATED
-    )
+    status = Column(SQLEnum(ProjectStatus), nullable=False, default=ProjectStatus.CREATED)
     current_phase = Column(Integer, nullable=False, default=0)
     config = Column(JSON, nullable=False, default=dict)
     metadata_ = Column("metadata", JSON, nullable=False, default=dict)
     checkpoint_id = Column(String(36), nullable=True)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=utc_now)
-    updated_at = Column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=utc_now,
-        onupdate=utc_now
-    )
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=utc_now, onupdate=utc_now)
 
     # Relationships
-    executions = relationship("AgentExecution", back_populates="project", cascade="all, delete-orphan")
+    executions = relationship(
+        "AgentExecution", back_populates="project", cascade="all, delete-orphan"
+    )
     decisions = relationship("Decision", back_populates="project", cascade="all, delete-orphan")
     errors = relationship("Error", back_populates="project", cascade="all, delete-orphan")
-    token_usages = relationship("TokenUsage", back_populates="project", cascade="all, delete-orphan")
-    validation_results = relationship("ValidationResult", back_populates="project", cascade="all, delete-orphan")
+    token_usages = relationship(
+        "TokenUsage", back_populates="project", cascade="all, delete-orphan"
+    )
+    validation_results = relationship(
+        "ValidationResult", back_populates="project", cascade="all, delete-orphan"
+    )
 
     # Indexes
     __table_args__ = (
@@ -167,11 +165,7 @@ class AgentExecution(Base):
     project_id = Column(String(36), ForeignKey("projects.id"), nullable=False, index=True)
     agent_name = Column(String(64), nullable=False, index=True)
     phase = Column(Integer, nullable=False, default=0)
-    status = Column(
-        SQLEnum(ExecutionStatus),
-        nullable=False,
-        default=ExecutionStatus.PENDING
-    )
+    status = Column(SQLEnum(ExecutionStatus), nullable=False, default=ExecutionStatus.PENDING)
     input_data = Column(JSON, nullable=False, default=dict)
     output_data = Column(JSON, nullable=False, default=dict)
     tokens_input = Column(Integer, nullable=False, default=0)

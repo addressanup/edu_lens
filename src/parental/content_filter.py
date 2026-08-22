@@ -6,16 +6,16 @@ Manages content filtering based on subject, difficulty, and content type.
 
 import json
 import logging
-from typing import Dict, List, Optional, Set
 from enum import Enum
 from pathlib import Path
-
+from typing import Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
 
 class FilterMode(Enum):
     """Filtering modes"""
+
     WHITELIST = "whitelist"  # Only allow specified items
     BLACKLIST = "blacklist"  # Block specified items
     UNRESTRICTED = "unrestricted"  # No filtering
@@ -23,6 +23,7 @@ class FilterMode(Enum):
 
 class DifficultyLevel(Enum):
     """Content difficulty levels"""
+
     ELEMENTARY = 1
     MIDDLE_SCHOOL = 2
     HIGH_SCHOOL = 3
@@ -32,6 +33,7 @@ class DifficultyLevel(Enum):
 
 class ContentType(Enum):
     """Types of educational content"""
+
     MULTIPLE_CHOICE = "multiple_choice"
     FREE_RESPONSE = "free_response"
     ESSAY = "essay"
@@ -44,6 +46,7 @@ class ContentType(Enum):
 
 class AgeGroup(Enum):
     """Age-based content groups"""
+
     AGES_5_7 = "5-7"
     AGES_8_10 = "8-10"
     AGES_11_13 = "11-13"
@@ -97,11 +100,7 @@ class ContentFilter:
 
         self._load_state()
 
-    def filter_subjects(
-        self,
-        mode: FilterMode,
-        subjects: Optional[List[str]] = None
-    ) -> None:
+    def filter_subjects(self, mode: FilterMode, subjects: Optional[List[str]] = None) -> None:
         """
         Configure subject filtering.
 
@@ -153,7 +152,7 @@ class ContentFilter:
     def filter_difficulty(
         self,
         min_level: Optional[DifficultyLevel] = None,
-        max_level: Optional[DifficultyLevel] = None
+        max_level: Optional[DifficultyLevel] = None,
     ) -> None:
         """
         Set difficulty level restrictions.
@@ -179,9 +178,7 @@ class ContentFilter:
         self._save_state()
 
     def filter_content_type(
-        self,
-        mode: FilterMode,
-        content_types: Optional[List[ContentType]] = None
+        self, mode: FilterMode, content_types: Optional[List[ContentType]] = None
     ) -> None:
         """
         Configure content type filtering.
@@ -241,7 +238,7 @@ class ContentFilter:
         difficulty: Optional[DifficultyLevel] = None,
         content_type: Optional[ContentType] = None,
         keywords: Optional[List[str]] = None,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
     ) -> tuple[bool, Optional[str]]:
         """
         Check if content is allowed based on current filters.
@@ -293,16 +290,11 @@ class ContentFilter:
         # Check custom rules
         for rule in self.custom_rules:
             if not self._evaluate_custom_rule(rule, subject, difficulty, content_type, metadata):
-                return False, rule.get('reason', 'Custom rule violation')
+                return False, rule.get("reason", "Custom rule violation")
 
         return True, None
 
-    def add_custom_rule(
-        self,
-        rule_name: str,
-        condition: Dict,
-        reason: str
-    ) -> None:
+    def add_custom_rule(self, rule_name: str, condition: Dict, reason: str) -> None:
         """
         Add a custom filtering rule.
 
@@ -311,11 +303,7 @@ class ContentFilter:
             condition: Dictionary defining the rule condition
             reason: Reason shown when content is blocked
         """
-        rule = {
-            'name': rule_name,
-            'condition': condition,
-            'reason': reason
-        }
+        rule = {"name": rule_name, "condition": condition, "reason": reason}
         self.custom_rules.append(rule)
         logger.info(f"Added custom rule '{rule_name}' for user {self.user_id}")
         self._save_state()
@@ -331,7 +319,7 @@ class ContentFilter:
             True if rule was found and removed
         """
         original_length = len(self.custom_rules)
-        self.custom_rules = [r for r in self.custom_rules if r['name'] != rule_name]
+        self.custom_rules = [r for r in self.custom_rules if r["name"] != rule_name]
 
         if len(self.custom_rules) < original_length:
             logger.info(f"Removed custom rule '{rule_name}' for user {self.user_id}")
@@ -346,13 +334,15 @@ class ContentFilter:
         Args:
             age_group: Age group for default settings
         """
-        logger.info(f"Setting age-appropriate defaults for {age_group.value} for user {self.user_id}")
+        logger.info(
+            f"Setting age-appropriate defaults for {age_group.value} for user {self.user_id}"
+        )
 
         if age_group == AgeGroup.AGES_5_7:
             self.filter_difficulty(max_level=DifficultyLevel.ELEMENTARY)
             self.filter_content_type(
                 FilterMode.WHITELIST,
-                [ContentType.MULTIPLE_CHOICE, ContentType.INTERACTIVE, ContentType.VIDEO]
+                [ContentType.MULTIPLE_CHOICE, ContentType.INTERACTIVE, ContentType.VIDEO],
             )
 
         elif age_group == AgeGroup.AGES_8_10:
@@ -365,8 +355,8 @@ class ContentFilter:
                     ContentType.MATH_PROBLEM,
                     ContentType.INTERACTIVE,
                     ContentType.VIDEO,
-                    ContentType.READING
-                ]
+                    ContentType.READING,
+                ],
             )
 
         elif age_group == AgeGroup.AGES_11_13:
@@ -407,23 +397,23 @@ class ContentFilter:
             Dictionary with filter configuration
         """
         return {
-            'user_id': self.user_id,
-            'subject_filter': {
-                'mode': self.subject_mode.value,
-                'allowed': list(self.allowed_subjects),
-                'blocked': list(self.blocked_subjects)
+            "user_id": self.user_id,
+            "subject_filter": {
+                "mode": self.subject_mode.value,
+                "allowed": list(self.allowed_subjects),
+                "blocked": list(self.blocked_subjects),
             },
-            'difficulty_filter': {
-                'min': self.min_difficulty.name if self.min_difficulty else None,
-                'max': self.max_difficulty.name if self.max_difficulty else None
+            "difficulty_filter": {
+                "min": self.min_difficulty.name if self.min_difficulty else None,
+                "max": self.max_difficulty.name if self.max_difficulty else None,
             },
-            'content_type_filter': {
-                'mode': self.content_type_mode.value,
-                'allowed': [ct.value for ct in self.allowed_content_types],
-                'blocked': [ct.value for ct in self.blocked_content_types]
+            "content_type_filter": {
+                "mode": self.content_type_mode.value,
+                "allowed": [ct.value for ct in self.allowed_content_types],
+                "blocked": [ct.value for ct in self.blocked_content_types],
             },
-            'blocked_keywords': list(self.blocked_keywords),
-            'custom_rules': [r['name'] for r in self.custom_rules]
+            "blocked_keywords": list(self.blocked_keywords),
+            "custom_rules": [r["name"] for r in self.custom_rules],
         }
 
     def _evaluate_custom_rule(
@@ -432,7 +422,7 @@ class ContentFilter:
         subject: Optional[str],
         difficulty: Optional[DifficultyLevel],
         content_type: Optional[ContentType],
-        metadata: Optional[Dict]
+        metadata: Optional[Dict],
     ) -> bool:
         """
         Evaluate a custom rule against content.
@@ -441,7 +431,7 @@ class ContentFilter:
             True if content passes the rule (is allowed)
         """
         # Simple rule evaluation - can be extended
-        condition = rule.get('condition', {})
+        condition = rule.get("condition", {})
 
         # This is a placeholder for more complex rule evaluation
         # In production, you might use a rule engine
@@ -450,53 +440,53 @@ class ContentFilter:
     def _save_state(self) -> None:
         """Save filter state to disk."""
         state = {
-            'subject_mode': self.subject_mode.value,
-            'allowed_subjects': list(self.allowed_subjects),
-            'blocked_subjects': list(self.blocked_subjects),
-            'min_difficulty': self.min_difficulty.value if self.min_difficulty else None,
-            'max_difficulty': self.max_difficulty.value if self.max_difficulty else None,
-            'content_type_mode': self.content_type_mode.value,
-            'allowed_content_types': [ct.value for ct in self.allowed_content_types],
-            'blocked_content_types': [ct.value for ct in self.blocked_content_types],
-            'blocked_keywords': list(self.blocked_keywords),
-            'custom_rules': self.custom_rules
+            "subject_mode": self.subject_mode.value,
+            "allowed_subjects": list(self.allowed_subjects),
+            "blocked_subjects": list(self.blocked_subjects),
+            "min_difficulty": self.min_difficulty.value if self.min_difficulty else None,
+            "max_difficulty": self.max_difficulty.value if self.max_difficulty else None,
+            "content_type_mode": self.content_type_mode.value,
+            "allowed_content_types": [ct.value for ct in self.allowed_content_types],
+            "blocked_content_types": [ct.value for ct in self.blocked_content_types],
+            "blocked_keywords": list(self.blocked_keywords),
+            "custom_rules": self.custom_rules,
         }
 
-        state_file = self.storage_path / 'filter_state.json'
-        with open(state_file, 'w') as f:
+        state_file = self.storage_path / "filter_state.json"
+        with open(state_file, "w") as f:
             json.dump(state, f, indent=2)
 
     def _load_state(self) -> None:
         """Load filter state from disk."""
-        state_file = self.storage_path / 'filter_state.json'
+        state_file = self.storage_path / "filter_state.json"
 
         if not state_file.exists():
             return
 
         try:
-            with open(state_file, 'r') as f:
+            with open(state_file, "r") as f:
                 state = json.load(f)
 
-            self.subject_mode = FilterMode(state.get('subject_mode', 'unrestricted'))
-            self.allowed_subjects = set(state.get('allowed_subjects', []))
-            self.blocked_subjects = set(state.get('blocked_subjects', []))
+            self.subject_mode = FilterMode(state.get("subject_mode", "unrestricted"))
+            self.allowed_subjects = set(state.get("allowed_subjects", []))
+            self.blocked_subjects = set(state.get("blocked_subjects", []))
 
-            min_diff = state.get('min_difficulty')
+            min_diff = state.get("min_difficulty")
             self.min_difficulty = DifficultyLevel(min_diff) if min_diff else None
 
-            max_diff = state.get('max_difficulty')
+            max_diff = state.get("max_difficulty")
             self.max_difficulty = DifficultyLevel(max_diff) if max_diff else None
 
-            self.content_type_mode = FilterMode(state.get('content_type_mode', 'unrestricted'))
+            self.content_type_mode = FilterMode(state.get("content_type_mode", "unrestricted"))
             self.allowed_content_types = {
-                ContentType(ct) for ct in state.get('allowed_content_types', [])
+                ContentType(ct) for ct in state.get("allowed_content_types", [])
             }
             self.blocked_content_types = {
-                ContentType(ct) for ct in state.get('blocked_content_types', [])
+                ContentType(ct) for ct in state.get("blocked_content_types", [])
             }
 
-            self.blocked_keywords = set(state.get('blocked_keywords', []))
-            self.custom_rules = state.get('custom_rules', [])
+            self.blocked_keywords = set(state.get("blocked_keywords", []))
+            self.custom_rules = state.get("custom_rules", [])
 
             logger.info(f"Loaded filter state for user {self.user_id}")
         except Exception as e:

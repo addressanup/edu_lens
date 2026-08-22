@@ -54,23 +54,38 @@ class ContextCompressor:
 
     # Patterns for low-value content removal
     LOW_VALUE_PATTERNS = [
-        (r'\n{3,}', '\n\n'),  # Multiple blank lines
-        (r' {2,}', ' '),  # Multiple spaces
-        (r'\t+', ' '),  # Tabs to single space
-        (r'#{4,}[^\n]*\n', ''),  # Deep headers (h4+)
-        (r'[-=]{5,}', ''),  # Separator lines
-        (r'<!--[\s\S]*?-->', ''),  # HTML comments
-        (r'```\s*```', ''),  # Empty code blocks
+        (r"\n{3,}", "\n\n"),  # Multiple blank lines
+        (r" {2,}", " "),  # Multiple spaces
+        (r"\t+", " "),  # Tabs to single space
+        (r"#{4,}[^\n]*\n", ""),  # Deep headers (h4+)
+        (r"[-=]{5,}", ""),  # Separator lines
+        (r"<!--[\s\S]*?-->", ""),  # HTML comments
+        (r"```\s*```", ""),  # Empty code blocks
     ]
 
     # High-value keywords to preserve
     HIGH_VALUE_KEYWORDS = [
-        "error", "exception", "failed", "critical",
-        "api", "endpoint", "database", "schema",
-        "config", "configuration", "setting",
-        "security", "auth", "permission",
-        "function", "class", "method", "interface",
-        "requirement", "constraint", "dependency",
+        "error",
+        "exception",
+        "failed",
+        "critical",
+        "api",
+        "endpoint",
+        "database",
+        "schema",
+        "config",
+        "configuration",
+        "setting",
+        "security",
+        "auth",
+        "permission",
+        "function",
+        "class",
+        "method",
+        "interface",
+        "requirement",
+        "constraint",
+        "dependency",
     ]
 
     def __init__(self, token_estimator: Optional[callable] = None):
@@ -133,9 +148,7 @@ class ContextCompressor:
 
         # Step 4: Restore code blocks (truncated if needed)
         if code_blocks:
-            compressed = self._restore_code_blocks(
-                compressed, code_blocks, target_tokens
-            )
+            compressed = self._restore_code_blocks(compressed, code_blocks, target_tokens)
 
         compressed_tokens = self._estimate_tokens(compressed)
         compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
@@ -153,7 +166,7 @@ class ContextCompressor:
     def _extract_code_blocks(self, text: str) -> Tuple[str, List[str]]:
         """Extract code blocks from text."""
         code_blocks = []
-        pattern = r'```[\s\S]*?```'
+        pattern = r"```[\s\S]*?```"
 
         def replace_block(match):
             code_blocks.append(match.group(0))
@@ -176,11 +189,9 @@ class ContextCompressor:
                 block_tokens = self._estimate_tokens(block)
                 if block_tokens > target_tokens * 0.3:
                     # Keep first and last parts
-                    lines = block.split('\n')
+                    lines = block.split("\n")
                     if len(lines) > 10:
-                        truncated = '\n'.join(
-                            lines[:5] + ['...truncated...'] + lines[-3:]
-                        )
+                        truncated = "\n".join(lines[:5] + ["...truncated..."] + lines[-3:])
                         block = truncated
 
                 text = text.replace(placeholder, block)
@@ -196,7 +207,7 @@ class ContextCompressor:
 
     def _compress_by_value(self, text: str, target_tokens: int) -> str:
         """Compress text by keeping high-value paragraphs."""
-        paragraphs = text.split('\n\n')
+        paragraphs = text.split("\n\n")
 
         # Score each paragraph
         scored = []
@@ -221,7 +232,7 @@ class ContextCompressor:
         original_order = {para: i for i, para in enumerate(paragraphs)}
         kept.sort(key=lambda p: original_order.get(p, 999))
 
-        return '\n\n'.join(kept)
+        return "\n\n".join(kept)
 
     def _calculate_info_density(self, text: str) -> float:
         """
@@ -235,18 +246,15 @@ class ContextCompressor:
         text_lower = text.lower()
 
         # Count high-value keywords
-        keyword_count = sum(
-            1 for kw in self.HIGH_VALUE_KEYWORDS
-            if kw in text_lower
-        )
+        keyword_count = sum(1 for kw in self.HIGH_VALUE_KEYWORDS if kw in text_lower)
 
         # Count structural elements
-        code_blocks = len(re.findall(r'```', text))
-        bullet_points = len(re.findall(r'^\s*[-*]\s', text, re.MULTILINE))
-        headers = len(re.findall(r'^#+\s', text, re.MULTILINE))
+        code_blocks = len(re.findall(r"```", text))
+        bullet_points = len(re.findall(r"^\s*[-*]\s", text, re.MULTILINE))
+        headers = len(re.findall(r"^#+\s", text, re.MULTILINE))
 
         # Calculate whitespace ratio
-        whitespace = len(re.findall(r'\s', text))
+        whitespace = len(re.findall(r"\s", text))
         ws_ratio = whitespace / len(text) if text else 0
 
         # Calculate score
@@ -335,7 +343,7 @@ class ContextCompressor:
             List of key point strings
         """
         # Split into sentences
-        sentences = re.split(r'[.!?]+', text)
+        sentences = re.split(r"[.!?]+", text)
         sentences = [s.strip() for s in sentences if s.strip()]
 
         # Score sentences

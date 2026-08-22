@@ -6,16 +6,15 @@ supporting both PostgreSQL (production) and SQLite (development/testing).
 """
 
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Type, TypeVar
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from sqlalchemy import create_engine, text, event
-from sqlalchemy.orm import sessionmaker, Session, scoped_session
-from sqlalchemy.pool import QueuePool, StaticPool
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.exc import SQLAlchemyError
-
+from sqlalchemy.orm import Session, scoped_session, sessionmaker
+from sqlalchemy.pool import QueuePool, StaticPool
 
 T = TypeVar("T")
 
@@ -260,13 +259,13 @@ class StateStore:
         with self._engine.connect() as conn:
             # Check if exists
             result = conn.execute(
-                text("SELECT id FROM checkpoints WHERE id = :id"),
-                {"id": checkpoint.id}
+                text("SELECT id FROM checkpoints WHERE id = :id"), {"id": checkpoint.id}
             ).fetchone()
 
             if result:
                 # Update
-                conn.execute(text("""
+                conn.execute(
+                    text("""
                     UPDATE checkpoints SET
                         project_name = :project_name,
                         current_phase = :current_phase,
@@ -277,20 +276,23 @@ class StateStore:
                         error_message = :error_message,
                         updated_at = :updated_at
                     WHERE id = :id
-                """), {
-                    "id": checkpoint.id,
-                    "project_name": checkpoint.project_name,
-                    "current_phase": checkpoint.current_phase,
-                    "status": checkpoint.status,
-                    "state_data": json.dumps(checkpoint.state_data),
-                    "agent_outputs": json.dumps(checkpoint.agent_outputs),
-                    "validation_results": json.dumps(checkpoint.validation_results),
-                    "error_message": checkpoint.error_message,
-                    "updated_at": checkpoint.updated_at,
-                })
+                """),
+                    {
+                        "id": checkpoint.id,
+                        "project_name": checkpoint.project_name,
+                        "current_phase": checkpoint.current_phase,
+                        "status": checkpoint.status,
+                        "state_data": json.dumps(checkpoint.state_data),
+                        "agent_outputs": json.dumps(checkpoint.agent_outputs),
+                        "validation_results": json.dumps(checkpoint.validation_results),
+                        "error_message": checkpoint.error_message,
+                        "updated_at": checkpoint.updated_at,
+                    },
+                )
             else:
                 # Insert
-                conn.execute(text("""
+                conn.execute(
+                    text("""
                     INSERT INTO checkpoints (
                         id, project_name, current_phase, status,
                         state_data, agent_outputs, validation_results,
@@ -300,18 +302,20 @@ class StateStore:
                         :state_data, :agent_outputs, :validation_results,
                         :error_message, :created_at, :updated_at
                     )
-                """), {
-                    "id": checkpoint.id,
-                    "project_name": checkpoint.project_name,
-                    "current_phase": checkpoint.current_phase,
-                    "status": checkpoint.status,
-                    "state_data": json.dumps(checkpoint.state_data),
-                    "agent_outputs": json.dumps(checkpoint.agent_outputs),
-                    "validation_results": json.dumps(checkpoint.validation_results),
-                    "error_message": checkpoint.error_message,
-                    "created_at": checkpoint.created_at,
-                    "updated_at": checkpoint.updated_at,
-                })
+                """),
+                    {
+                        "id": checkpoint.id,
+                        "project_name": checkpoint.project_name,
+                        "current_phase": checkpoint.current_phase,
+                        "status": checkpoint.status,
+                        "state_data": json.dumps(checkpoint.state_data),
+                        "agent_outputs": json.dumps(checkpoint.agent_outputs),
+                        "validation_results": json.dumps(checkpoint.validation_results),
+                        "error_message": checkpoint.error_message,
+                        "created_at": checkpoint.created_at,
+                        "updated_at": checkpoint.updated_at,
+                    },
+                )
 
             conn.commit()
 
@@ -327,8 +331,7 @@ class StateStore:
         """
         with self._engine.connect() as conn:
             result = conn.execute(
-                text("SELECT * FROM checkpoints WHERE id = :id"),
-                {"id": checkpoint_id}
+                text("SELECT * FROM checkpoints WHERE id = :id"), {"id": checkpoint_id}
             ).fetchone()
 
             if not result:
@@ -343,14 +346,20 @@ class StateStore:
                 agent_outputs=json.loads(result[5] or "{}"),
                 validation_results=json.loads(result[6] or "{}"),
                 error_message=result[7],
-                created_at=result[8] if isinstance(result[8], datetime) else datetime.fromisoformat(result[8]) if result[8] else None,
-                updated_at=result[9] if isinstance(result[9], datetime) else datetime.fromisoformat(result[9]) if result[9] else None,
+                created_at=(
+                    result[8]
+                    if isinstance(result[8], datetime)
+                    else datetime.fromisoformat(result[8]) if result[8] else None
+                ),
+                updated_at=(
+                    result[9]
+                    if isinstance(result[9], datetime)
+                    else datetime.fromisoformat(result[9]) if result[9] else None
+                ),
             )
 
     def list_checkpoints(
-        self,
-        status: Optional[str] = None,
-        limit: Optional[int] = 10
+        self, status: Optional[str] = None, limit: Optional[int] = 10
     ) -> List[Checkpoint]:
         """
         List checkpoints with optional filtering.
@@ -380,18 +389,28 @@ class StateStore:
 
             checkpoints = []
             for row in results:
-                checkpoints.append(Checkpoint(
-                    id=row[0],
-                    project_name=row[1],
-                    current_phase=row[2],
-                    status=row[3],
-                    state_data=json.loads(row[4] or "{}"),
-                    agent_outputs=json.loads(row[5] or "{}"),
-                    validation_results=json.loads(row[6] or "{}"),
-                    error_message=row[7],
-                    created_at=row[8] if isinstance(row[8], datetime) else datetime.fromisoformat(row[8]) if row[8] else None,
-                    updated_at=row[9] if isinstance(row[9], datetime) else datetime.fromisoformat(row[9]) if row[9] else None,
-                ))
+                checkpoints.append(
+                    Checkpoint(
+                        id=row[0],
+                        project_name=row[1],
+                        current_phase=row[2],
+                        status=row[3],
+                        state_data=json.loads(row[4] or "{}"),
+                        agent_outputs=json.loads(row[5] or "{}"),
+                        validation_results=json.loads(row[6] or "{}"),
+                        error_message=row[7],
+                        created_at=(
+                            row[8]
+                            if isinstance(row[8], datetime)
+                            else datetime.fromisoformat(row[8]) if row[8] else None
+                        ),
+                        updated_at=(
+                            row[9]
+                            if isinstance(row[9], datetime)
+                            else datetime.fromisoformat(row[9]) if row[9] else None
+                        ),
+                    )
+                )
 
             return checkpoints
 
@@ -409,17 +428,16 @@ class StateStore:
             # Delete related records first
             conn.execute(
                 text("DELETE FROM agent_executions WHERE checkpoint_id = :id"),
-                {"id": checkpoint_id}
+                {"id": checkpoint_id},
             )
             conn.execute(
                 text("DELETE FROM validation_results WHERE checkpoint_id = :id"),
-                {"id": checkpoint_id}
+                {"id": checkpoint_id},
             )
 
             # Delete checkpoint
             result = conn.execute(
-                text("DELETE FROM checkpoints WHERE id = :id"),
-                {"id": checkpoint_id}
+                text("DELETE FROM checkpoints WHERE id = :id"), {"id": checkpoint_id}
             )
             conn.commit()
 
@@ -430,7 +448,8 @@ class StateStore:
     def save_agent_execution(self, execution: AgentExecutionRecord) -> None:
         """Save an agent execution record."""
         with self._engine.connect() as conn:
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 INSERT INTO agent_executions (
                     id, checkpoint_id, agent_name, phase, status,
                     input_data, output_data, tokens_input, tokens_output,
@@ -448,28 +467,28 @@ class StateStore:
                     latency_ms = :latency_ms,
                     error_message = :error_message,
                     completed_at = :completed_at
-            """), {
-                "id": execution.id,
-                "checkpoint_id": execution.checkpoint_id,
-                "agent_name": execution.agent_name,
-                "phase": execution.phase,
-                "status": execution.status,
-                "input_data": json.dumps(execution.input_data),
-                "output_data": json.dumps(execution.output_data),
-                "tokens_input": execution.tokens_input,
-                "tokens_output": execution.tokens_output,
-                "latency_ms": execution.latency_ms,
-                "error_message": execution.error_message,
-                "started_at": execution.started_at,
-                "completed_at": execution.completed_at,
-                "created_at": execution.created_at,
-            })
+            """),
+                {
+                    "id": execution.id,
+                    "checkpoint_id": execution.checkpoint_id,
+                    "agent_name": execution.agent_name,
+                    "phase": execution.phase,
+                    "status": execution.status,
+                    "input_data": json.dumps(execution.input_data),
+                    "output_data": json.dumps(execution.output_data),
+                    "tokens_input": execution.tokens_input,
+                    "tokens_output": execution.tokens_output,
+                    "latency_ms": execution.latency_ms,
+                    "error_message": execution.error_message,
+                    "started_at": execution.started_at,
+                    "completed_at": execution.completed_at,
+                    "created_at": execution.created_at,
+                },
+            )
             conn.commit()
 
     def get_agent_executions(
-        self,
-        checkpoint_id: str,
-        agent_name: Optional[str] = None
+        self, checkpoint_id: str, agent_name: Optional[str] = None
     ) -> List[AgentExecutionRecord]:
         """Get agent execution records for a checkpoint."""
         query = "SELECT * FROM agent_executions WHERE checkpoint_id = :checkpoint_id"
@@ -486,22 +505,24 @@ class StateStore:
 
             executions = []
             for row in results:
-                executions.append(AgentExecutionRecord(
-                    id=row[0],
-                    checkpoint_id=row[1],
-                    agent_name=row[2],
-                    phase=row[3],
-                    status=row[4],
-                    input_data=json.loads(row[5] or "{}"),
-                    output_data=json.loads(row[6] or "{}"),
-                    tokens_input=row[7],
-                    tokens_output=row[8],
-                    latency_ms=row[9],
-                    error_message=row[10],
-                    started_at=row[11],
-                    completed_at=row[12],
-                    created_at=row[13],
-                ))
+                executions.append(
+                    AgentExecutionRecord(
+                        id=row[0],
+                        checkpoint_id=row[1],
+                        agent_name=row[2],
+                        phase=row[3],
+                        status=row[4],
+                        input_data=json.loads(row[5] or "{}"),
+                        output_data=json.loads(row[6] or "{}"),
+                        tokens_input=row[7],
+                        tokens_output=row[8],
+                        latency_ms=row[9],
+                        error_message=row[10],
+                        started_at=row[11],
+                        completed_at=row[12],
+                        created_at=row[13],
+                    )
+                )
 
             return executions
 
@@ -519,13 +540,9 @@ class StateStore:
     def get_statistics(self) -> Dict[str, Any]:
         """Get database statistics."""
         with self._engine.connect() as conn:
-            checkpoint_count = conn.execute(
-                text("SELECT COUNT(*) FROM checkpoints")
-            ).scalar()
+            checkpoint_count = conn.execute(text("SELECT COUNT(*) FROM checkpoints")).scalar()
 
-            execution_count = conn.execute(
-                text("SELECT COUNT(*) FROM agent_executions")
-            ).scalar()
+            execution_count = conn.execute(text("SELECT COUNT(*) FROM agent_executions")).scalar()
 
             status_counts = {}
             for row in conn.execute(
@@ -551,17 +568,23 @@ class StateStore:
         """
         with self._engine.connect() as conn:
             if self._is_sqlite:
-                result = conn.execute(text("""
+                result = conn.execute(
+                    text("""
                     DELETE FROM checkpoints
                     WHERE created_at < datetime('now', :days || ' days')
                     AND status IN ('completed', 'failed')
-                """), {"days": f"-{days}"})
+                """),
+                    {"days": f"-{days}"},
+                )
             else:
-                result = conn.execute(text("""
+                result = conn.execute(
+                    text("""
                     DELETE FROM checkpoints
                     WHERE created_at < NOW() - INTERVAL ':days days'
                     AND status IN ('completed', 'failed')
-                """), {"days": days})
+                """),
+                    {"days": days},
+                )
 
             conn.commit()
             return result.rowcount

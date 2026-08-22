@@ -11,11 +11,10 @@ Author: EduLens AI Team
 Version: 1.0.0
 """
 
-import re
 import logging
-from typing import Dict, List, Optional, Tuple, Set
+import re
 from dataclasses import dataclass
-
+from typing import Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ValidationResult:
     """Result of response validation."""
+
     is_valid: bool
     score: float  # 0.0 to 1.0
     issues: List[str]
@@ -50,11 +50,7 @@ class ResponseValidator:
         self.encouragement_words = self._load_encouragement_words()
 
     def validate_response(
-        self,
-        response: str,
-        age: int,
-        subject: str,
-        expected_type: Optional[str] = None
+        self, response: str, age: int, subject: str, expected_type: Optional[str] = None
     ) -> Dict:
         """
         Validate an educational response comprehensively.
@@ -74,29 +70,17 @@ class ResponseValidator:
         scores = {}
 
         # Run all validation checks
-        scores['age_appropriate'] = self._check_age_appropriateness(
-            response, age, issues, warnings
-        )
+        scores["age_appropriate"] = self._check_age_appropriateness(response, age, issues, warnings)
 
-        scores['socratic'] = self._check_socratic_method(
-            response, issues, warnings
-        )
+        scores["socratic"] = self._check_socratic_method(response, issues, warnings)
 
-        scores['educational'] = self._check_educational_value(
-            response, issues, suggestions
-        )
+        scores["educational"] = self._check_educational_value(response, issues, suggestions)
 
-        scores['encouraging'] = self._check_encouraging_tone(
-            response, warnings, suggestions
-        )
+        scores["encouraging"] = self._check_encouraging_tone(response, warnings, suggestions)
 
-        scores['safe'] = self._check_content_safety(
-            response, issues
-        )
+        scores["safe"] = self._check_content_safety(response, issues)
 
-        scores['length'] = self._check_length_appropriateness(
-            response, age, warnings
-        )
+        scores["length"] = self._check_length_appropriateness(response, age, warnings)
 
         # Calculate overall score
         overall_score = sum(scores.values()) / len(scores)
@@ -105,20 +89,16 @@ class ResponseValidator:
         is_valid = overall_score >= 0.7 and len(issues) == 0
 
         return {
-            'is_valid': is_valid,
-            'overall_score': overall_score,
-            'scores': scores,
-            'issues': issues,  # Critical problems
-            'warnings': warnings,  # Minor concerns
-            'suggestions': suggestions  # Improvement recommendations
+            "is_valid": is_valid,
+            "overall_score": overall_score,
+            "scores": scores,
+            "issues": issues,  # Critical problems
+            "warnings": warnings,  # Minor concerns
+            "suggestions": suggestions,  # Improvement recommendations
         }
 
     def _check_age_appropriateness(
-        self,
-        response: str,
-        age: int,
-        issues: List[str],
-        warnings: List[str]
+        self, response: str, age: int, issues: List[str], warnings: List[str]
     ) -> float:
         """Check if language is age-appropriate."""
         score = 1.0
@@ -150,23 +130,19 @@ class ResponseValidator:
             )
 
         # Check sentence length
-        sentences = re.split(r'[.!?]+', response)
+        sentences = re.split(r"[.!?]+", response)
         for sentence in sentences:
             sentence_words = len(sentence.split())
             if sentence_words > max_sentence_words * 1.5:
                 score -= 0.2
-                warnings.append(
-                    f"Sentence too long for age {age} ({sentence_words} words)"
-                )
+                warnings.append(f"Sentence too long for age {age} ({sentence_words} words)")
                 break
 
         # Check for overly complex words
         complex_words = self._find_complex_words(response, age)
         if complex_words:
             score -= min(0.3, len(complex_words) * 0.1)
-            warnings.append(
-                f"Complex words for age {age}: {', '.join(list(complex_words)[:3])}"
-            )
+            warnings.append(f"Complex words for age {age}: {', '.join(list(complex_words)[:3])}")
 
         # Check for inappropriate content
         if self._contains_inappropriate_content(response):
@@ -176,17 +152,14 @@ class ResponseValidator:
         return max(0.0, score)
 
     def _check_socratic_method(
-        self,
-        response: str,
-        issues: List[str],
-        warnings: List[str]
+        self, response: str, issues: List[str], warnings: List[str]
     ) -> float:
         """Check if response follows Socratic method (asking vs. telling)."""
         score = 1.0
 
         # Count questions vs. statements
-        question_marks = response.count('?')
-        sentences = len(re.findall(r'[.!?]+', response))
+        question_marks = response.count("?")
+        sentences = len(re.findall(r"[.!?]+", response))
 
         if sentences == 0:
             return 0.5
@@ -198,16 +171,12 @@ class ResponseValidator:
 
         if direct_answer_count > 0:
             score -= direct_answer_count * 0.3
-            issues.append(
-                f"Response appears to give {direct_answer_count} direct answer(s)"
-            )
+            issues.append(f"Response appears to give {direct_answer_count} direct answer(s)")
 
         # Socratic responses should have questions
         if question_ratio < 0.2:
             score -= 0.3
-            warnings.append(
-                "Response could include more guiding questions (Socratic method)"
-            )
+            warnings.append("Response could include more guiding questions (Socratic method)")
 
         # Check for guidance phrases
         if not self._has_guidance_phrases(response):
@@ -217,10 +186,7 @@ class ResponseValidator:
         return max(0.0, score)
 
     def _check_educational_value(
-        self,
-        response: str,
-        issues: List[str],
-        suggestions: List[str]
+        self, response: str, issues: List[str], suggestions: List[str]
     ) -> float:
         """Check if response has educational value."""
         score = 1.0
@@ -250,10 +216,7 @@ class ResponseValidator:
         return max(0.0, score)
 
     def _check_encouraging_tone(
-        self,
-        response: str,
-        warnings: List[str],
-        suggestions: List[str]
+        self, response: str, warnings: List[str], suggestions: List[str]
     ) -> float:
         """Check if response is encouraging and supportive."""
         score = 1.0
@@ -281,11 +244,7 @@ class ResponseValidator:
 
         return max(0.0, score)
 
-    def _check_content_safety(
-        self,
-        response: str,
-        issues: List[str]
-    ) -> float:
+    def _check_content_safety(self, response: str, issues: List[str]) -> float:
         """Check for content safety issues."""
         score = 1.0
 
@@ -293,9 +252,7 @@ class ResponseValidator:
         inappropriate = self._find_inappropriate_words(response)
         if inappropriate:
             score = 0.0
-            issues.append(
-                f"Response contains inappropriate words: {', '.join(inappropriate)}"
-            )
+            issues.append(f"Response contains inappropriate words: {', '.join(inappropriate)}")
 
         # Check for personal information requests
         if self._requests_personal_info(response):
@@ -309,12 +266,7 @@ class ResponseValidator:
 
         return score
 
-    def _check_length_appropriateness(
-        self,
-        response: str,
-        age: int,
-        warnings: List[str]
-    ) -> float:
+    def _check_length_appropriateness(self, response: str, age: int, warnings: List[str]) -> float:
         """Check if response length is appropriate."""
         score = 1.0
         word_count = len(response.split())
@@ -345,25 +297,30 @@ class ResponseValidator:
         """Find words that may be too complex for the age."""
         # Words that are too long or complex for young students
         age_thresholds = {
-            7: 8,   # 6-7 year olds
+            7: 8,  # 6-7 year olds
             9: 10,  # 8-9 year olds
-            11: 12, # 10-11 year olds
-            12: 14  # 12+ year olds
+            11: 12,  # 10-11 year olds
+            12: 14,  # 12+ year olds
         }
 
-        threshold = age_thresholds.get(
-            min(age, 12) if age >= 7 else 7,
-            8
-        )
+        threshold = age_thresholds.get(min(age, 12) if age >= 7 else 7, 8)
 
-        words = re.findall(r'\b[a-zA-Z]+\b', text.lower())
+        words = re.findall(r"\b[a-zA-Z]+\b", text.lower())
         complex_words = {word for word in words if len(word) > threshold}
 
         # Remove common long words that are still simple
         simple_long_words = {
-            'because', 'something', 'everyone', 'everything',
-            'anything', 'together', 'another', 'important',
-            'different', 'understand', 'remember'
+            "because",
+            "something",
+            "everyone",
+            "everything",
+            "anything",
+            "together",
+            "another",
+            "important",
+            "different",
+            "understand",
+            "remember",
         }
 
         return complex_words - simple_long_words
@@ -381,9 +338,17 @@ class ResponseValidator:
     def _has_guidance_phrases(self, text: str) -> bool:
         """Check if text contains guidance phrases."""
         guidance_phrases = [
-            'think about', 'what if', 'can you', 'try',
-            'notice', 'look at', 'consider', 'imagine',
-            'let\'s', 'how about', 'what do you'
+            "think about",
+            "what if",
+            "can you",
+            "try",
+            "notice",
+            "look at",
+            "consider",
+            "imagine",
+            "let's",
+            "how about",
+            "what do you",
         ]
 
         text_lower = text.lower()
@@ -403,9 +368,9 @@ class ResponseValidator:
     def _is_too_vague(self, text: str) -> bool:
         """Check if response is too vague."""
         vague_only_patterns = [
-            r'^(good|great|nice)\s+(job|work|question)[.!]?$',
-            r'^(that\'s|thats)\s+(right|correct|good)[.!]?$',
-            r'^(keep|keep up|continue)\s+.{0,20}[.!]?$'
+            r"^(good|great|nice)\s+(job|work|question)[.!]?$",
+            r"^(that\'s|thats)\s+(right|correct|good)[.!]?$",
+            r"^(keep|keep up|continue)\s+.{0,20}[.!]?$",
         ]
 
         text_stripped = text.strip()
@@ -415,8 +380,8 @@ class ResponseValidator:
 
         # Check for very generic responses
         if len(text.split()) < 10 and not any(
-            word in text.lower() for word in
-            ['why', 'how', 'what', 'where', 'when', 'because', 'try']
+            word in text.lower()
+            for word in ["why", "how", "what", "where", "when", "because", "try"]
         ):
             return True
 
@@ -425,9 +390,15 @@ class ResponseValidator:
     def _builds_on_prior_knowledge(self, text: str) -> bool:
         """Check if response builds on prior knowledge."""
         prior_knowledge_phrases = [
-            'remember', 'you know', 'learned', 'before',
-            'like when', 'similar to', 'just like',
-            'you\'ve seen', 'already know'
+            "remember",
+            "you know",
+            "learned",
+            "before",
+            "like when",
+            "similar to",
+            "just like",
+            "you've seen",
+            "already know",
         ]
 
         text_lower = text.lower()
@@ -447,20 +418,38 @@ class ResponseValidator:
     def _find_negative_words(self, text: str) -> Set[str]:
         """Find potentially discouraging words."""
         negative_words = {
-            'wrong', 'incorrect', 'bad', 'fail', 'failure',
-            'can\'t', 'cannot', 'unable', 'impossible',
-            'never', 'always', 'stupid', 'dumb'
+            "wrong",
+            "incorrect",
+            "bad",
+            "fail",
+            "failure",
+            "can't",
+            "cannot",
+            "unable",
+            "impossible",
+            "never",
+            "always",
+            "stupid",
+            "dumb",
         }
 
-        words = set(re.findall(r'\b[a-z\']+\b', text.lower()))
+        words = set(re.findall(r"\b[a-z\']+\b", text.lower()))
         return words & negative_words
 
     def _has_growth_mindset_language(self, text: str) -> bool:
         """Check for growth mindset language."""
         growth_phrases = [
-            'yet', 'learn', 'grow', 'practice', 'improve',
-            'try again', 'keep going', 'you\'re getting',
-            'progress', 'discover', 'figure out'
+            "yet",
+            "learn",
+            "grow",
+            "practice",
+            "improve",
+            "try again",
+            "keep going",
+            "you're getting",
+            "progress",
+            "discover",
+            "figure out",
         ]
 
         text_lower = text.lower()
@@ -472,31 +461,28 @@ class ResponseValidator:
 
     def _find_inappropriate_words(self, text: str) -> List[str]:
         """Find inappropriate words in text."""
-        words = set(re.findall(r'\b[a-z]+\b', text.lower()))
+        words = set(re.findall(r"\b[a-z]+\b", text.lower()))
         return list(words & self.inappropriate_words)
 
     def _requests_personal_info(self, text: str) -> bool:
         """Check if response requests personal information."""
         personal_info_patterns = [
-            r'what\'?s? your (name|address|phone|email)',
-            r'where do you live',
-            r'tell me your (full name|address)',
-            r'what school do you go to'
+            r"what\'?s? your (name|address|phone|email)",
+            r"where do you live",
+            r"tell me your (full name|address)",
+            r"what school do you go to",
         ]
 
         text_lower = text.lower()
-        return any(
-            re.search(pattern, text_lower)
-            for pattern in personal_info_patterns
-        )
+        return any(re.search(pattern, text_lower) for pattern in personal_info_patterns)
 
     def _contains_links_or_contact(self, text: str) -> bool:
         """Check for URLs, emails, or phone numbers."""
         patterns = [
-            r'http[s]?://',
-            r'www\.',
-            r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+            r"http[s]?://",
+            r"www\.",
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b",
         ]
 
         return any(re.search(pattern, text) for pattern in patterns)
@@ -505,48 +491,83 @@ class ResponseValidator:
         """Load set of inappropriate words."""
         # Basic set - in production, this would be more comprehensive
         return {
-            'stupid', 'dumb', 'idiot', 'hate', 'kill',
-            'die', 'death', 'violence', 'weapon'
+            "stupid",
+            "dumb",
+            "idiot",
+            "hate",
+            "kill",
+            "die",
+            "death",
+            "violence",
+            "weapon",
             # Note: Real implementation would have comprehensive list
         }
 
     def _load_direct_answer_patterns(self) -> List[str]:
         """Load patterns that indicate direct answers."""
         return [
-            r'the answer is \d+',
-            r'it equals \d+',
-            r'the solution is',
-            r'^\d+\s*[+\-*/]\s*\d+\s*=\s*\d+',  # "5 + 3 = 8"
-            r'you (should|need to|must) do',
-            r'the correct answer',
-            r'here\'?s? the answer'
+            r"the answer is \d+",
+            r"it equals \d+",
+            r"the solution is",
+            r"^\d+\s*[+\-*/]\s*\d+\s*=\s*\d+",  # "5 + 3 = 8"
+            r"you (should|need to|must) do",
+            r"the correct answer",
+            r"here\'?s? the answer",
         ]
 
     def _load_educational_indicators(self) -> List[str]:
         """Load educational concept indicators."""
         return [
-            'because', 'strategy', 'method', 'pattern', 'concept',
-            'example', 'step', 'process', 'understand', 'learn',
-            'discover', 'notice', 'observe', 'compare', 'connect',
-            'break down', 'think about', 'reason', 'explain'
+            "because",
+            "strategy",
+            "method",
+            "pattern",
+            "concept",
+            "example",
+            "step",
+            "process",
+            "understand",
+            "learn",
+            "discover",
+            "notice",
+            "observe",
+            "compare",
+            "connect",
+            "break down",
+            "think about",
+            "reason",
+            "explain",
         ]
 
     def _load_encouragement_words(self) -> List[str]:
         """Load encouraging words and phrases."""
         return [
-            'great', 'good', 'excellent', 'wonderful', 'awesome',
-            'nice', 'super', 'fantastic', 'amazing', 'brilliant',
-            'love', 'like', 'proud', 'impressive', 'terrific',
-            'you\'re', 'you can', 'well done', 'keep going',
-            'keep it up', 'way to go', 'that\'s right'
+            "great",
+            "good",
+            "excellent",
+            "wonderful",
+            "awesome",
+            "nice",
+            "super",
+            "fantastic",
+            "amazing",
+            "brilliant",
+            "love",
+            "like",
+            "proud",
+            "impressive",
+            "terrific",
+            "you're",
+            "you can",
+            "well done",
+            "keep going",
+            "keep it up",
+            "way to go",
+            "that's right",
         ]
 
 
-def validate_educational_response(
-    response: str,
-    age: int,
-    subject: str
-) -> Dict:
+def validate_educational_response(response: str, age: int, subject: str) -> Dict:
     """
     Convenience function to validate a response.
 
@@ -576,11 +597,7 @@ if __name__ == "__main__":
         "Try drawing 5 groups with 3 items in each!"
     )
 
-    result = validator.validate_response(
-        response=good_response,
-        age=8,
-        subject='math'
-    )
+    result = validator.validate_response(response=good_response, age=8, subject="math")
 
     print(f"Response: {good_response}")
     print(f"Valid: {result['is_valid']}")
@@ -593,11 +610,7 @@ if __name__ == "__main__":
     print("--- Example 2: Direct Answer (Invalid) ---")
     bad_response = "The answer is 15. You multiply 5 times 3."
 
-    result = validator.validate_response(
-        response=bad_response,
-        age=8,
-        subject='math'
-    )
+    result = validator.validate_response(response=bad_response, age=8, subject="math")
 
     print(f"Response: {bad_response}")
     print(f"Valid: {result['is_valid']}")
@@ -612,11 +625,7 @@ if __name__ == "__main__":
         "of iterative summation utilizing multiplicative factors."
     )
 
-    result = validator.validate_response(
-        response=complex_response,
-        age=7,
-        subject='math'
-    )
+    result = validator.validate_response(response=complex_response, age=7, subject="math")
 
     print(f"Response: {complex_response}")
     print(f"Valid: {result['is_valid']}")
@@ -632,11 +641,7 @@ if __name__ == "__main__":
         "the problem into smaller parts? You've got this!"
     )
 
-    result = validator.validate_response(
-        response=encouraging_response,
-        age=9,
-        subject='math'
-    )
+    result = validator.validate_response(response=encouraging_response, age=9, subject="math")
 
     print(f"Response: {encouraging_response}")
     print(f"Valid: {result['is_valid']}")

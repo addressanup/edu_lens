@@ -19,8 +19,8 @@ import pytest
 from src.privacy.data_minimizer import (
     DataMinimizer,
     MinimizationLevel,
-    MinimizedImage,
     MinimizedAudio,
+    MinimizedImage,
 )
 
 
@@ -54,8 +54,8 @@ class TestDataMinimizationPipeline:
         assert minimized.detected_text == detected_text
 
         # Raw image data should not be accessible
-        assert not hasattr(minimized, 'raw_data')
-        assert not hasattr(minimized, 'image_data')
+        assert not hasattr(minimized, "raw_data")
+        assert not hasattr(minimized, "image_data")
 
     def test_audio_minimization_in_pipeline(
         self,
@@ -82,8 +82,8 @@ class TestDataMinimizationPipeline:
         assert minimized.intent == intent
 
         # Raw audio data should not be accessible
-        assert not hasattr(minimized, 'raw_data')
-        assert not hasattr(minimized, 'audio_data')
+        assert not hasattr(minimized, "raw_data")
+        assert not hasattr(minimized, "audio_data")
 
     def test_pii_removal_from_extracted_text(
         self,
@@ -115,7 +115,9 @@ class TestDataMinimizationPipeline:
 
         # Phone number should be redacted
         assert "555-123-4567" not in minimized.transcription
-        assert "[PHONE_REDACTED]" in minimized.transcription or "REDACTED" in minimized.transcription
+        assert (
+            "[PHONE_REDACTED]" in minimized.transcription or "REDACTED" in minimized.transcription
+        )
 
     def test_minimization_levels(
         self,
@@ -205,8 +207,8 @@ class TestAutoDeletion:
             )
 
         # Minimizer should not store raw data
-        assert not hasattr(data_minimizer, '_image_cache')
-        assert not hasattr(data_minimizer, '_audio_cache')
+        assert not hasattr(data_minimizer, "_image_cache")
+        assert not hasattr(data_minimizer, "_audio_cache")
 
     @pytest.mark.asyncio
     async def test_scheduled_deletion(
@@ -262,9 +264,9 @@ class TestNoPersistentRawData:
         context = vision_to_ai_bridge.process_vision_output(sample_ocr_result)
 
         # Should not have raw image data
-        assert not hasattr(context, 'image_data')
-        assert not hasattr(context, 'raw_image')
-        assert not hasattr(context, 'image_bytes')
+        assert not hasattr(context, "image_data")
+        assert not hasattr(context, "raw_image")
+        assert not hasattr(context, "image_bytes")
 
     def test_no_raw_audio_in_voice_query(
         self,
@@ -277,9 +279,9 @@ class TestNoPersistentRawData:
         )
 
         # Should not have raw audio data
-        assert not hasattr(query, 'audio_data')
-        assert not hasattr(query, 'raw_audio')
-        assert not hasattr(query, 'audio_bytes')
+        assert not hasattr(query, "audio_data")
+        assert not hasattr(query, "raw_audio")
+        assert not hasattr(query, "audio_bytes")
 
     def test_session_data_contains_no_raw_media(
         self,
@@ -301,9 +303,9 @@ class TestNoPersistentRawData:
 
         # Interactions should not contain raw data
         for interaction in session.interactions:
-            assert not hasattr(interaction, 'image_data')
-            assert not hasattr(interaction, 'audio_data')
-            assert not hasattr(interaction, 'raw_media')
+            assert not hasattr(interaction, "image_data")
+            assert not hasattr(interaction, "audio_data")
+            assert not hasattr(interaction, "raw_media")
 
 
 class TestConsentFlowIntegration:
@@ -351,9 +353,7 @@ class TestConsentFlowIntegration:
         child_age = 8
 
         # Should require parental consent
-        consent_manager.requires_parental_consent = Mock(
-            return_value=(child_age < 13)
-        )
+        consent_manager.requires_parental_consent = Mock(return_value=(child_age < 13))
 
         assert consent_manager.requires_parental_consent(child_age)
 
@@ -364,11 +364,13 @@ class TestConsentFlowIntegration:
         student_id = "TEST_STUDENT"
 
         # Request data export
-        data_export_manager.export_user_data = Mock(return_value={
-            "student_id": student_id,
-            "aggregated_stats": {"sessions": 5, "problems_solved": 42},
-            "no_raw_data": True,
-        })
+        data_export_manager.export_user_data = Mock(
+            return_value={
+                "student_id": student_id,
+                "aggregated_stats": {"sessions": 5, "problems_solved": 42},
+                "no_raw_data": True,
+            }
+        )
 
         export_data = data_export_manager.export_user_data(student_id)
 

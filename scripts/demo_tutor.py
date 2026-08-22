@@ -29,6 +29,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -63,11 +64,7 @@ def text_mode():
     engine = get_tutor_engine()
 
     # Default context for a student
-    context = {
-        'age': 8,
-        'grade': '3',
-        'subject': 'general'
-    }
+    context = {"age": 8, "grade": "3", "subject": "general"}
 
     while True:
         try:
@@ -75,27 +72,41 @@ def text_mode():
 
             if not query:
                 continue
-            if query.lower() == 'quit':
+            if query.lower() == "quit":
                 print("\n👋 Goodbye! Keep learning!")
                 break
-            if query.lower() == 'clear':
+            if query.lower() == "clear":
                 engine.conversation_history.clear()
                 print("🔄 Conversation cleared!\n")
                 continue
 
             # Detect subject from query
             query_lower = query.lower()
-            if any(word in query_lower for word in ['math', 'add', 'subtract', 'multiply', 'divide', 'number', 'plus', 'minus']):
-                context['subject'] = 'math'
-            elif any(word in query_lower for word in ['read', 'word', 'spell', 'story', 'book']):
-                context['subject'] = 'reading'
-            elif any(word in query_lower for word in ['science', 'plant', 'animal', 'weather', 'body']):
-                context['subject'] = 'science'
+            if any(
+                word in query_lower
+                for word in [
+                    "math",
+                    "add",
+                    "subtract",
+                    "multiply",
+                    "divide",
+                    "number",
+                    "plus",
+                    "minus",
+                ]
+            ):
+                context["subject"] = "math"
+            elif any(word in query_lower for word in ["read", "word", "spell", "story", "book"]):
+                context["subject"] = "reading"
+            elif any(
+                word in query_lower for word in ["science", "plant", "animal", "weather", "body"]
+            ):
+                context["subject"] = "science"
 
             # Generate response
             print("\n🤖 EduLens: ", end="", flush=True)
             result = engine.generate_response(query, context)
-            print(result['response'])
+            print(result["response"])
             print()
 
         except KeyboardInterrupt:
@@ -126,13 +137,14 @@ def image_mode(image_path: str):
 
         # Load and process image
         import cv2
+
         image = cv2.imread(image_path)
         if image is None:
             print("❌ Could not load image")
             sys.exit(1)
 
         result = ocr.extract_text(image)
-        extracted_text = result.get('text', '')
+        extracted_text = result.get("text", "")
 
         if extracted_text:
             print(f"\n📝 Detected text:\n{'-' * 40}")
@@ -154,12 +166,7 @@ def image_mode(image_path: str):
     # Start tutoring session with image context
     engine = get_tutor_engine()
 
-    context = {
-        'age': 8,
-        'grade': '3',
-        'subject': 'math',
-        'problem_statement': extracted_text
-    }
+    context = {"age": 8, "grade": "3", "subject": "math", "problem_statement": extracted_text}
 
     print("💬 Now you can ask questions about this homework!\n")
 
@@ -169,7 +176,7 @@ def image_mode(image_path: str):
 
             if not query:
                 continue
-            if query.lower() == 'quit':
+            if query.lower() == "quit":
                 print("\n👋 Goodbye!")
                 break
 
@@ -181,7 +188,7 @@ def image_mode(image_path: str):
 
             print("\n🤖 EduLens: ", end="", flush=True)
             result = engine.generate_response(full_query, context)
-            print(result['response'])
+            print(result["response"])
             print()
 
         except KeyboardInterrupt:
@@ -219,7 +226,7 @@ def interactive_mode():
 
         # Check microphone
         devices = sd.query_devices()
-        input_devices = [d for d in devices if d['max_input_channels'] > 0]
+        input_devices = [d for d in devices if d["max_input_channels"] > 0]
         if not input_devices:
             print("❌ No microphone detected")
             print("\nFalling back to text mode...")
@@ -250,16 +257,12 @@ def quick_test():
 
     engine = get_tutor_engine()
 
-    context = {
-        'age': 8,
-        'grade': '3',
-        'subject': 'math'
-    }
+    context = {"age": 8, "grade": "3", "subject": "math"}
 
     test_questions = [
         "What is 5 + 3?",
         "Can you help me understand fractions?",
-        "Why is the sky blue?"
+        "Why is the sky blue?",
     ]
 
     print("\nRunning test queries...\n")
@@ -290,36 +293,28 @@ Examples:
 
 Environment:
   LLM_PROVIDER=deepseek python scripts/demo_tutor.py --mode text
-        """
+        """,
     )
 
     parser.add_argument(
-        '--mode',
-        choices=['text', 'image', 'interactive'],
-        default='text',
-        help='Demo mode (default: text)'
+        "--mode",
+        choices=["text", "image", "interactive"],
+        default="text",
+        help="Demo mode (default: text)",
     )
+    parser.add_argument("--image", type=str, help="Path to homework image (for image mode)")
+    parser.add_argument("--test", action="store_true", help="Run quick test to verify setup")
     parser.add_argument(
-        '--image',
-        type=str,
-        help='Path to homework image (for image mode)'
-    )
-    parser.add_argument(
-        '--test',
-        action='store_true',
-        help='Run quick test to verify setup'
-    )
-    parser.add_argument(
-        '--provider',
-        choices=['anthropic', 'openai', 'google', 'deepseek', 'ollama'],
-        help='LLM provider (overrides LLM_PROVIDER env var)'
+        "--provider",
+        choices=["anthropic", "openai", "google", "deepseek", "ollama"],
+        help="LLM provider (overrides LLM_PROVIDER env var)",
     )
 
     args = parser.parse_args()
 
     # Set provider if specified
     if args.provider:
-        os.environ['LLM_PROVIDER'] = args.provider
+        os.environ["LLM_PROVIDER"] = args.provider
 
     print("\n" + "=" * 60)
     print("🎓 Welcome to EduLens AI Tutor")
@@ -327,14 +322,14 @@ Environment:
 
     if args.test:
         quick_test()
-    elif args.mode == 'text':
+    elif args.mode == "text":
         text_mode()
-    elif args.mode == 'image':
+    elif args.mode == "image":
         if not args.image:
             print("❌ Image mode requires --image path/to/image.jpg")
             sys.exit(1)
         image_mode(args.image)
-    elif args.mode == 'interactive':
+    elif args.mode == "interactive":
         interactive_mode()
 
 

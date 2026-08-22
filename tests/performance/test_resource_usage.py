@@ -15,8 +15,8 @@ import asyncio
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from unittest.mock import Mock, AsyncMock
+from typing import Any, Dict, List, Optional
+from unittest.mock import AsyncMock, Mock
 
 import numpy as np
 import pytest
@@ -28,9 +28,9 @@ except ImportError:
     psutil = None
 
 try:
-    from src.vision.ocr_engine import OCREngine, OCRBackend
-    from src.audio.speech_recognizer import SpeechRecognizer, SpeechConfig
-    from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
+    from src.audio.speech_recognizer import SpeechConfig, SpeechRecognizer
+    from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
+    from src.vision.ocr_engine import OCRBackend, OCREngine
 except ImportError:
     OCREngine = None
     SpeechRecognizer = None
@@ -104,7 +104,7 @@ class ResourceMonitor:
             "memory": {
                 "mean_mb": np.mean(self.memory_samples) if self.memory_samples else 0,
                 "max_mb": np.max(self.memory_samples) if self.memory_samples else 0,
-            }
+            },
         }
 
 
@@ -139,8 +139,9 @@ class TestCPUUtilization:
         stats = monitor.stop()
 
         # CPU usage should be moderate
-        assert stats["cpu"]["mean"] < RESOURCE_LIMITS["cpu_percent"], \
-            f"OCR CPU usage {stats['cpu']['mean']:.1f}% exceeds limit {RESOURCE_LIMITS['cpu_percent']}%"
+        assert (
+            stats["cpu"]["mean"] < RESOURCE_LIMITS["cpu_percent"]
+        ), f"OCR CPU usage {stats['cpu']['mean']:.1f}% exceeds limit {RESOURCE_LIMITS['cpu_percent']}%"
 
     @pytest.mark.asyncio
     async def test_asr_cpu_usage(self, sample_audio_data):
@@ -221,8 +222,10 @@ class TestCPUUtilization:
         cpu_percent_per_core_after = psutil.cpu_percent(percpu=True)
 
         # At least one core should show activity
-        assert any(after > before for before, after in
-                   zip(cpu_percent_per_core_before, cpu_percent_per_core_after))
+        assert any(
+            after > before
+            for before, after in zip(cpu_percent_per_core_before, cpu_percent_per_core_after)
+        )
 
 
 # ============================================================================
@@ -240,13 +243,15 @@ class TestGPUUtilization:
 
         try:
             import torch
+
             gpu_available = torch.cuda.is_available()
         except ImportError:
             pass
 
         try:
             import tensorflow as tf
-            gpu_available = gpu_available or len(tf.config.list_physical_devices('GPU')) > 0
+
+            gpu_available = gpu_available or len(tf.config.list_physical_devices("GPU")) > 0
         except ImportError:
             pass
 
@@ -290,9 +295,9 @@ class TestDiskIO:
         # Create test images
         image_paths = []
         for i in range(20):
-            img = Image.new('RGB', (640, 480), color='white')
+            img = Image.new("RGB", (640, 480), color="white")
             draw = ImageDraw.Draw(img)
-            draw.text((50, 50), f"Test {i}", fill='black')
+            draw.text((50, 50), f"Test {i}", fill="black")
 
             path = temp_dir / f"disk_test_{i}.jpg"
             img.save(path)
@@ -347,7 +352,7 @@ class TestDiskIO:
         for i in range(50):
             cache_file = cache_dir / f"cache_{i}.bin"
             data = np.random.bytes(1024 * 10)  # 10KB per file
-            with open(cache_file, 'wb') as f:
+            with open(cache_file, "wb") as f:
                 f.write(data)
 
         io_after = psutil.disk_io_counters()
@@ -582,8 +587,9 @@ class TestResourceEfficiency:
         # Measure CPU time after
         cpu_times_after = process.cpu_times()
 
-        cpu_time_used = (cpu_times_after.user + cpu_times_after.system) - \
-                        (cpu_times_before.user + cpu_times_before.system)
+        cpu_time_used = (cpu_times_after.user + cpu_times_after.system) - (
+            cpu_times_before.user + cpu_times_before.system
+        )
 
         operations_per_cpu_second = operation_count / cpu_time_used
 
@@ -604,6 +610,7 @@ class TestResourceEfficiency:
 
         # Baseline
         import gc
+
         gc.collect()
         mem_before = process.memory_info().rss / 1024 / 1024
 
@@ -658,13 +665,14 @@ def test_resource_usage_summary(tmp_path):
             "efficiency": {
                 "operations_per_cpu_second": 3.5,
                 "memory_per_operation_mb": 2.1,
-            }
-        }
+            },
+        },
     }
 
     import json
+
     report_file = tmp_path / "resource_usage_report.json"
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     assert report_file.exists()

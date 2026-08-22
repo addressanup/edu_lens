@@ -9,18 +9,18 @@ Author: EduLens AI Team
 Version: 1.0.0
 """
 
-import re
 import logging
-from typing import Dict, List, Optional, Tuple, Any
+import re
 from dataclasses import dataclass
 from enum import Enum
-
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 
 class TextType(Enum):
     """Types of reading texts."""
+
     FICTION = "fiction"
     NON_FICTION = "non_fiction"
     POETRY = "poetry"
@@ -30,6 +30,7 @@ class TextType(Enum):
 
 class ComprehensionLevel(Enum):
     """Levels of reading comprehension."""
+
     LITERAL = "literal"  # What the text says
     INFERENTIAL = "inferential"  # Reading between the lines
     EVALUATIVE = "evaluative"  # Forming opinions and judgments
@@ -38,6 +39,7 @@ class ComprehensionLevel(Enum):
 
 class ReadingStrategy(Enum):
     """Reading comprehension strategies."""
+
     PREDICT = "predict"
     QUESTION = "question"
     CLARIFY = "clarify"
@@ -50,6 +52,7 @@ class ReadingStrategy(Enum):
 @dataclass
 class VocabularyExplanation:
     """Explanation of a vocabulary word."""
+
     word: str
     definition: str
     context_clues: List[str]
@@ -61,6 +64,7 @@ class VocabularyExplanation:
 @dataclass
 class ComprehensionCheck:
     """Comprehension check question and guidance."""
+
     question: str
     question_type: str
     expected_thinking: str
@@ -89,10 +93,7 @@ class ReadingReasoner:
         self.text_features = self._initialize_text_features()
 
     def analyze_passage(
-        self,
-        passage: str,
-        grade_level: str,
-        text_type: Optional[TextType] = None
+        self, passage: str, grade_level: str, text_type: Optional[TextType] = None
     ) -> Dict[str, Any]:
         """
         Analyze a reading passage to understand its structure and features.
@@ -137,22 +138,19 @@ class ReadingReasoner:
         complexity = self._assess_complexity(passage, grade_level)
 
         return {
-            'text_type': text_type.value,
-            'reading_level': reading_level,
-            'key_features': features,
-            'notable_vocabulary': vocabulary,
-            'themes': themes,
-            'structure': structure,
-            'complexity': complexity,
-            'word_count': len(passage.split()),
-            'sentence_count': len(re.findall(r'[.!?]+', passage))
+            "text_type": text_type.value,
+            "reading_level": reading_level,
+            "key_features": features,
+            "notable_vocabulary": vocabulary,
+            "themes": themes,
+            "structure": structure,
+            "complexity": complexity,
+            "word_count": len(passage.split()),
+            "sentence_count": len(re.findall(r"[.!?]+", passage)),
         }
 
     def identify_main_idea(
-        self,
-        passage: str,
-        student_age: int,
-        provide_guidance: bool = True
+        self, passage: str, student_age: int, provide_guidance: bool = True
     ) -> Dict[str, Any]:
         """
         Extract and explain the main idea of a passage.
@@ -174,32 +172,26 @@ class ReadingReasoner:
         main_idea_candidates = self._extract_main_idea_candidates(passage)
 
         # Generate guiding questions
-        guiding_questions = self._generate_main_idea_questions(
-            passage, text_type, student_age
-        )
+        guiding_questions = self._generate_main_idea_questions(passage, text_type, student_age)
 
         # Identify key details that support main idea
         supporting_details = self._identify_supporting_details(passage)
 
         result = {
-            'text_type': text_type.value,
-            'guiding_questions': guiding_questions,
-            'key_details': supporting_details[:5],  # Top 5 details
-            'thinking_strategy': self._get_main_idea_strategy(text_type, student_age)
+            "text_type": text_type.value,
+            "guiding_questions": guiding_questions,
+            "key_details": supporting_details[:5],  # Top 5 details
+            "thinking_strategy": self._get_main_idea_strategy(text_type, student_age),
         }
 
         # Only include direct main idea if not providing guidance
         if not provide_guidance:
-            result['main_idea'] = main_idea_candidates[0] if main_idea_candidates else None
+            result["main_idea"] = main_idea_candidates[0] if main_idea_candidates else None
 
         return result
 
     def explain_vocabulary(
-        self,
-        word: str,
-        context_sentence: str,
-        student_age: int,
-        passage: Optional[str] = None
+        self, word: str, context_sentence: str, student_age: int, passage: Optional[str] = None
     ) -> VocabularyExplanation:
         """
         Provide context-appropriate vocabulary explanation.
@@ -234,16 +226,11 @@ class ReadingReasoner:
             context_clues=context_clues,
             example_sentence=example,
             synonyms=synonyms,
-            student_friendly_definition=student_friendly
+            student_friendly_definition=student_friendly,
         )
 
     def guide_comprehension(
-        self,
-        passage: str,
-        student_response: str,
-        question: str,
-        grade_level: str,
-        student_age: int
+        self, passage: str, student_response: str, question: str, grade_level: str, student_age: int
     ) -> Dict[str, Any]:
         """
         Guide student toward better reading comprehension.
@@ -274,17 +261,13 @@ class ReadingReasoner:
         )
 
         # Generate feedback
-        feedback = self._generate_reading_feedback(
-            response_quality, student_age
-        )
+        feedback = self._generate_reading_feedback(response_quality, student_age)
 
         # Suggest appropriate reading strategy
         strategy = self._suggest_reading_strategy(question_type, passage)
 
         # Identify where to find evidence
-        text_evidence_location = self._locate_text_evidence(
-            question, passage, question_type
-        )
+        text_evidence_location = self._locate_text_evidence(question, passage, question_type)
 
         # Generate guiding questions
         guiding_questions = self._generate_guiding_questions(
@@ -292,25 +275,20 @@ class ReadingReasoner:
         )
 
         # Create progressive hints
-        hints = self._create_progressive_hints(
-            question, passage, question_type, student_age
-        )
+        hints = self._create_progressive_hints(question, passage, question_type, student_age)
 
         return {
-            'feedback': feedback,
-            'response_quality': response_quality,
-            'guiding_questions': guiding_questions,
-            'strategy_suggestion': strategy,
-            'text_evidence_location': text_evidence_location,
-            'hints': hints,
-            'question_type': question_type
+            "feedback": feedback,
+            "response_quality": response_quality,
+            "guiding_questions": guiding_questions,
+            "strategy_suggestion": strategy,
+            "text_evidence_location": text_evidence_location,
+            "hints": hints,
+            "question_type": question_type,
         }
 
     def check_understanding(
-        self,
-        passage: str,
-        student_summary: str,
-        grade_level: str
+        self, passage: str, student_summary: str, grade_level: str
     ) -> Dict[str, Any]:
         """
         Verify student's reading comprehension.
@@ -334,21 +312,15 @@ class ReadingReasoner:
         key_elements = self._extract_key_elements(passage)
 
         # Check which elements are in student's summary
-        included_elements = self._find_included_elements(
-            student_summary, key_elements
-        )
+        included_elements = self._find_included_elements(student_summary, key_elements)
 
-        missing_elements = [
-            elem for elem in key_elements if elem not in included_elements
-        ]
+        missing_elements = [elem for elem in key_elements if elem not in included_elements]
 
         # Calculate accuracy
         accuracy = len(included_elements) / max(len(key_elements), 1)
 
         # Assess comprehension level
-        comp_level = self._assess_comprehension_level(
-            student_summary, passage
-        )
+        comp_level = self._assess_comprehension_level(student_summary, passage)
 
         # Generate feedback
         feedback = self._generate_comprehension_feedback(
@@ -356,19 +328,16 @@ class ReadingReasoner:
         )
 
         return {
-            'comprehension_level': comp_level.value,
-            'key_elements_included': included_elements,
-            'key_elements_missing': missing_elements,
-            'accuracy_score': accuracy,
-            'feedback': feedback,
-            'demonstrates_understanding': accuracy >= 0.6
+            "comprehension_level": comp_level.value,
+            "key_elements_included": included_elements,
+            "key_elements_missing": missing_elements,
+            "accuracy_score": accuracy,
+            "feedback": feedback,
+            "demonstrates_understanding": accuracy >= 0.6,
         }
 
     def suggest_reading_strategy(
-        self,
-        passage: str,
-        difficulty_area: str,
-        student_age: int
+        self, passage: str, difficulty_area: str, student_age: int
     ) -> Dict[str, Any]:
         """
         Suggest appropriate reading strategy for comprehension.
@@ -404,19 +373,16 @@ class ReadingReasoner:
         practice = self._create_strategy_example(strategy, passage, student_age)
 
         return {
-            'strategy_name': strategy.value,
-            'description': description,
-            'steps': steps,
-            'when_to_use': when_to_use,
-            'practice_example': practice,
-            'visual_aid': self._get_strategy_visual_aid(strategy)
+            "strategy_name": strategy.value,
+            "description": description,
+            "steps": steps,
+            "when_to_use": when_to_use,
+            "practice_example": practice,
+            "visual_aid": self._get_strategy_visual_aid(strategy),
         }
 
     def analyze_character(
-        self,
-        passage: str,
-        character_name: str,
-        student_age: int
+        self, passage: str, character_name: str, student_age: int
     ) -> Dict[str, Any]:
         """
         Analyze a character from a narrative passage.
@@ -444,20 +410,16 @@ class ReadingReasoner:
         feelings = self._infer_character_feelings(passage, character_name)
 
         # Guiding questions for analysis
-        questions = self._generate_character_questions(
-            character_name, student_age
-        )
+        questions = self._generate_character_questions(character_name, student_age)
 
         return {
-            'character_name': character_name,
-            'mentions_count': len(mentions),
-            'traits': traits,
-            'actions': actions,
-            'feelings': feelings,
-            'guiding_questions': questions,
-            'evidence_locations': self._find_evidence_sentences(
-                passage, character_name
-            )
+            "character_name": character_name,
+            "mentions_count": len(mentions),
+            "traits": traits,
+            "actions": actions,
+            "feelings": feelings,
+            "guiding_questions": questions,
+            "evidence_locations": self._find_evidence_sentences(passage, character_name),
         }
 
     # Private helper methods
@@ -467,15 +429,15 @@ class ReadingReasoner:
         passage_lower = passage.lower()
 
         # Fiction indicators
-        fiction_indicators = ['once upon', 'said', 'character', 'story']
+        fiction_indicators = ["once upon", "said", "character", "story"]
         fiction_score = sum(1 for ind in fiction_indicators if ind in passage_lower)
 
         # Non-fiction indicators
-        nonfiction_indicators = ['fact', 'information', 'because', 'example']
+        nonfiction_indicators = ["fact", "information", "because", "example"]
         nonfiction_score = sum(1 for ind in nonfiction_indicators if ind in passage_lower)
 
         # Poetry indicators
-        poetry_indicators = ['\n\n', 'verse', 'stanza']
+        poetry_indicators = ["\n\n", "verse", "stanza"]
         is_poetry = any(ind in passage for ind in poetry_indicators)
 
         if is_poetry:
@@ -488,7 +450,7 @@ class ReadingReasoner:
     def _estimate_reading_level(self, passage: str) -> str:
         """Estimate reading level using simplified metrics."""
         words = passage.split()
-        sentences = re.findall(r'[.!?]+', passage)
+        sentences = re.findall(r"[.!?]+", passage)
 
         if not sentences:
             return "K-1"
@@ -506,11 +468,7 @@ class ReadingReasoner:
         else:
             return "6+"
 
-    def _identify_text_features(
-        self,
-        passage: str,
-        text_type: TextType
-    ) -> List[str]:
+    def _identify_text_features(self, passage: str, text_type: TextType) -> List[str]:
         """Identify important text features."""
         features = []
 
@@ -519,34 +477,30 @@ class ReadingReasoner:
             features.append("dialogue")
 
         # Check for headings (simple check)
-        if '\n\n' in passage:
+        if "\n\n" in passage:
             features.append("paragraphs")
 
         # Check for questions
-        if '?' in passage:
+        if "?" in passage:
             features.append("questions")
 
         # Type-specific features
         if text_type == TextType.NON_FICTION:
-            if any(word in passage.lower() for word in ['first', 'next', 'then', 'finally']):
+            if any(word in passage.lower() for word in ["first", "next", "then", "finally"]):
                 features.append("sequence words")
-            if any(word in passage.lower() for word in ['because', 'so', 'since']):
+            if any(word in passage.lower() for word in ["because", "so", "since"]):
                 features.append("cause and effect")
 
         return features
 
-    def _extract_vocabulary(
-        self,
-        passage: str,
-        grade_level: str
-    ) -> List[str]:
+    def _extract_vocabulary(self, passage: str, grade_level: str) -> List[str]:
         """Extract notable vocabulary words."""
-        words = re.findall(r'\b[a-zA-Z]+\b', passage)
+        words = re.findall(r"\b[a-zA-Z]+\b", passage)
 
         # Find longer, potentially challenging words
         notable = []
         for word in set(words):
-            if len(word) > 7 and word.lower() not in ['together', 'everyone', 'something']:
+            if len(word) > 7 and word.lower() not in ["together", "everyone", "something"]:
                 notable.append(word.lower())
 
         return notable[:10]  # Return top 10
@@ -557,11 +511,11 @@ class ReadingReasoner:
         passage_lower = passage.lower()
 
         theme_keywords = {
-            'friendship': ['friend', 'together', 'help'],
-            'courage': ['brave', 'courage', 'fear'],
-            'learning': ['learn', 'discover', 'understand'],
-            'nature': ['animal', 'plant', 'forest', 'ocean'],
-            'family': ['family', 'mother', 'father', 'sister', 'brother']
+            "friendship": ["friend", "together", "help"],
+            "courage": ["brave", "courage", "fear"],
+            "learning": ["learn", "discover", "understand"],
+            "nature": ["animal", "plant", "forest", "ocean"],
+            "family": ["family", "mother", "father", "sister", "brother"],
         }
 
         for theme, keywords in theme_keywords.items():
@@ -570,11 +524,7 @@ class ReadingReasoner:
 
         return themes
 
-    def _determine_structure(
-        self,
-        passage: str,
-        text_type: TextType
-    ) -> str:
+    def _determine_structure(self, passage: str, text_type: TextType) -> str:
         """Determine text structure."""
         passage_lower = passage.lower()
 
@@ -582,45 +532,38 @@ class ReadingReasoner:
             return "narrative"
 
         # Check for different structures
-        if any(word in passage_lower for word in ['first', 'second', 'next', 'finally']):
+        if any(word in passage_lower for word in ["first", "second", "next", "finally"]):
             return "sequential"
-        elif any(word in passage_lower for word in ['because', 'due to', 'as a result']):
+        elif any(word in passage_lower for word in ["because", "due to", "as a result"]):
             return "cause_and_effect"
-        elif any(word in passage_lower for word in ['alike', 'different', 'both', 'whereas']):
+        elif any(word in passage_lower for word in ["alike", "different", "both", "whereas"]):
             return "compare_and_contrast"
-        elif any(word in passage_lower for word in ['problem', 'solution', 'solve']):
+        elif any(word in passage_lower for word in ["problem", "solution", "solve"]):
             return "problem_solution"
         else:
             return "descriptive"
 
-    def _assess_complexity(
-        self,
-        passage: str,
-        grade_level: str
-    ) -> Dict[str, Any]:
+    def _assess_complexity(self, passage: str, grade_level: str) -> Dict[str, Any]:
         """Assess reading complexity."""
         words = passage.split()
-        sentences = len(re.findall(r'[.!?]+', passage))
+        sentences = len(re.findall(r"[.!?]+", passage))
 
         return {
-            'total_words': len(words),
-            'unique_words': len(set(words)),
-            'sentence_count': sentences,
-            'avg_sentence_length': len(words) / max(sentences, 1),
-            'complexity_rating': 'moderate'  # Simplified
+            "total_words": len(words),
+            "unique_words": len(set(words)),
+            "sentence_count": sentences,
+            "avg_sentence_length": len(words) / max(sentences, 1),
+            "complexity_rating": "moderate",  # Simplified
         }
 
     def _extract_main_idea_candidates(self, passage: str) -> List[str]:
         """Extract potential main ideas."""
         # Simplified - would use more sophisticated NLP in production
-        sentences = passage.split('.')
+        sentences = passage.split(".")
         return [s.strip() for s in sentences[:2] if s.strip()]
 
     def _generate_main_idea_questions(
-        self,
-        passage: str,
-        text_type: TextType,
-        age: int
+        self, passage: str, text_type: TextType, age: int
     ) -> List[str]:
         """Generate questions to help identify main idea."""
         questions = [
@@ -637,25 +580,17 @@ class ReadingReasoner:
 
     def _identify_supporting_details(self, passage: str) -> List[str]:
         """Identify supporting details."""
-        sentences = passage.split('.')
+        sentences = passage.split(".")
         return [s.strip() for s in sentences if s.strip()][:5]
 
-    def _get_main_idea_strategy(
-        self,
-        text_type: TextType,
-        age: int
-    ) -> str:
+    def _get_main_idea_strategy(self, text_type: TextType, age: int) -> str:
         """Get strategy for finding main idea."""
         if text_type == TextType.FICTION:
             return "Think about who the story is about and what happens to them."
         else:
             return "Look for the topic that appears most often. What is the author teaching about this topic?"
 
-    def _find_context_clues(
-        self,
-        word: str,
-        sentence: str
-    ) -> List[str]:
+    def _find_context_clues(self, word: str, sentence: str) -> List[str]:
         """Find context clues around a word."""
         clues = []
 
@@ -664,11 +599,11 @@ class ReadingReasoner:
         word_lower = word.lower()
 
         # Definition clues
-        if ' is ' in sentence_lower or ' means ' in sentence_lower:
+        if " is " in sentence_lower or " means " in sentence_lower:
             clues.append("definition clue in sentence")
 
         # Example clues
-        if 'such as' in sentence_lower or 'like' in sentence_lower:
+        if "such as" in sentence_lower or "like" in sentence_lower:
             clues.append("example clue")
 
         # Surrounding words
@@ -692,11 +627,7 @@ class ReadingReasoner:
         # Placeholder - would use actual simplification logic
         return f"A simple way to understand {definition}"
 
-    def _get_age_appropriate_synonyms(
-        self,
-        word: str,
-        age: int
-    ) -> List[str]:
+    def _get_age_appropriate_synonyms(self, word: str, age: int) -> List[str]:
         """Get synonyms appropriate for age."""
         # Placeholder - would use thesaurus with age filtering
         return ["similar word 1", "similar word 2"]
@@ -709,23 +640,19 @@ class ReadingReasoner:
         """Classify comprehension question type."""
         question_lower = question.lower()
 
-        if any(word in question_lower for word in ['who', 'what', 'when', 'where']):
+        if any(word in question_lower for word in ["who", "what", "when", "where"]):
             return "literal"
-        elif any(word in question_lower for word in ['why', 'how']):
+        elif any(word in question_lower for word in ["why", "how"]):
             return "inferential"
-        elif 'main idea' in question_lower or 'mostly about' in question_lower:
+        elif "main idea" in question_lower or "mostly about" in question_lower:
             return "main_idea"
-        elif 'feel' in question_lower or 'emotion' in question_lower:
+        elif "feel" in question_lower or "emotion" in question_lower:
             return "emotional"
         else:
             return "general"
 
     def _evaluate_response(
-        self,
-        response: str,
-        question: str,
-        passage: str,
-        question_type: str
+        self, response: str, question: str, passage: str, question_type: str
     ) -> str:
         """Evaluate quality of student's response."""
         # Simplified evaluation
@@ -736,81 +663,56 @@ class ReadingReasoner:
         else:
             return "detailed"
 
-    def _generate_reading_feedback(
-        self,
-        quality: str,
-        age: int
-    ) -> str:
+    def _generate_reading_feedback(self, quality: str, age: int) -> str:
         """Generate feedback on reading response."""
         feedback_map = {
             "incomplete": "Can you tell me more? Let's look at the text together.",
             "basic": "Good start! Can you add more details from the story?",
-            "detailed": "Great job explaining your thinking!"
+            "detailed": "Great job explaining your thinking!",
         }
         return feedback_map.get(quality, "Let's think about this together.")
 
-    def _suggest_reading_strategy(
-        self,
-        question_type: str,
-        passage: str
-    ) -> str:
+    def _suggest_reading_strategy(self, question_type: str, passage: str) -> str:
         """Suggest appropriate reading strategy."""
         strategy_map = {
             "literal": "Look carefully at the words in the text.",
             "inferential": "Think about clues in the story. What does the author want you to understand?",
             "main_idea": "Think about what the whole text is mostly about.",
-            "emotional": "Put yourself in the character's shoes. How would you feel?"
+            "emotional": "Put yourself in the character's shoes. How would you feel?",
         }
         return strategy_map.get(question_type, "Read carefully and think about what you learned.")
 
-    def _locate_text_evidence(
-        self,
-        question: str,
-        passage: str,
-        question_type: str
-    ) -> str:
+    def _locate_text_evidence(self, question: str, passage: str, question_type: str) -> str:
         """Help locate where to find evidence."""
         return "Look at the beginning, middle, or end of the passage for clues."
 
     def _generate_guiding_questions(
-        self,
-        question: str,
-        passage: str,
-        question_type: str,
-        age: int
+        self, question: str, passage: str, question_type: str, age: int
     ) -> List[str]:
         """Generate guiding questions."""
         return [
             "What does the text tell us?",
             "What clues can we find?",
-            "What do we already know that can help?"
+            "What do we already know that can help?",
         ]
 
     def _create_progressive_hints(
-        self,
-        question: str,
-        passage: str,
-        question_type: str,
-        age: int
+        self, question: str, passage: str, question_type: str, age: int
     ) -> List[str]:
         """Create progressive hints."""
         return [
             "Think about what you just read.",
             "Look for key words in the question and find them in the text.",
-            "The answer is in the text. Let's read that part again together."
+            "The answer is in the text. Let's read that part again together.",
         ]
 
     def _extract_key_elements(self, passage: str) -> List[str]:
         """Extract key elements from passage."""
         # Simplified - would be more sophisticated in production
-        sentences = passage.split('.')
+        sentences = passage.split(".")
         return [s.strip() for s in sentences if len(s.strip()) > 20][:5]
 
-    def _find_included_elements(
-        self,
-        summary: str,
-        key_elements: List[str]
-    ) -> List[str]:
+    def _find_included_elements(self, summary: str, key_elements: List[str]) -> List[str]:
         """Find which key elements are in summary."""
         included = []
         summary_lower = summary.lower()
@@ -826,26 +728,18 @@ class ReadingReasoner:
 
         return included
 
-    def _assess_comprehension_level(
-        self,
-        summary: str,
-        passage: str
-    ) -> ComprehensionLevel:
+    def _assess_comprehension_level(self, summary: str, passage: str) -> ComprehensionLevel:
         """Assess level of comprehension demonstrated."""
         # Simplified assessment
         if len(summary.split()) < 10:
             return ComprehensionLevel.LITERAL
-        elif any(word in summary.lower() for word in ['because', 'so', 'reason']):
+        elif any(word in summary.lower() for word in ["because", "so", "reason"]):
             return ComprehensionLevel.INFERENTIAL
         else:
             return ComprehensionLevel.LITERAL
 
     def _generate_comprehension_feedback(
-        self,
-        accuracy: float,
-        included: List[str],
-        missing: List[str],
-        grade_level: str
+        self, accuracy: float, included: List[str], missing: List[str], grade_level: str
     ) -> str:
         """Generate feedback on comprehension."""
         if accuracy >= 0.8:
@@ -855,25 +749,18 @@ class ReadingReasoner:
         else:
             return "Let's read the passage again and look for the main ideas together."
 
-    def _select_strategy_for_difficulty(
-        self,
-        difficulty_area: str
-    ) -> ReadingStrategy:
+    def _select_strategy_for_difficulty(self, difficulty_area: str) -> ReadingStrategy:
         """Select strategy based on difficulty."""
         strategy_map = {
-            'vocabulary': ReadingStrategy.CLARIFY,
-            'main_idea': ReadingStrategy.SUMMARIZE,
-            'details': ReadingStrategy.QUESTION,
-            'understanding': ReadingStrategy.VISUALIZE,
-            'predictions': ReadingStrategy.PREDICT
+            "vocabulary": ReadingStrategy.CLARIFY,
+            "main_idea": ReadingStrategy.SUMMARIZE,
+            "details": ReadingStrategy.QUESTION,
+            "understanding": ReadingStrategy.VISUALIZE,
+            "predictions": ReadingStrategy.PREDICT,
         }
         return strategy_map.get(difficulty_area, ReadingStrategy.QUESTION)
 
-    def _get_strategy_description(
-        self,
-        strategy: ReadingStrategy,
-        age: int
-    ) -> str:
+    def _get_strategy_description(self, strategy: ReadingStrategy, age: int) -> str:
         """Get strategy description."""
         descriptions = {
             ReadingStrategy.PREDICT: "Guess what will happen next based on clues!",
@@ -882,28 +769,24 @@ class ReadingReasoner:
             ReadingStrategy.SUMMARIZE: "Tell the main ideas in your own words.",
             ReadingStrategy.VISUALIZE: "Make a picture in your mind of what's happening.",
             ReadingStrategy.CONNECT: "Connect the story to your own life.",
-            ReadingStrategy.INFER: "Use clues to figure out things the author doesn't say directly."
+            ReadingStrategy.INFER: "Use clues to figure out things the author doesn't say directly.",
         }
         return descriptions.get(strategy, "Think carefully about what you read.")
 
-    def _get_strategy_steps(
-        self,
-        strategy: ReadingStrategy,
-        age: int
-    ) -> List[str]:
+    def _get_strategy_steps(self, strategy: ReadingStrategy, age: int) -> List[str]:
         """Get steps for using strategy."""
         steps_map = {
             ReadingStrategy.VISUALIZE: [
                 "Stop and close your eyes",
                 "Picture what's happening in your mind",
                 "Think about colors, shapes, and actions you see",
-                "Keep that picture in mind as you keep reading"
+                "Keep that picture in mind as you keep reading",
             ],
             ReadingStrategy.QUESTION: [
                 "Before reading, ask 'What will this be about?'",
                 "During reading, ask 'What is happening?'",
-                "After reading, ask 'What did I learn?'"
-            ]
+                "After reading, ask 'What did I learn?'",
+            ],
         }
         return steps_map.get(strategy, ["Use this strategy as you read."])
 
@@ -911,12 +794,7 @@ class ReadingReasoner:
         """Explain when to use strategy."""
         return f"Use {strategy.value} when you need to understand the text better."
 
-    def _create_strategy_example(
-        self,
-        strategy: ReadingStrategy,
-        passage: str,
-        age: int
-    ) -> str:
+    def _create_strategy_example(self, strategy: ReadingStrategy, passage: str, age: int) -> str:
         """Create example of using strategy."""
         return f"Example: When reading this passage, you can {strategy.value}..."
 
@@ -924,14 +802,10 @@ class ReadingReasoner:
         """Get visual aid suggestion for strategy."""
         return "Draw pictures or make notes to help you remember."
 
-    def _find_character_mentions(
-        self,
-        passage: str,
-        character_name: str
-    ) -> List[str]:
+    def _find_character_mentions(self, passage: str, character_name: str) -> List[str]:
         """Find mentions of character."""
         mentions = []
-        sentences = passage.split('.')
+        sentences = passage.split(".")
 
         for sentence in sentences:
             if character_name.lower() in sentence.lower():
@@ -939,15 +813,11 @@ class ReadingReasoner:
 
         return mentions
 
-    def _identify_character_traits(
-        self,
-        passage: str,
-        character_name: str
-    ) -> List[str]:
+    def _identify_character_traits(self, passage: str, character_name: str) -> List[str]:
         """Identify character traits."""
         # Simplified - would be more sophisticated in production
         traits = []
-        trait_words = ['brave', 'kind', 'smart', 'funny', 'helpful', 'curious']
+        trait_words = ["brave", "kind", "smart", "funny", "helpful", "curious"]
 
         passage_lower = passage.lower()
         for trait in trait_words:
@@ -956,11 +826,7 @@ class ReadingReasoner:
 
         return traits
 
-    def _identify_character_actions(
-        self,
-        passage: str,
-        character_name: str
-    ) -> List[str]:
+    def _identify_character_actions(self, passage: str, character_name: str) -> List[str]:
         """Identify character's actions."""
         actions = []
         mentions = self._find_character_mentions(passage, character_name)
@@ -972,14 +838,10 @@ class ReadingReasoner:
 
         return actions[:3]
 
-    def _infer_character_feelings(
-        self,
-        passage: str,
-        character_name: str
-    ) -> List[str]:
+    def _infer_character_feelings(self, passage: str, character_name: str) -> List[str]:
         """Infer character's feelings."""
         feelings = []
-        emotion_words = ['happy', 'sad', 'angry', 'excited', 'worried', 'surprised']
+        emotion_words = ["happy", "sad", "angry", "excited", "worried", "surprised"]
 
         passage_lower = passage.lower()
         for emotion in emotion_words:
@@ -988,24 +850,16 @@ class ReadingReasoner:
 
         return feelings
 
-    def _generate_character_questions(
-        self,
-        character_name: str,
-        age: int
-    ) -> List[str]:
+    def _generate_character_questions(self, character_name: str, age: int) -> List[str]:
         """Generate questions about character."""
         return [
             f"What does {character_name} do in the story?",
             f"How does {character_name} feel?",
             f"What kind of person is {character_name}?",
-            f"What can we learn from {character_name}?"
+            f"What can we learn from {character_name}?",
         ]
 
-    def _find_evidence_sentences(
-        self,
-        passage: str,
-        character_name: str
-    ) -> List[str]:
+    def _find_evidence_sentences(self, passage: str, character_name: str) -> List[str]:
         """Find sentences with evidence about character."""
         return self._find_character_mentions(passage, character_name)
 
@@ -1013,9 +867,9 @@ class ReadingReasoner:
         """Initialize reading strategies database."""
         return {
             strategy: {
-                'name': strategy.value,
-                'description': f"Strategy for {strategy.value}",
-                'when_to_use': f"Use when needed for {strategy.value}"
+                "name": strategy.value,
+                "description": f"Strategy for {strategy.value}",
+                "when_to_use": f"Use when needed for {strategy.value}",
             }
             for strategy in ReadingStrategy
         }
@@ -1023,17 +877,17 @@ class ReadingReasoner:
     def _initialize_question_stems(self) -> Dict:
         """Initialize question stems for comprehension."""
         return {
-            'literal': ['Who', 'What', 'When', 'Where'],
-            'inferential': ['Why', 'How', 'What if'],
-            'evaluative': ['Do you think', 'Would you', 'Should']
+            "literal": ["Who", "What", "When", "Where"],
+            "inferential": ["Why", "How", "What if"],
+            "evaluative": ["Do you think", "Would you", "Should"],
         }
 
     def _initialize_text_features(self) -> Dict:
         """Initialize text features database."""
         return {
-            'narrative': ['characters', 'setting', 'plot', 'problem', 'solution'],
-            'informational': ['headings', 'facts', 'details', 'examples'],
-            'poetry': ['rhyme', 'rhythm', 'stanzas', 'imagery']
+            "narrative": ["characters", "setting", "plot", "problem", "solution"],
+            "informational": ["headings", "facts", "details", "examples"],
+            "poetry": ["rhyme", "rhythm", "stanzas", "imagery"],
         }
 
 
@@ -1076,7 +930,7 @@ if __name__ == "__main__":
     print("--- Example 2: Main Idea Guidance ---")
     main_idea = reasoner.identify_main_idea(passage, student_age=8)
     print("Guiding Questions:")
-    for q in main_idea['guiding_questions']:
+    for q in main_idea["guiding_questions"]:
         print(f"  - {q}")
     print()
 
@@ -1085,7 +939,7 @@ if __name__ == "__main__":
     vocab = reasoner.explain_vocabulary(
         word="adventure",
         context_sentence="Her favorite books were adventure stories.",
-        student_age=8
+        student_age=8,
     )
     print(f"Word: {vocab.word}")
     print(f"Student-Friendly: {vocab.student_friendly_definition}")
@@ -1094,9 +948,7 @@ if __name__ == "__main__":
     # Example 4: Reading strategy suggestion
     print("--- Example 4: Strategy Suggestion ---")
     strategy = reasoner.suggest_reading_strategy(
-        passage=passage,
-        difficulty_area="main_idea",
-        student_age=8
+        passage=passage, difficulty_area="main_idea", student_age=8
     )
     print(f"Strategy: {strategy['strategy_name']}")
     print(f"Description: {strategy['description']}")

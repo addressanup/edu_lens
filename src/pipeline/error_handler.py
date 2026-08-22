@@ -12,25 +12,27 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any, Callable, Coroutine, Optional
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
 
 class ErrorSeverity(Enum):
     """Severity levels for errors."""
-    LOW = auto()       # Minor issue, can continue
-    MEDIUM = auto()    # Significant issue, may need recovery
-    HIGH = auto()      # Critical issue, requires intervention
+
+    LOW = auto()  # Minor issue, can continue
+    MEDIUM = auto()  # Significant issue, may need recovery
+    HIGH = auto()  # Critical issue, requires intervention
     CRITICAL = auto()  # System-level failure
 
 
 class ErrorCategory(Enum):
     """Categories of errors."""
+
     VISION = "vision"
     AUDIO = "audio"
     AI = "ai"
@@ -43,17 +45,19 @@ class ErrorCategory(Enum):
 
 class RecoveryStrategy(Enum):
     """Recovery strategies for different error types."""
-    RETRY = auto()              # Retry the operation
-    FALLBACK = auto()           # Use fallback method
-    SKIP = auto()               # Skip and continue
-    DEGRADE = auto()            # Degrade functionality
+
+    RETRY = auto()  # Retry the operation
+    FALLBACK = auto()  # Use fallback method
+    SKIP = auto()  # Skip and continue
+    DEGRADE = auto()  # Degrade functionality
     RESTART_COMPONENT = auto()  # Restart the component
-    ESCALATE = auto()           # Escalate to operator
+    ESCALATE = auto()  # Escalate to operator
 
 
 @dataclass
 class ErrorRecord:
     """Record of an error occurrence."""
+
     error_id: str
     timestamp: datetime
     category: ErrorCategory
@@ -70,13 +74,10 @@ class ErrorRecord:
 @dataclass
 class ErrorStats:
     """Statistics about errors."""
+
     total_errors: int = 0
-    errors_by_category: dict[ErrorCategory, int] = field(
-        default_factory=lambda: defaultdict(int)
-    )
-    errors_by_severity: dict[ErrorSeverity, int] = field(
-        default_factory=lambda: defaultdict(int)
-    )
+    errors_by_category: dict[ErrorCategory, int] = field(default_factory=lambda: defaultdict(int))
+    errors_by_severity: dict[ErrorSeverity, int] = field(default_factory=lambda: defaultdict(int))
     recovery_attempts: int = 0
     successful_recoveries: int = 0
     failed_recoveries: int = 0
@@ -86,6 +87,7 @@ class ErrorStats:
 @dataclass
 class RecoveryConfig:
     """Configuration for error recovery."""
+
     max_retries: int = 3
     retry_delay_seconds: float = 1.0
     exponential_backoff: bool = True
@@ -110,7 +112,7 @@ class ErrorHandler:
     def __init__(
         self,
         config: Optional[RecoveryConfig] = None,
-        escalation_callback: Optional[Callable[[ErrorRecord], Coroutine]] = None
+        escalation_callback: Optional[Callable[[ErrorRecord], Coroutine]] = None,
     ) -> None:
         """
         Initialize error handler.
@@ -134,10 +136,7 @@ class ErrorHandler:
         logger.info("ErrorHandler initialized")
 
     async def handle_vision_error(
-        self,
-        error: Exception,
-        component: str,
-        context: Optional[dict[str, Any]] = None
+        self, error: Exception, component: str, context: Optional[dict[str, Any]] = None
     ) -> tuple[bool, Any]:
         """
         Handle vision pipeline errors.
@@ -151,15 +150,10 @@ class ErrorHandler:
             (success, result) tuple - success=True if recovered
         """
         error_record = self._create_error_record(
-            category=ErrorCategory.VISION,
-            error=error,
-            component=component,
-            context=context or {}
+            category=ErrorCategory.VISION, error=error, component=component, context=context or {}
         )
 
-        logger.warning(
-            f"Vision error in {component}: {str(error)}"
-        )
+        logger.warning(f"Vision error in {component}: {str(error)}")
 
         # Determine recovery strategy
         if "camera" in component.lower():
@@ -167,15 +161,13 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.RESTART_COMPONENT,
-                recovery_fn=self._restart_camera_fallback
+                recovery_fn=self._restart_camera_fallback,
             )
 
         elif "ocr" in component.lower():
             # OCR errors - retry with different settings
             return await self._apply_recovery(
-                error_record,
-                strategy=RecoveryStrategy.RETRY,
-                recovery_fn=None
+                error_record, strategy=RecoveryStrategy.RETRY, recovery_fn=None
             )
 
         elif "handwriting" in component.lower():
@@ -183,7 +175,7 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.FALLBACK,
-                recovery_fn=self._fallback_to_printed_ocr
+                recovery_fn=self._fallback_to_printed_ocr,
             )
 
         else:
@@ -191,14 +183,11 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.DEGRADE,
-                recovery_fn=self._degrade_vision_quality
+                recovery_fn=self._degrade_vision_quality,
             )
 
     async def handle_audio_error(
-        self,
-        error: Exception,
-        component: str,
-        context: Optional[dict[str, Any]] = None
+        self, error: Exception, component: str, context: Optional[dict[str, Any]] = None
     ) -> tuple[bool, Any]:
         """
         Handle audio pipeline errors.
@@ -212,15 +201,10 @@ class ErrorHandler:
             (success, result) tuple
         """
         error_record = self._create_error_record(
-            category=ErrorCategory.AUDIO,
-            error=error,
-            component=component,
-            context=context or {}
+            category=ErrorCategory.AUDIO, error=error, component=component, context=context or {}
         )
 
-        logger.warning(
-            f"Audio error in {component}: {str(error)}"
-        )
+        logger.warning(f"Audio error in {component}: {str(error)}")
 
         # Determine recovery strategy
         if "microphone" in component.lower() or "capture" in component.lower():
@@ -228,15 +212,13 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.RESTART_COMPONENT,
-                recovery_fn=self._restart_audio_fallback
+                recovery_fn=self._restart_audio_fallback,
             )
 
         elif "wake_word" in component.lower():
             # Wake word errors - lower threshold or disable
             return await self._apply_recovery(
-                error_record,
-                strategy=RecoveryStrategy.DEGRADE,
-                recovery_fn=self._degrade_wake_word
+                error_record, strategy=RecoveryStrategy.DEGRADE, recovery_fn=self._degrade_wake_word
             )
 
         elif "asr" in component.lower() or "speech" in component.lower():
@@ -244,7 +226,7 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.FALLBACK,
-                recovery_fn=self._fallback_asr_model
+                recovery_fn=self._fallback_asr_model,
             )
 
         elif "tts" in component.lower():
@@ -252,22 +234,17 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.FALLBACK,
-                recovery_fn=self._fallback_tts_engine
+                recovery_fn=self._fallback_tts_engine,
             )
 
         else:
             # Generic audio error
             return await self._apply_recovery(
-                error_record,
-                strategy=RecoveryStrategy.RETRY,
-                recovery_fn=None
+                error_record, strategy=RecoveryStrategy.RETRY, recovery_fn=None
             )
 
     async def handle_ai_error(
-        self,
-        error: Exception,
-        component: str,
-        context: Optional[dict[str, Any]] = None
+        self, error: Exception, component: str, context: Optional[dict[str, Any]] = None
     ) -> tuple[bool, Any]:
         """
         Handle AI/LLM errors.
@@ -281,23 +258,16 @@ class ErrorHandler:
             (success, result) tuple
         """
         error_record = self._create_error_record(
-            category=ErrorCategory.AI,
-            error=error,
-            component=component,
-            context=context or {}
+            category=ErrorCategory.AI, error=error, component=component, context=context or {}
         )
 
-        logger.warning(
-            f"AI error in {component}: {str(error)}"
-        )
+        logger.warning(f"AI error in {component}: {str(error)}")
 
         # Determine recovery strategy
         if "timeout" in str(error).lower():
             # Timeout - retry with increased timeout
             return await self._apply_recovery(
-                error_record,
-                strategy=RecoveryStrategy.RETRY,
-                recovery_fn=None
+                error_record, strategy=RecoveryStrategy.RETRY, recovery_fn=None
             )
 
         elif "memory" in str(error).lower() or "resource" in str(error).lower():
@@ -305,7 +275,7 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.DEGRADE,
-                recovery_fn=self._reduce_ai_resources
+                recovery_fn=self._reduce_ai_resources,
             )
 
         elif "model" in str(error).lower():
@@ -313,21 +283,17 @@ class ErrorHandler:
             return await self._apply_recovery(
                 error_record,
                 strategy=RecoveryStrategy.FALLBACK,
-                recovery_fn=self._fallback_ai_model
+                recovery_fn=self._fallback_ai_model,
             )
 
         else:
             # Generic AI error - retry once
             return await self._apply_recovery(
-                error_record,
-                strategy=RecoveryStrategy.RETRY,
-                recovery_fn=None
+                error_record, strategy=RecoveryStrategy.RETRY, recovery_fn=None
             )
 
     async def recover(
-        self,
-        error_record: ErrorRecord,
-        recovery_fn: Optional[Callable[[], Coroutine]] = None
+        self, error_record: ErrorRecord, recovery_fn: Optional[Callable[[], Coroutine]] = None
     ) -> tuple[bool, Any]:
         """
         Attempt to recover from an error.
@@ -347,9 +313,7 @@ class ErrorHandler:
                 result = await recovery_fn()
                 error_record.recovery_successful = True
                 self._stats.successful_recoveries += 1
-                logger.info(
-                    f"Successfully recovered from {error_record.category.value} error"
-                )
+                logger.info(f"Successfully recovered from {error_record.category.value} error")
                 return True, result
             else:
                 # No specific recovery function, just log
@@ -362,11 +326,7 @@ class ErrorHandler:
             logger.error(f"Recovery failed: {e}", exc_info=True)
             return False, None
 
-    async def escalate(
-        self,
-        error_record: ErrorRecord,
-        reason: str
-    ) -> None:
+    async def escalate(self, error_record: ErrorRecord, reason: str) -> None:
         """
         Escalate error to operator/parent.
 
@@ -416,9 +376,7 @@ class ErrorHandler:
         return self._stats
 
     def get_error_history(
-        self,
-        category: Optional[ErrorCategory] = None,
-        limit: int = 100
+        self, category: Optional[ErrorCategory] = None, limit: int = 100
     ) -> list[ErrorRecord]:
         """
         Get error history.
@@ -449,11 +407,7 @@ class ErrorHandler:
         return error_count >= self.config.escalation_threshold
 
     def _create_error_record(
-        self,
-        category: ErrorCategory,
-        error: Exception,
-        component: str,
-        context: dict[str, Any]
+        self, category: ErrorCategory, error: Exception, component: str, context: dict[str, Any]
     ) -> ErrorRecord:
         """Create an error record."""
         import uuid
@@ -469,7 +423,7 @@ class ErrorHandler:
             component=component,
             error_message=str(error),
             exception=error,
-            context=context
+            context=context,
         )
 
         # Track error
@@ -486,10 +440,7 @@ class ErrorHandler:
         return error_record
 
     def _determine_severity(
-        self,
-        error: Exception,
-        category: ErrorCategory,
-        component: str
+        self, error: Exception, category: ErrorCategory, component: str
     ) -> ErrorSeverity:
         """Determine error severity."""
         error_str = str(error).lower()
@@ -516,7 +467,7 @@ class ErrorHandler:
         self,
         error_record: ErrorRecord,
         strategy: RecoveryStrategy,
-        recovery_fn: Optional[Callable] = None
+        recovery_fn: Optional[Callable] = None,
     ) -> tuple[bool, Any]:
         """Apply recovery strategy."""
         error_record.recovery_strategy = strategy
@@ -558,9 +509,7 @@ class ErrorHandler:
             return False, None
 
     async def _retry_with_backoff(
-        self,
-        error_record: ErrorRecord,
-        recovery_fn: Optional[Callable]
+        self, error_record: ErrorRecord, recovery_fn: Optional[Callable]
     ) -> tuple[bool, Any]:
         """Retry operation with exponential backoff."""
         delay = self.config.retry_delay_seconds
@@ -651,7 +600,7 @@ class ErrorHandler:
 
 def create_error_handler(
     config: Optional[RecoveryConfig] = None,
-    escalation_callback: Optional[Callable[[ErrorRecord], Coroutine]] = None
+    escalation_callback: Optional[Callable[[ErrorRecord], Coroutine]] = None,
 ) -> ErrorHandler:
     """
     Create an error handler instance.

@@ -37,7 +37,6 @@ from typing import (
 
 from .interfaces import ComponentType, EduLensError, ILifecycle
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -45,23 +44,28 @@ logger = logging.getLogger(__name__)
 # Exceptions
 # ============================================================================
 
+
 class DIError(EduLensError):
     """Dependency injection related errors"""
+
     pass
 
 
 class ComponentNotFoundError(DIError):
     """Component not registered in container"""
+
     pass
 
 
 class CircularDependencyError(DIError):
     """Circular dependency detected"""
+
     pass
 
 
 class LifecycleError(DIError):
     """Component lifecycle error"""
+
     pass
 
 
@@ -69,11 +73,13 @@ class LifecycleError(DIError):
 # Component Lifetime
 # ============================================================================
 
+
 class ComponentLifetime(Enum):
     """Component lifetime strategies"""
-    SINGLETON = "singleton"      # Single instance shared
-    TRANSIENT = "transient"      # New instance every time
-    SCOPED = "scoped"           # One instance per scope
+
+    SINGLETON = "singleton"  # Single instance shared
+    TRANSIENT = "transient"  # New instance every time
+    SCOPED = "scoped"  # One instance per scope
 
 
 # ============================================================================
@@ -124,6 +130,7 @@ class ComponentRegistration(Generic[T]):
 # ============================================================================
 # Service Container
 # ============================================================================
+
 
 class ServiceContainer:
     """
@@ -250,8 +257,7 @@ class ServiceContainer:
             Self for method chaining
         """
         logger.info(
-            f"Registering factory for {interface.__name__} "
-            f"with {lifetime.value} lifetime"
+            f"Registering factory for {interface.__name__} " f"with {lifetime.value} lifetime"
         )
 
         registration = ComponentRegistration(
@@ -305,17 +311,13 @@ class ServiceContainer:
         """
         # Check if registered
         if interface not in self._registrations:
-            raise ComponentNotFoundError(
-                f"Component {interface.__name__} not registered"
-            )
+            raise ComponentNotFoundError(f"Component {interface.__name__} not registered")
 
         registration = self._registrations[interface]
 
         # Check for circular dependencies
         if interface in resolving:
-            raise CircularDependencyError(
-                f"Circular dependency detected: {interface.__name__}"
-            )
+            raise CircularDependencyError(f"Circular dependency detected: {interface.__name__}")
 
         # Handle singleton lifetime
         if registration.lifetime == ComponentLifetime.SINGLETON:
@@ -466,6 +468,7 @@ class ServiceContainer:
 
         # Convert CamelCase to snake_case
         import re
+
         snake_case = re.sub(r"(?<!^)(?=[A-Z])", "_", type_name).lower()
         return snake_case
 
@@ -490,9 +493,7 @@ class ServiceContainer:
                     logger.info(f"Started {interface.__name__}")
                 except Exception as e:
                     logger.error(f"Failed to start {interface.__name__}: {e}")
-                    raise LifecycleError(
-                        f"Failed to start {interface.__name__}: {e}"
-                    )
+                    raise LifecycleError(f"Failed to start {interface.__name__}: {e}")
 
         self._started = True
 
@@ -640,6 +641,7 @@ def reset_container() -> None:
 # Decorator for Injectable Components
 # ============================================================================
 
+
 def injectable(
     interface: Optional[Type[T]] = None,
     lifetime: ComponentLifetime = ComponentLifetime.TRANSIENT,
@@ -659,6 +661,7 @@ def injectable(
         class CameraFrameCapture(IFrameCapture):
             pass
     """
+
     def decorator(cls: Type[T]) -> Type[T]:
         # Get interface from class bases if not provided
         target_interface = interface

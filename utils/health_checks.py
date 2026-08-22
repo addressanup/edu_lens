@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
+
 import httpx
 
 
@@ -155,6 +156,7 @@ class HealthChecker:
         timeout = self._timeouts[name]
 
         import time
+
         start = time.time()
 
         try:
@@ -239,6 +241,7 @@ class HealthChecker:
 
 
 # Pre-built health check functions
+
 
 async def check_database(database_url: str) -> ComponentHealth:
     """
@@ -385,9 +388,9 @@ async def check_disk_space(
             message=message,
             details={
                 "path": path,
-                "total_gb": usage.total / (1024 ** 3),
-                "used_gb": usage.used / (1024 ** 3),
-                "free_gb": usage.free / (1024 ** 3),
+                "total_gb": usage.total / (1024**3),
+                "used_gb": usage.used / (1024**3),
+                "free_gb": usage.free / (1024**3),
                 "used_percent": used_ratio * 100,
             },
         )

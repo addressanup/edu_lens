@@ -11,10 +11,11 @@ Tests curriculum management including:
 Author: Testing Agent (TST-001)
 """
 
-import pytest
 import json
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
+
+import pytest
 
 from src.ai.curriculum_manager import CurriculumManager, create_curriculum_manager
 
@@ -29,7 +30,7 @@ class TestCurriculumManagerInitialization:
             "metadata": {
                 "version": "1.0",
                 "grade_range": "K-6",
-                "standards_alignment": ["CCSS", "NGSS"]
+                "standards_alignment": ["CCSS", "NGSS"],
             },
             "subjects": {
                 "math": {
@@ -48,17 +49,21 @@ class TestCurriculumManagerInitialization:
                                             "definition": "Multiplication as repeated addition",
                                             "difficulty": 5,
                                             "prerequisites": ["math_2_oa_002"],
-                                            "learning_objectives": ["Understand multiplication concept"],
+                                            "learning_objectives": [
+                                                "Understand multiplication concept"
+                                            ],
                                             "examples": ["2 × 3 = 6"],
-                                            "common_misconceptions": ["Confusing multiplication with addition"]
+                                            "common_misconceptions": [
+                                                "Confusing multiplication with addition"
+                                            ],
                                         }
-                                    }
+                                    },
                                 }
                             }
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
     @pytest.fixture
@@ -66,18 +71,14 @@ class TestCurriculumManagerInitialization:
         """Mock concept graphs data."""
         return {
             "math": {
-                "prerequisite_graph": {
-                    "math_3_oa_001": {
-                        "prerequisites": ["math_2_oa_002"]
-                    }
-                },
+                "prerequisite_graph": {"math_3_oa_001": {"prerequisites": ["math_2_oa_002"]}},
                 "learning_pathways": {
                     "multiplication_basics": {
                         "name": "Multiplication Basics",
                         "description": "Learn multiplication",
-                        "sequence": ["math_2_oa_002", "math_3_oa_001"]
+                        "sequence": ["math_2_oa_002", "math_3_oa_001"],
                     }
-                }
+                },
             }
         }
 
@@ -166,26 +167,21 @@ class TestConceptRetrieval:
                                             "difficulty": 5,
                                             "prerequisites": ["math_2_oa_002"],
                                             "examples": ["2 x 3"],
-                                            "common_misconceptions": ["Test misconception"]
+                                            "common_misconceptions": ["Test misconception"],
                                         }
-                                    }
+                                    },
                                 }
                             }
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
     @pytest.fixture
     def mock_concept_graphs(self):
         """Mock concept graphs."""
-        return {
-            "math": {
-                "prerequisite_graph": {},
-                "learning_pathways": {}
-            }
-        }
+        return {"math": {"prerequisite_graph": {}, "learning_pathways": {}}}
 
     def test_get_concept_by_id(self, manager):
         """Test getting concept by ID."""
@@ -236,25 +232,25 @@ class TestPrerequisites:
                                         "mult": {
                                             "id": "math_3_oa_001",
                                             "name": "Multiplication",
-                                            "prerequisites": ["math_2_oa_001", "math_2_oa_002"]
+                                            "prerequisites": ["math_2_oa_001", "math_2_oa_002"],
                                         },
                                         "add": {
                                             "id": "math_2_oa_001",
                                             "name": "Addition",
-                                            "prerequisites": []
+                                            "prerequisites": [],
                                         },
                                         "rep_add": {
                                             "id": "math_2_oa_002",
                                             "name": "Repeated Addition",
-                                            "prerequisites": ["math_2_oa_001"]
-                                        }
+                                            "prerequisites": ["math_2_oa_001"],
+                                        },
                                     }
                                 }
                             }
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
         kb_file = data_dir / "knowledge_base.json"
@@ -314,21 +310,21 @@ class TestSearchAndQuery:
                                             "name": "Understanding fractions",
                                             "definition": "Parts of a whole",
                                             "examples": ["1/2", "3/4"],
-                                            "learning_objectives": ["Understand fraction concept"]
+                                            "learning_objectives": ["Understand fraction concept"],
                                         },
                                         "frac2": {
                                             "id": "math_3_nf_002",
                                             "name": "Comparing fractions",
                                             "definition": "Compare fraction sizes",
-                                            "examples": ["1/2 > 1/4"]
-                                        }
+                                            "examples": ["1/2 > 1/4"],
+                                        },
                                     }
                                 }
                             }
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
         kb_file = data_dir / "knowledge_base.json"
@@ -393,21 +389,15 @@ class TestLearningPathways:
                             "domains": {
                                 "ops": {
                                     "concepts": {
-                                        "add": {
-                                            "id": "math_2_oa_001",
-                                            "name": "Addition"
-                                        },
-                                        "mult": {
-                                            "id": "math_3_oa_001",
-                                            "name": "Multiplication"
-                                        }
+                                        "add": {"id": "math_2_oa_001", "name": "Addition"},
+                                        "mult": {"id": "math_3_oa_001", "name": "Multiplication"},
                                     }
                                 }
                             }
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
         kb_file = data_dir / "knowledge_base.json"
@@ -422,9 +412,9 @@ class TestLearningPathways:
                 "basic_math": {
                     "name": "Basic Math Path",
                     "description": "Fundamental math concepts",
-                    "sequence": ["math_2_oa_001", "math_3_oa_001"]
+                    "sequence": ["math_2_oa_001", "math_3_oa_001"],
                 }
-            }
+            },
         }
 
         math_graph = graphs_dir / "math_concepts.json"
@@ -476,25 +466,25 @@ class TestReadinessAssessment:
                                         "add": {
                                             "id": "math_2_oa_001",
                                             "name": "Addition",
-                                            "prerequisites": []
+                                            "prerequisites": [],
                                         },
                                         "mult": {
                                             "id": "math_3_oa_001",
                                             "name": "Multiplication",
-                                            "prerequisites": ["math_2_oa_001", "math_2_oa_002"]
+                                            "prerequisites": ["math_2_oa_001", "math_2_oa_002"],
                                         },
                                         "rep_add": {
                                             "id": "math_2_oa_002",
                                             "name": "Repeated Addition",
-                                            "prerequisites": ["math_2_oa_001"]
-                                        }
+                                            "prerequisites": ["math_2_oa_001"],
+                                        },
                                     }
                                 }
                             }
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
         kb_file = data_dir / "knowledge_base.json"
@@ -554,19 +544,15 @@ class TestMetadataAndInfo:
         data_dir.mkdir()
 
         kb_data = {
-            "metadata": {
-                "version": "1.0",
-                "grade_range": "K-6",
-                "standards_alignment": ["CCSS"]
-            },
+            "metadata": {"version": "1.0", "grade_range": "K-6", "standards_alignment": ["CCSS"]},
             "subjects": {
                 "math": {
                     "name": "Mathematics",
                     "description": "Math curriculum",
                     "standards_framework": "CCSS",
-                    "grade_levels": {}
+                    "grade_levels": {},
                 }
-            }
+            },
         }
 
         kb_file = data_dir / "knowledge_base.json"
@@ -631,19 +617,17 @@ class TestConceptDetails:
                                             "examples": ["2 x 3 = 6", "5 x 4 = 20"],
                                             "learning_objectives": [
                                                 "Understand multiplication",
-                                                "Solve multiplication problems"
+                                                "Solve multiplication problems",
                                             ],
-                                            "common_misconceptions": [
-                                                "Confusing with addition"
-                                            ]
+                                            "common_misconceptions": ["Confusing with addition"],
                                         }
                                     }
                                 }
                             }
                         }
-                    }
+                    },
                 }
-            }
+            },
         }
 
         kb_file = data_dir / "knowledge_base.json"
@@ -690,10 +674,7 @@ class TestConvenienceFunction:
         data_dir = tmp_path / "curriculum"
         data_dir.mkdir()
 
-        kb_data = {
-            "metadata": {"version": "1.0"},
-            "subjects": {}
-        }
+        kb_data = {"metadata": {"version": "1.0"}, "subjects": {}}
 
         kb_file = data_dir / "knowledge_base.json"
         kb_file.write_text(json.dumps(kb_data))

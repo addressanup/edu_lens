@@ -14,23 +14,25 @@ import random
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Awaitable, Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class InterventionType(Enum):
     """Types of interventions."""
-    GENTLE_PROMPT = "gentle_prompt"    # "Would you like a hint?"
-    HINT_OFFER = "hint_offer"          # "I have an idea that might help!"
-    CHECK_IN = "check_in"              # "How's it going?"
-    ENCOURAGEMENT = "encouragement"    # "Don't give up!"
-    DIRECT_HELP = "direct_help"        # Provide actual hint/guidance
+
+    GENTLE_PROMPT = "gentle_prompt"  # "Would you like a hint?"
+    HINT_OFFER = "hint_offer"  # "I have an idea that might help!"
+    CHECK_IN = "check_in"  # "How's it going?"
+    ENCOURAGEMENT = "encouragement"  # "Don't give up!"
+    DIRECT_HELP = "direct_help"  # Provide actual hint/guidance
 
 
 @dataclass
 class Intervention:
     """A generated intervention."""
+
     intervention_type: str
     message: str
     audio_data: Optional[bytes] = None
@@ -308,12 +310,14 @@ class InterventionManager:
             )
 
             # Record in history
-            self._intervention_history.append({
-                "timestamp": time.time(),
-                "intervention": intervention.to_dict(),
-                "struggle_reason": struggle_reason,
-                "problem_time": problem_time,
-            })
+            self._intervention_history.append(
+                {
+                    "timestamp": time.time(),
+                    "intervention": intervention.to_dict(),
+                    "struggle_reason": struggle_reason,
+                    "problem_time": problem_time,
+                }
+            )
 
             # Limit history
             if len(self._intervention_history) > 50:
@@ -385,13 +389,16 @@ class InterventionManager:
             logger.warning(f"AI generation failed: {e}, using template")
             return self._get_template_message(intervention_type)
 
-    def _build_ai_prompt(
-        self, intervention_type: str, context: Dict[str, Any]
-    ) -> str:
+    def _build_ai_prompt(self, intervention_type: str, context: Dict[str, Any]) -> str:
         """Build prompt for AI message generation."""
         lang_names = {
-            "en": "English", "es": "Spanish", "fr": "French",
-            "de": "German", "zh": "Chinese", "hi": "Hindi", "ne": "Nepali"
+            "en": "English",
+            "es": "Spanish",
+            "fr": "French",
+            "de": "German",
+            "zh": "Chinese",
+            "hi": "Hindi",
+            "ne": "Nepali",
         }
         lang_name = lang_names.get(self.language, "English")
 
@@ -421,7 +428,7 @@ Message:"""
 
         # Add name at the beginning naturally
         # Check if message starts with "I" or similar
-        if message[0].isupper() and message[0] not in ['I', 'A']:
+        if message[0].isupper() and message[0] not in ["I", "A"]:
             # Insert name at beginning
             return f"{self.child_name}, {message[0].lower()}{message[1:]}"
         else:
@@ -469,7 +476,7 @@ Message:"""
 async def create_tts_callback() -> Optional[Callable[[str, str], Awaitable[bytes]]]:
     """Create TTS callback function using the TTS engine."""
     try:
-        from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
+        from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
 
         async def generate_tts(text: str, language: str) -> bytes:
             config = TTSConfig(

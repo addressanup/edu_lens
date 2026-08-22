@@ -6,20 +6,20 @@ Provides remote device management capabilities.
 
 import json
 import logging
+import threading
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Any
 from enum import Enum
 from pathlib import Path
-from queue import Queue, PriorityQueue
-import threading
-
+from queue import PriorityQueue, Queue
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class DeviceStatus(Enum):
     """Device status states"""
+
     ONLINE = "online"
     OFFLINE = "offline"
     LOCKED = "locked"
@@ -29,6 +29,7 @@ class DeviceStatus(Enum):
 
 class CommandType(Enum):
     """Types of remote commands"""
+
     LOCK = "lock"
     UNLOCK = "unlock"
     UPDATE_SETTINGS = "update_settings"
@@ -40,10 +41,11 @@ class CommandType(Enum):
 
 class CommandPriority(Enum):
     """Priority levels for commands"""
+
     CRITICAL = 1  # Lock/unlock commands
-    HIGH = 2      # Setting updates
-    NORMAL = 3    # Status requests
-    LOW = 4       # Sync operations
+    HIGH = 2  # Setting updates
+    NORMAL = 3  # Status requests
+    LOW = 4  # Sync operations
 
 
 class RemoteCommand:
@@ -54,7 +56,7 @@ class RemoteCommand:
         command_type: CommandType,
         payload: Optional[Dict] = None,
         priority: CommandPriority = CommandPriority.NORMAL,
-        command_id: Optional[str] = None
+        command_id: Optional[str] = None,
     ):
         self.command_id = command_id or str(uuid.uuid4())
         self.command_type = command_type
@@ -73,32 +75,32 @@ class RemoteCommand:
     def to_dict(self) -> Dict:
         """Convert to dictionary for storage/transmission."""
         return {
-            'command_id': self.command_id,
-            'command_type': self.command_type.value,
-            'payload': self.payload,
-            'priority': self.priority.value,
-            'created_at': self.created_at.isoformat(),
-            'executed_at': self.executed_at.isoformat() if self.executed_at else None,
-            'status': self.status,
-            'result': self.result,
-            'error': self.error
+            "command_id": self.command_id,
+            "command_type": self.command_type.value,
+            "payload": self.payload,
+            "priority": self.priority.value,
+            "created_at": self.created_at.isoformat(),
+            "executed_at": self.executed_at.isoformat() if self.executed_at else None,
+            "status": self.status,
+            "result": self.result,
+            "error": self.error,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'RemoteCommand':
+    def from_dict(cls, data: Dict) -> "RemoteCommand":
         """Create from dictionary."""
         cmd = cls(
-            command_type=CommandType(data['command_type']),
-            payload=data.get('payload', {}),
-            priority=CommandPriority(data['priority']),
-            command_id=data['command_id']
+            command_type=CommandType(data["command_type"]),
+            payload=data.get("payload", {}),
+            priority=CommandPriority(data["priority"]),
+            command_id=data["command_id"],
         )
-        cmd.created_at = datetime.fromisoformat(data['created_at'])
-        if data.get('executed_at'):
-            cmd.executed_at = datetime.fromisoformat(data['executed_at'])
-        cmd.status = data.get('status', 'pending')
-        cmd.result = data.get('result')
-        cmd.error = data.get('error')
+        cmd.created_at = datetime.fromisoformat(data["created_at"])
+        if data.get("executed_at"):
+            cmd.executed_at = datetime.fromisoformat(data["executed_at"])
+        cmd.status = data.get("status", "pending")
+        cmd.result = data.get("result")
+        cmd.error = data.get("error")
         return cmd
 
 
@@ -106,12 +108,7 @@ class DeviceInfo:
     """Information about a managed device."""
 
     def __init__(
-        self,
-        device_id: str,
-        device_name: str,
-        user_id: str,
-        platform: str,
-        app_version: str
+        self, device_id: str, device_name: str, user_id: str, platform: str, app_version: str
     ):
         self.device_id = device_id
         self.device_name = device_name
@@ -128,17 +125,17 @@ class DeviceInfo:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         return {
-            'device_id': self.device_id,
-            'device_name': self.device_name,
-            'user_id': self.user_id,
-            'platform': self.platform,
-            'app_version': self.app_version,
-            'status': self.status.value,
-            'last_seen': self.last_seen.isoformat() if self.last_seen else None,
-            'battery_level': self.battery_level,
-            'is_charging': self.is_charging,
-            'connection_type': self.connection_type,
-            'is_locked': self.is_locked
+            "device_id": self.device_id,
+            "device_name": self.device_name,
+            "user_id": self.user_id,
+            "platform": self.platform,
+            "app_version": self.app_version,
+            "status": self.status.value,
+            "last_seen": self.last_seen.isoformat() if self.last_seen else None,
+            "battery_level": self.battery_level,
+            "is_charging": self.is_charging,
+            "connection_type": self.connection_type,
+            "is_locked": self.is_locked,
         }
 
 
@@ -177,12 +174,7 @@ class DeviceManager:
         self._load_state()
 
     def register_device(
-        self,
-        device_id: str,
-        device_name: str,
-        user_id: str,
-        platform: str,
-        app_version: str
+        self, device_id: str, device_name: str, user_id: str, platform: str, app_version: str
     ) -> DeviceInfo:
         """
         Register a new device for management.
@@ -203,11 +195,13 @@ class DeviceManager:
                 device_name=device_name,
                 user_id=user_id,
                 platform=platform,
-                app_version=app_version
+                app_version=app_version,
             )
             self.devices[device_id] = device
 
-            logger.info(f"Registered device {device_id} ({device_name}) for parent {self.parent_id}")
+            logger.info(
+                f"Registered device {device_id} ({device_name}) for parent {self.parent_id}"
+            )
             self._save_state()
 
             return device
@@ -249,8 +243,8 @@ class DeviceManager:
 
         command = RemoteCommand(
             command_type=CommandType.LOCK,
-            payload={'reason': reason or 'Locked by parent'},
-            priority=CommandPriority.CRITICAL
+            payload={"reason": reason or "Locked by parent"},
+            priority=CommandPriority.CRITICAL,
         )
 
         self._enqueue_command(device_id, command)
@@ -274,21 +268,14 @@ class DeviceManager:
         if device_id not in self.devices:
             raise ValueError(f"Device {device_id} not found")
 
-        command = RemoteCommand(
-            command_type=CommandType.UNLOCK,
-            priority=CommandPriority.CRITICAL
-        )
+        command = RemoteCommand(command_type=CommandType.UNLOCK, priority=CommandPriority.CRITICAL)
 
         self._enqueue_command(device_id, command)
         logger.info(f"Unlock command sent to device {device_id}: {command.command_id}")
 
         return command.command_id
 
-    def update_settings(
-        self,
-        device_id: str,
-        settings: Dict[str, Any]
-    ) -> str:
+    def update_settings(self, device_id: str, settings: Dict[str, Any]) -> str:
         """
         Push updated settings to a device.
 
@@ -307,8 +294,8 @@ class DeviceManager:
 
         command = RemoteCommand(
             command_type=CommandType.UPDATE_SETTINGS,
-            payload={'settings': settings},
-            priority=CommandPriority.HIGH
+            payload={"settings": settings},
+            priority=CommandPriority.HIGH,
         )
 
         self._enqueue_command(device_id, command)
@@ -341,17 +328,19 @@ class DeviceManager:
             is_online = minutes_since_seen < 5
 
         return {
-            'device_id': device_id,
-            'device_name': device.device_name,
-            'status': DeviceStatus.ONLINE.value if is_online else DeviceStatus.OFFLINE.value,
-            'is_locked': device.is_locked,
-            'last_seen': device.last_seen.isoformat() if device.last_seen else None,
-            'battery_level': device.battery_level,
-            'is_charging': device.is_charging,
-            'connection_type': device.connection_type,
-            'platform': device.platform,
-            'app_version': device.app_version,
-            'pending_commands': len([c for c in self.pending_commands.values() if c.status == 'pending'])
+            "device_id": device_id,
+            "device_name": device.device_name,
+            "status": DeviceStatus.ONLINE.value if is_online else DeviceStatus.OFFLINE.value,
+            "is_locked": device.is_locked,
+            "last_seen": device.last_seen.isoformat() if device.last_seen else None,
+            "battery_level": device.battery_level,
+            "is_charging": device.is_charging,
+            "connection_type": device.connection_type,
+            "platform": device.platform,
+            "app_version": device.app_version,
+            "pending_commands": len(
+                [c for c in self.pending_commands.values() if c.status == "pending"]
+            ),
         }
 
     def trigger_sync(self, device_id: str) -> str:
@@ -370,10 +359,7 @@ class DeviceManager:
         if device_id not in self.devices:
             raise ValueError(f"Device {device_id} not found")
 
-        command = RemoteCommand(
-            command_type=CommandType.FORCE_SYNC,
-            priority=CommandPriority.LOW
-        )
+        command = RemoteCommand(command_type=CommandType.FORCE_SYNC, priority=CommandPriority.LOW)
 
         self._enqueue_command(device_id, command)
         logger.info(f"Sync command sent to device {device_id}: {command.command_id}")
@@ -396,10 +382,7 @@ class DeviceManager:
         if device_id not in self.devices:
             raise ValueError(f"Device {device_id} not found")
 
-        command = RemoteCommand(
-            command_type=CommandType.RESTART_APP,
-            priority=CommandPriority.HIGH
-        )
+        command = RemoteCommand(command_type=CommandType.RESTART_APP, priority=CommandPriority.HIGH)
 
         self._enqueue_command(device_id, command)
         logger.info(f"App restart command sent to device {device_id}: {command.command_id}")
@@ -411,7 +394,7 @@ class DeviceManager:
         device_id: str,
         battery_level: Optional[int] = None,
         is_charging: bool = False,
-        connection_type: Optional[str] = None
+        connection_type: Optional[str] = None,
     ) -> None:
         """
         Update device status from heartbeat.
@@ -453,7 +436,7 @@ class DeviceManager:
 
         pending = []
         for command in list(self.pending_commands.values()):
-            if command.payload.get('device_id') == device_id and command.status == 'pending':
+            if command.payload.get("device_id") == device_id and command.status == "pending":
                 pending.append(command.to_dict())
 
         return pending
@@ -463,7 +446,7 @@ class DeviceManager:
         command_id: str,
         success: bool,
         result: Optional[Dict] = None,
-        error: Optional[str] = None
+        error: Optional[str] = None,
     ) -> None:
         """
         Report result of command execution (called by device).
@@ -486,8 +469,7 @@ class DeviceManager:
             del self.pending_commands[command_id]
 
             logger.info(
-                f"Command {command_id} {command.status}: "
-                f"{error if error else 'success'}"
+                f"Command {command_id} {command.status}: " f"{error if error else 'success'}"
             )
 
             self._save_state()
@@ -525,11 +507,7 @@ class DeviceManager:
             devices.append(self.get_device_status(device_id))
         return devices
 
-    def get_command_history(
-        self,
-        device_id: Optional[str] = None,
-        limit: int = 50
-    ) -> List[Dict]:
+    def get_command_history(self, device_id: Optional[str] = None, limit: int = 50) -> List[Dict]:
         """
         Get command history.
 
@@ -543,16 +521,13 @@ class DeviceManager:
         history = self.command_history[-limit:]
 
         if device_id:
-            history = [
-                cmd for cmd in history
-                if cmd.payload.get('device_id') == device_id
-            ]
+            history = [cmd for cmd in history if cmd.payload.get("device_id") == device_id]
 
         return [cmd.to_dict() for cmd in reversed(history)]
 
     def _enqueue_command(self, device_id: str, command: RemoteCommand) -> None:
         """Add a command to the queue."""
-        command.payload['device_id'] = device_id
+        command.payload["device_id"] = device_id
 
         with self._lock:
             self.pending_commands[command.command_id] = command
@@ -562,64 +537,59 @@ class DeviceManager:
     def _save_state(self) -> None:
         """Save manager state to disk."""
         state = {
-            'parent_id': self.parent_id,
-            'devices': {
-                device_id: device.to_dict()
-                for device_id, device in self.devices.items()
+            "parent_id": self.parent_id,
+            "devices": {device_id: device.to_dict() for device_id, device in self.devices.items()},
+            "pending_commands": {
+                cmd_id: cmd.to_dict() for cmd_id, cmd in self.pending_commands.items()
             },
-            'pending_commands': {
-                cmd_id: cmd.to_dict()
-                for cmd_id, cmd in self.pending_commands.items()
-            },
-            'command_history': [
+            "command_history": [
                 cmd.to_dict() for cmd in self.command_history[-100:]  # Keep last 100
-            ]
+            ],
         }
 
-        state_file = self.storage_path / 'device_state.json'
-        with open(state_file, 'w') as f:
+        state_file = self.storage_path / "device_state.json"
+        with open(state_file, "w") as f:
             json.dump(state, f, indent=2)
 
     def _load_state(self) -> None:
         """Load manager state from disk."""
-        state_file = self.storage_path / 'device_state.json'
+        state_file = self.storage_path / "device_state.json"
 
         if not state_file.exists():
             return
 
         try:
-            with open(state_file, 'r') as f:
+            with open(state_file, "r") as f:
                 state = json.load(f)
 
             # Load devices
-            for device_id, device_data in state.get('devices', {}).items():
+            for device_id, device_data in state.get("devices", {}).items():
                 device = DeviceInfo(
-                    device_id=device_data['device_id'],
-                    device_name=device_data['device_name'],
-                    user_id=device_data['user_id'],
-                    platform=device_data['platform'],
-                    app_version=device_data['app_version']
+                    device_id=device_data["device_id"],
+                    device_name=device_data["device_name"],
+                    user_id=device_data["user_id"],
+                    platform=device_data["platform"],
+                    app_version=device_data["app_version"],
                 )
-                device.status = DeviceStatus(device_data.get('status', 'offline'))
-                if device_data.get('last_seen'):
-                    device.last_seen = datetime.fromisoformat(device_data['last_seen'])
-                device.battery_level = device_data.get('battery_level')
-                device.is_charging = device_data.get('is_charging', False)
-                device.connection_type = device_data.get('connection_type')
-                device.is_locked = device_data.get('is_locked', False)
+                device.status = DeviceStatus(device_data.get("status", "offline"))
+                if device_data.get("last_seen"):
+                    device.last_seen = datetime.fromisoformat(device_data["last_seen"])
+                device.battery_level = device_data.get("battery_level")
+                device.is_charging = device_data.get("is_charging", False)
+                device.connection_type = device_data.get("connection_type")
+                device.is_locked = device_data.get("is_locked", False)
 
                 self.devices[device_id] = device
 
             # Load pending commands
-            for cmd_id, cmd_data in state.get('pending_commands', {}).items():
+            for cmd_id, cmd_data in state.get("pending_commands", {}).items():
                 command = RemoteCommand.from_dict(cmd_data)
                 self.pending_commands[cmd_id] = command
                 self.command_queue.put(command)
 
             # Load command history
             self.command_history = [
-                RemoteCommand.from_dict(cmd_data)
-                for cmd_data in state.get('command_history', [])
+                RemoteCommand.from_dict(cmd_data) for cmd_data in state.get("command_history", [])
             ]
 
             logger.info(
@@ -643,10 +613,7 @@ class DeviceManager:
         cutoff = datetime.now() - datetime.timedelta(days=days)
         original_count = len(self.command_history)
 
-        self.command_history = [
-            cmd for cmd in self.command_history
-            if cmd.created_at >= cutoff
-        ]
+        self.command_history = [cmd for cmd in self.command_history if cmd.created_at >= cutoff]
 
         removed = original_count - len(self.command_history)
         if removed > 0:

@@ -12,10 +12,10 @@ This agent handles Phase 5 security validation:
 from typing import Any, Dict, List, Optional
 
 from agents.base_agent import (
-    BaseAgent,
     AgentCapability,
     AgentContext,
     AgentResult,
+    BaseAgent,
 )
 
 
@@ -61,10 +61,9 @@ class SecurityEngineerAgent(BaseAgent):
             security_report = self._extract_security_report(response)
 
             # Determine overall pass/fail
-            critical_count = len([
-                f for f in security_report.get("findings", [])
-                if f.get("severity") == "critical"
-            ])
+            critical_count = len(
+                [f for f in security_report.get("findings", []) if f.get("severity") == "critical"]
+            )
 
             return AgentResult(
                 success=critical_count == 0,
@@ -97,114 +96,128 @@ class SecurityEngineerAgent(BaseAgent):
         # Add code to analyze
         code_files = context.input_data.get("code_files", {})
         if code_files:
-            prompt_parts.extend([
-                "## Code to Analyze",
-                "",
-            ])
-            for filepath, content in list(code_files.items())[:10]:  # Limit files
-                prompt_parts.extend([
-                    f"### {filepath}",
-                    "```",
-                    content[:2000] if isinstance(content, str) else str(content)[:2000],
-                    "```",
+            prompt_parts.extend(
+                [
+                    "## Code to Analyze",
                     "",
-                ])
+                ]
+            )
+            for filepath, content in list(code_files.items())[:10]:  # Limit files
+                prompt_parts.extend(
+                    [
+                        f"### {filepath}",
+                        "```",
+                        content[:2000] if isinstance(content, str) else str(content)[:2000],
+                        "```",
+                        "",
+                    ]
+                )
 
         # Add dependency files
         dependencies = context.input_data.get("dependencies", {})
         if dependencies:
-            prompt_parts.extend([
-                "## Dependencies",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Dependencies",
+                ]
+            )
             for dep_file, content in dependencies.items():
-                prompt_parts.extend([
-                    f"### {dep_file}",
-                    "```",
-                    str(content)[:1000],
-                    "```",
-                    "",
-                ])
+                prompt_parts.extend(
+                    [
+                        f"### {dep_file}",
+                        "```",
+                        str(content)[:1000],
+                        "```",
+                        "",
+                    ]
+                )
 
         # Add configuration files
         configs = context.input_data.get("configuration", {})
         if configs:
-            prompt_parts.extend([
-                "## Configuration Files",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Configuration Files",
+                ]
+            )
             for config_file, content in configs.items():
-                prompt_parts.extend([
-                    f"### {config_file}",
-                    "```",
-                    str(content)[:1000],
-                    "```",
-                    "",
-                ])
+                prompt_parts.extend(
+                    [
+                        f"### {config_file}",
+                        "```",
+                        str(content)[:1000],
+                        "```",
+                        "",
+                    ]
+                )
 
-        prompt_parts.extend([
-            "## Security Checks Required",
-            "",
-            "1. **OWASP Top 10** - Check for common vulnerabilities",
-            "2. **Secret Detection** - Find hardcoded secrets, API keys, passwords",
-            "3. **Dependency Vulnerabilities** - Check for known CVEs",
-            "4. **Input Validation** - Verify proper sanitization",
-            "5. **Authentication/Authorization** - Check security implementations",
-            "6. **Cryptography** - Verify secure algorithms and key management",
-            "7. **Error Handling** - Check for information leakage",
-            "",
-            "## Required Output",
-            "",
-            "```json",
-            "{",
-            '  "summary": {',
-            '    "overall_risk": "low|medium|high|critical",',
-            '    "critical_count": 0,',
-            '    "high_count": 0,',
-            '    "medium_count": 0,',
-            '    "low_count": 0',
-            "  },",
-            '  "findings": [',
-            "    {",
-            '      "id": "SEC-001",',
-            '      "severity": "critical|high|medium|low",',
-            '      "category": "OWASP category or other",',
-            '      "title": "Finding title",',
-            '      "description": "Detailed description",',
-            '      "location": "file:line",',
-            '      "recommendation": "How to fix",',
-            '      "cwe_id": "CWE-XXX",',
-            '      "owasp_category": "A01:2021"',
-            "    }",
-            "  ],",
-            '  "secrets_detected": [',
-            "    {",
-            '      "type": "api_key|password|token",',
-            '      "location": "file:line",',
-            '      "masked_value": "***"',
-            "    }",
-            "  ],",
-            '  "vulnerable_dependencies": [',
-            "    {",
-            '      "package": "package-name",',
-            '      "version": "1.0.0",',
-            '      "vulnerability": "CVE-XXXX-XXXXX",',
-            '      "severity": "critical",',
-            '      "fixed_version": "1.0.1"',
-            "    }",
-            "  ],",
-            '  "compliance": {',
-            '    "owasp_top_10": {',
-            '      "A01_broken_access_control": "pass|fail",',
-            '      "A02_cryptographic_failures": "pass|fail",',
-            '      "A03_injection": "pass|fail"',
-            "    }",
-            "  },",
-            '  "recommendations": [',
-            '    "Priority recommendation 1",',
-            '    "Priority recommendation 2"',
-            "  ]",
-            "}",
-            "```",
-        ])
+        prompt_parts.extend(
+            [
+                "## Security Checks Required",
+                "",
+                "1. **OWASP Top 10** - Check for common vulnerabilities",
+                "2. **Secret Detection** - Find hardcoded secrets, API keys, passwords",
+                "3. **Dependency Vulnerabilities** - Check for known CVEs",
+                "4. **Input Validation** - Verify proper sanitization",
+                "5. **Authentication/Authorization** - Check security implementations",
+                "6. **Cryptography** - Verify secure algorithms and key management",
+                "7. **Error Handling** - Check for information leakage",
+                "",
+                "## Required Output",
+                "",
+                "```json",
+                "{",
+                '  "summary": {',
+                '    "overall_risk": "low|medium|high|critical",',
+                '    "critical_count": 0,',
+                '    "high_count": 0,',
+                '    "medium_count": 0,',
+                '    "low_count": 0',
+                "  },",
+                '  "findings": [',
+                "    {",
+                '      "id": "SEC-001",',
+                '      "severity": "critical|high|medium|low",',
+                '      "category": "OWASP category or other",',
+                '      "title": "Finding title",',
+                '      "description": "Detailed description",',
+                '      "location": "file:line",',
+                '      "recommendation": "How to fix",',
+                '      "cwe_id": "CWE-XXX",',
+                '      "owasp_category": "A01:2021"',
+                "    }",
+                "  ],",
+                '  "secrets_detected": [',
+                "    {",
+                '      "type": "api_key|password|token",',
+                '      "location": "file:line",',
+                '      "masked_value": "***"',
+                "    }",
+                "  ],",
+                '  "vulnerable_dependencies": [',
+                "    {",
+                '      "package": "package-name",',
+                '      "version": "1.0.0",',
+                '      "vulnerability": "CVE-XXXX-XXXXX",',
+                '      "severity": "critical",',
+                '      "fixed_version": "1.0.1"',
+                "    }",
+                "  ],",
+                '  "compliance": {',
+                '    "owasp_top_10": {',
+                '      "A01_broken_access_control": "pass|fail",',
+                '      "A02_cryptographic_failures": "pass|fail",',
+                '      "A03_injection": "pass|fail"',
+                "    }",
+                "  },",
+                '  "recommendations": [',
+                '    "Priority recommendation 1",',
+                '    "Priority recommendation 2"',
+                "  ]",
+                "}",
+                "```",
+            ]
+        )
 
         return "\n".join(prompt_parts)
 
@@ -219,6 +232,7 @@ class SecurityEngineerAgent(BaseAgent):
 
             if "text" in response:
                 import json
+
                 try:
                     text = response["text"]
                     start = text.find("{")

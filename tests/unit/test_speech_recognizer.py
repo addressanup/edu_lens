@@ -11,20 +11,21 @@ Tests speech recognition including:
 Author: Testing Agent (TST-001)
 """
 
-import pytest
-import numpy as np
 import asyncio
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import numpy as np
+import pytest
 
 from src.audio.speech_recognizer import (
-    SpeechRecognizer,
+    LanguageHint,
     SpeechConfig,
+    SpeechRecognizer,
+    StreamingTranscriber,
+    TranscriptionMode,
     TranscriptionResult,
     WordTimestamp,
-    TranscriptionMode,
-    LanguageHint,
-    StreamingTranscriber,
 )
 
 
@@ -33,12 +34,7 @@ class TestWordTimestamp:
 
     def test_word_timestamp_creation(self):
         """Test creating a word timestamp."""
-        timestamp = WordTimestamp(
-            word="hello",
-            start=0.0,
-            end=0.5,
-            confidence=0.95
-        )
+        timestamp = WordTimestamp(word="hello", start=0.0, end=0.5, confidence=0.95)
 
         assert timestamp.word == "hello"
         assert timestamp.start == 0.0
@@ -58,10 +54,7 @@ class TestTranscriptionResult:
     def test_transcription_result_creation(self):
         """Test creating a transcription result."""
         result = TranscriptionResult(
-            text="Hello world",
-            confidence=0.92,
-            language="en",
-            processing_time=0.5
+            text="Hello world", confidence=0.92, language="en", processing_time=0.5
         )
 
         assert result.text == "Hello world"
@@ -70,11 +63,7 @@ class TestTranscriptionResult:
 
     def test_words_property(self):
         """Test words property."""
-        result = TranscriptionResult(
-            text="Hello world test",
-            confidence=0.9,
-            language="en"
-        )
+        result = TranscriptionResult(text="Hello world test", confidence=0.9, language="en")
 
         words = result.words
         assert len(words) == 3
@@ -84,25 +73,18 @@ class TestTranscriptionResult:
         """Test duration calculation from timestamps."""
         timestamps = [
             WordTimestamp("hello", 0.0, 0.5, 0.95),
-            WordTimestamp("world", 0.5, 1.2, 0.90)
+            WordTimestamp("world", 0.5, 1.2, 0.90),
         ]
 
         result = TranscriptionResult(
-            text="hello world",
-            confidence=0.925,
-            language="en",
-            word_timestamps=timestamps
+            text="hello world", confidence=0.925, language="en", word_timestamps=timestamps
         )
 
         assert result.duration == 1.2
 
     def test_empty_result(self):
         """Test empty transcription result."""
-        result = TranscriptionResult(
-            text="",
-            confidence=0.0,
-            language="en"
-        )
+        result = TranscriptionResult(text="", confidence=0.0, language="en")
 
         assert result.duration == 0.0
         assert len(result.words) == 0
@@ -122,12 +104,7 @@ class TestSpeechConfig:
 
     def test_custom_config(self):
         """Test custom configuration."""
-        config = SpeechConfig(
-            model_size="small",
-            language="es",
-            temperature=0.5,
-            child_mode=False
-        )
+        config = SpeechConfig(model_size="small", language="es", temperature=0.5, child_mode=False)
 
         assert config.model_size == "small"
         assert config.language == "es"
@@ -162,19 +139,23 @@ class TestSpeechRecognizer:
     def mock_whisper_model(self):
         """Mock Whisper model."""
         model = Mock()
-        model.transcribe = Mock(return_value={
-            "text": "This is a test transcription",
-            "language": "en",
-            "segments": [{
-                "avg_logprob": -0.5,
-                "words": [
-                    {"word": "This", "start": 0.0, "end": 0.3, "probability": 0.95},
-                    {"word": "is", "start": 0.3, "end": 0.5, "probability": 0.93},
-                    {"word": "a", "start": 0.5, "end": 0.6, "probability": 0.90},
-                    {"word": "test", "start": 0.6, "end": 1.0, "probability": 0.92},
-                ]
-            }]
-        })
+        model.transcribe = Mock(
+            return_value={
+                "text": "This is a test transcription",
+                "language": "en",
+                "segments": [
+                    {
+                        "avg_logprob": -0.5,
+                        "words": [
+                            {"word": "This", "start": 0.0, "end": 0.3, "probability": 0.95},
+                            {"word": "is", "start": 0.3, "end": 0.5, "probability": 0.93},
+                            {"word": "a", "start": 0.5, "end": 0.6, "probability": 0.90},
+                            {"word": "test", "start": 0.6, "end": 1.0, "probability": 0.92},
+                        ],
+                    }
+                ],
+            }
+        )
         return model
 
     def test_recognizer_initialization(self):
@@ -188,7 +169,7 @@ class TestSpeechRecognizer:
     @pytest.mark.asyncio
     async def test_initialize_recognizer(self, recognizer):
         """Test initializing the recognizer."""
-        with patch('whisper.load_model') as mock_load:
+        with patch("whisper.load_model") as mock_load:
             mock_load.return_value = Mock()
 
             await recognizer.initialize()
@@ -200,7 +181,7 @@ class TestSpeechRecognizer:
     @pytest.mark.asyncio
     async def test_initialize_already_initialized(self, recognizer):
         """Test initializing when already initialized."""
-        with patch('whisper.load_model') as mock_load:
+        with patch("whisper.load_model") as mock_load:
             mock_load.return_value = Mock()
 
             await recognizer.initialize()
@@ -232,9 +213,9 @@ class TestSpeechRecognizer:
         audio_file = tmp_path / "test.wav"
         audio_file.touch()
 
-        with patch('whisper.load_audio') as mock_load_audio:
+        with patch("whisper.load_audio") as mock_load_audio:
             mock_load_audio.return_value = np.random.randn(16000).astype(np.float32)
-            with patch('whisper.pad_or_trim') as mock_pad:
+            with patch("whisper.pad_or_trim") as mock_pad:
                 mock_pad.return_value = np.random.randn(16000).astype(np.float32)
 
                 result = await recognizer.transcribe(str(audio_file))
@@ -288,19 +269,18 @@ class TestSpeechRecognizer:
         recognizer._is_initialized = True
 
         mock_model = Mock()
-        mock_model.detect_language = Mock(return_value=(
-            Mock(),
-            {"en": 0.95, "es": 0.03, "fr": 0.02}
-        ))
+        mock_model.detect_language = Mock(
+            return_value=(Mock(), {"en": 0.95, "es": 0.03, "fr": 0.02})
+        )
         recognizer.model = mock_model
 
         audio = np.random.randn(16000).astype(np.float32)
 
-        with patch('whisper.load_audio') as mock_load:
+        with patch("whisper.load_audio") as mock_load:
             mock_load.return_value = audio
-            with patch('whisper.pad_or_trim') as mock_pad:
+            with patch("whisper.pad_or_trim") as mock_pad:
                 mock_pad.return_value = audio
-                with patch('whisper.audio.log_mel_spectrogram') as mock_mel:
+                with patch("whisper.audio.log_mel_spectrogram") as mock_mel:
                     mock_mel.return_value = Mock()
 
                     language, confidence = await recognizer.detect_language(audio)
@@ -312,14 +292,11 @@ class TestSpeechRecognizer:
         """Test getting word timestamps."""
         timestamps = [
             WordTimestamp("hello", 0.0, 0.5, 0.95),
-            WordTimestamp("world", 0.5, 1.2, 0.90)
+            WordTimestamp("world", 0.5, 1.2, 0.90),
         ]
 
         result = TranscriptionResult(
-            text="hello world",
-            confidence=0.925,
-            language="en",
-            word_timestamps=timestamps
+            text="hello world", confidence=0.925, language="en", word_timestamps=timestamps
         )
 
         extracted = recognizer.get_word_timestamps(result)
@@ -331,14 +308,11 @@ class TestSpeechRecognizer:
         """Test getting per-word confidence scores."""
         timestamps = [
             WordTimestamp("hello", 0.0, 0.5, 0.95),
-            WordTimestamp("world", 0.5, 1.2, 0.90)
+            WordTimestamp("world", 0.5, 1.2, 0.90),
         ]
 
         result = TranscriptionResult(
-            text="hello world",
-            confidence=0.925,
-            language="en",
-            word_timestamps=timestamps
+            text="hello world", confidence=0.925, language="en", word_timestamps=timestamps
         )
 
         scores = recognizer.get_confidence_scores(result)
@@ -375,9 +349,7 @@ class TestChildSpeechHandling:
     def child_recognizer(self):
         """Create recognizer optimized for children."""
         config = SpeechConfig(
-            child_mode=True,
-            age_group="6-12",
-            vocabulary_boost=["math", "science", "reading"]
+            child_mode=True, age_group="6-12", vocabulary_boost=["math", "science", "reading"]
         )
         return SpeechRecognizer(config=config)
 
@@ -409,11 +381,9 @@ class TestChildSpeechHandling:
 
         child_recognizer._is_initialized = True
         child_recognizer.model = Mock()
-        child_recognizer.model.transcribe = Mock(return_value={
-            "text": "Test",
-            "language": "en",
-            "segments": []
-        })
+        child_recognizer.model.transcribe = Mock(
+            return_value={"text": "Test", "language": "en", "segments": []}
+        )
 
         result = await child_recognizer.transcribe(audio)
 
@@ -437,12 +407,14 @@ class TestNoisyEnvironment:
 
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "Noisy transcription",
-            "language": "en",
-            "segments": [],
-            "no_speech_prob": 0.3
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={
+                "text": "Noisy transcription",
+                "language": "en",
+                "segments": [],
+                "no_speech_prob": 0.3,
+            }
+        )
 
         result = await recognizer.transcribe(noisy_audio)
 
@@ -460,11 +432,9 @@ class TestNoisyEnvironment:
 
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "Background test",
-            "language": "en",
-            "segments": []
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "Background test", "language": "en", "segments": []}
+        )
 
         result = await recognizer.transcribe(audio_with_bg)
 
@@ -482,6 +452,7 @@ class TestStreamingTranscription:
     @pytest.fixture
     async def audio_stream(self):
         """Create a mock audio stream."""
+
         async def stream_generator():
             for _ in range(5):
                 chunk = np.random.randn(8000).astype(np.float32)
@@ -495,11 +466,9 @@ class TestStreamingTranscription:
         """Test streaming transcription mode."""
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "Streaming chunk",
-            "language": "en",
-            "segments": []
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "Streaming chunk", "language": "en", "segments": []}
+        )
 
         results = []
         async for result in recognizer.transcribe_streaming(audio_stream):
@@ -526,16 +495,12 @@ class TestStreamingTranscription:
         """Test StreamingTranscriber helper."""
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "Test",
-            "language": "en",
-            "segments": []
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "Test", "language": "en", "segments": []}
+        )
 
         transcriber = StreamingTranscriber(
-            recognizer=recognizer,
-            chunk_duration=2.0,
-            overlap_duration=0.3
+            recognizer=recognizer, chunk_duration=2.0, overlap_duration=0.3
         )
 
         audio_queue = asyncio.Queue()
@@ -577,11 +542,9 @@ class TestEdgeCases:
 
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "",
-            "language": "en",
-            "segments": []
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "", "language": "en", "segments": []}
+        )
 
         result = await recognizer.transcribe(empty_audio)
 
@@ -594,11 +557,9 @@ class TestEdgeCases:
 
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "Hi",
-            "language": "en",
-            "segments": []
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "Hi", "language": "en", "segments": []}
+        )
 
         result = await recognizer.transcribe(short_audio)
 
@@ -611,11 +572,9 @@ class TestEdgeCases:
 
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "Long transcription",
-            "language": "en",
-            "segments": []
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "Long transcription", "language": "en", "segments": []}
+        )
 
         result = await recognizer.transcribe(long_audio)
 
@@ -628,12 +587,9 @@ class TestEdgeCases:
 
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "",
-            "language": "en",
-            "segments": [],
-            "no_speech_prob": 0.99
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "", "language": "en", "segments": [], "no_speech_prob": 0.99}
+        )
 
         result = await recognizer.transcribe(silent_audio)
 
@@ -656,13 +612,11 @@ class TestEdgeCases:
         """Test using recognizer before initialization."""
         audio = np.random.randn(16000).astype(np.float32)
 
-        with patch('whisper.load_model') as mock_load:
+        with patch("whisper.load_model") as mock_load:
             mock_load.return_value = Mock()
-            mock_load.return_value.transcribe = Mock(return_value={
-                "text": "Test",
-                "language": "en",
-                "segments": []
-            })
+            mock_load.return_value.transcribe = Mock(
+                return_value={"text": "Test", "language": "en", "segments": []}
+            )
 
             # Should auto-initialize
             result = await recognizer.transcribe(audio)
@@ -686,11 +640,9 @@ class TestEdgeCases:
 
         recognizer._is_initialized = True
         recognizer.model = Mock()
-        recognizer.model.transcribe = Mock(return_value={
-            "text": "Normalized",
-            "language": "en",
-            "segments": []
-        })
+        recognizer.model.transcribe = Mock(
+            return_value={"text": "Normalized", "language": "en", "segments": []}
+        )
 
         result = await recognizer.transcribe(audio_int16)
 

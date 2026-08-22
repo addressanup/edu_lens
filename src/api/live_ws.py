@@ -80,16 +80,16 @@ async def live_tutor_websocket(websocket: WebSocket, session_id: str) -> None:
     )
     live_sessions[session_id] = session
 
-    await emit({
-        "type": "connected",
-        "payload": {
-            "session_id": session_id,
-            "message": "Live tutor ready. Send frames, then start_observation.",
-            "vision_model": getattr(
-                get_live_llm_service()._provider, "vision_model", None
-            ),
-        },
-    })
+    await emit(
+        {
+            "type": "connected",
+            "payload": {
+                "session_id": session_id,
+                "message": "Live tutor ready. Send frames, then start_observation.",
+                "vision_model": getattr(get_live_llm_service()._provider, "vision_model", None),
+            },
+        }
+    )
 
     try:
         while True:
@@ -116,10 +116,12 @@ async def live_tutor_websocket(websocket: WebSocket, session_id: str) -> None:
 
             elif msg_type == "start_observation":
                 await session.start()
-                await emit({
-                    "type": "observation_started",
-                    "payload": {"interval_s": config.observation_interval_s},
-                })
+                await emit(
+                    {
+                        "type": "observation_started",
+                        "payload": {"interval_s": config.observation_interval_s},
+                    }
+                )
 
             elif msg_type == "stop_observation":
                 await session.stop()
@@ -136,29 +138,37 @@ async def live_tutor_websocket(websocket: WebSocket, session_id: str) -> None:
                         pass
                 if "observation_interval_s" in cfg:
                     try:
-                        config.observation_interval_s = max(5.0, min(120.0, float(cfg["observation_interval_s"])))
+                        config.observation_interval_s = max(
+                            5.0, min(120.0, float(cfg["observation_interval_s"]))
+                        )
                     except (TypeError, ValueError):
                         pass
-                await emit({
-                    "type": "config_applied",
-                    "payload": {
-                        "child_name": config.child_name,
-                        "child_age": config.child_age,
-                        "observation_interval_s": config.observation_interval_s,
-                    },
-                })
+                await emit(
+                    {
+                        "type": "config_applied",
+                        "payload": {
+                            "child_name": config.child_name,
+                            "child_age": config.child_age,
+                            "observation_interval_s": config.observation_interval_s,
+                        },
+                    }
+                )
 
             elif msg_type == "ping":
-                await emit({
-                    "type": "pong",
-                    "payload": {"stats": session.get_stats()},
-                })
+                await emit(
+                    {
+                        "type": "pong",
+                        "payload": {"stats": session.get_stats()},
+                    }
+                )
 
             else:
-                await emit({
-                    "type": "error",
-                    "payload": {"message": f"Unknown message type: {msg_type}"},
-                })
+                await emit(
+                    {
+                        "type": "error",
+                        "payload": {"message": f"Unknown message type: {msg_type}"},
+                    }
+                )
 
     except WebSocketDisconnect:
         logger.info("Live tutor WebSocket disconnected: %s", session_id)

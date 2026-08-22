@@ -32,7 +32,7 @@ class MFCCExtractor:
         n_mels: int = 40,
         fmin: float = 100.0,  # Lower for children's voices
         fmax: float = 8000.0,  # Upper frequency limit
-        window: str = 'hamming'
+        window: str = "hamming",
     ):
         """
         Initialize MFCC extractor.
@@ -87,7 +87,7 @@ class MFCCExtractor:
         log_mel_spec = np.log(mel_spec + 1e-10)
 
         # Apply DCT to get MFCCs
-        mfcc = dct(log_mel_spec, type=2, axis=0, norm='ortho')[:self.n_mfcc]
+        mfcc = dct(log_mel_spec, type=2, axis=0, norm="ortho")[: self.n_mfcc]
 
         return mfcc
 
@@ -139,7 +139,7 @@ class MFCCExtractor:
             if end > len(audio_data):
                 # Pad last frame if necessary
                 frame = np.zeros(self.n_fft)
-                frame[:len(audio_data) - start] = audio_data[start:]
+                frame[: len(audio_data) - start] = audio_data[start:]
             else:
                 frame = audio_data[start:end]
 
@@ -215,7 +215,7 @@ class VoiceActivityDetector:
         frame_duration_ms: float = 30.0,
         energy_threshold: float = 0.05,  # Lower for children
         zcr_threshold: float = 0.3,
-        speech_pad_ms: float = 300.0  # Padding around speech
+        speech_pad_ms: float = 300.0,  # Padding around speech
     ):
         """
         Initialize VAD.
@@ -302,18 +302,12 @@ class VoiceActivityDetector:
             elif not is_speech and in_speech:
                 # End of speech segment
                 end_frame = min(n_frames - 1, i + self.pad_frames)
-                segments.append((
-                    start_frame * self.frame_size,
-                    end_frame * self.frame_size
-                ))
+                segments.append((start_frame * self.frame_size, end_frame * self.frame_size))
                 in_speech = False
 
         # Handle case where speech continues to end
         if in_speech:
-            segments.append((
-                start_frame * self.frame_size,
-                len(audio_data)
-            ))
+            segments.append((start_frame * self.frame_size, len(audio_data)))
 
         return segments
 
@@ -322,7 +316,7 @@ class VoiceActivityDetector:
         """Compute frame energy."""
         if len(audio_data) == 0:
             return 0.0
-        return np.sqrt(np.mean(audio_data ** 2))
+        return np.sqrt(np.mean(audio_data**2))
 
     @staticmethod
     def _compute_zero_crossing_rate(audio_data: np.ndarray) -> float:
@@ -345,10 +339,7 @@ class NoiseEstimator:
     """
 
     def __init__(
-        self,
-        sample_rate: int = 16000,
-        adaptation_rate: float = 0.1,
-        min_noise_floor: float = 0.001
+        self, sample_rate: int = 16000, adaptation_rate: float = 0.1, min_noise_floor: float = 0.001
     ):
         """
         Initialize noise estimator.
@@ -380,7 +371,7 @@ class NoiseEstimator:
             return
 
         # Compute current noise level
-        current_level = np.sqrt(np.mean(audio_data ** 2))
+        current_level = np.sqrt(np.mean(audio_data**2))
 
         # Adaptive update
         if self.n_updates == 0:
@@ -412,16 +403,12 @@ class NoiseEstimator:
         if len(audio_data) == 0 or self.noise_floor == 0:
             return 0.0
 
-        signal_level = np.sqrt(np.mean(audio_data ** 2))
+        signal_level = np.sqrt(np.mean(audio_data**2))
         snr = 20 * np.log10(signal_level / self.noise_floor)
 
         return snr
 
-    def apply_noise_reduction(
-        self,
-        audio_data: np.ndarray,
-        strength: float = 1.0
-    ) -> np.ndarray:
+    def apply_noise_reduction(self, audio_data: np.ndarray, strength: float = 1.0) -> np.ndarray:
         """
         Apply spectral subtraction-based noise reduction.
 
@@ -483,7 +470,9 @@ class FeatureNormalizer:
             features: Feature array (feature_dim, n_frames)
         """
         if features.shape[0] != self.feature_dim:
-            logger.warning(f"Feature dimension mismatch: expected {self.feature_dim}, got {features.shape[0]}")
+            logger.warning(
+                f"Feature dimension mismatch: expected {self.feature_dim}, got {features.shape[0]}"
+            )
             return
 
         # Compute batch statistics
@@ -567,9 +556,7 @@ def extract_delta_delta_features(features: np.ndarray, width: int = 2) -> np.nda
 
 
 def combine_features(
-    mfcc: np.ndarray,
-    include_delta: bool = True,
-    include_delta_delta: bool = True
+    mfcc: np.ndarray, include_delta: bool = True, include_delta_delta: bool = True
 ) -> np.ndarray:
     """
     Combine MFCC with delta and delta-delta features.

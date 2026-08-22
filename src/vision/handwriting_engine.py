@@ -16,12 +16,13 @@ Author: Vision Processing Agent (VIS-001)
 Target Accuracy: 85% on child handwriting (ages 6-12)
 """
 
-import numpy as np
-from typing import List, Dict, Tuple, Optional, Any, Union
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
-import logging
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
 
 try:
     import cv2
@@ -33,9 +34,8 @@ try:
 except ImportError:
     StandardScaler = None
 
-from src.vision.preprocessing import ImagePreprocessor
 from src.vision.character_segmenter import CharacterSegmenter, Segment, SegmentationResult
-
+from src.vision.preprocessing import ImagePreprocessor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +44,7 @@ logger = logging.getLogger(__name__)
 
 class HandwritingStyle(Enum):
     """Types of handwriting styles supported."""
+
     PRINTED = "printed"
     CURSIVE = "cursive"
     MIXED = "mixed"
@@ -52,14 +53,16 @@ class HandwritingStyle(Enum):
 
 class AgeGroup(Enum):
     """Age groups with different handwriting characteristics."""
+
     EARLY_ELEMENTARY = "6-8"  # Kindergarten - 2nd grade
-    MID_ELEMENTARY = "9-10"   # 3rd - 4th grade
+    MID_ELEMENTARY = "9-10"  # 3rd - 4th grade
     LATE_ELEMENTARY = "11-12"  # 5th - 6th grade
 
 
 @dataclass
 class HandwritingCharacter:
     """Represents a recognized handwritten character."""
+
     character: str
     confidence: float
     bounding_box: Tuple[int, int, int, int]
@@ -74,15 +77,15 @@ class HandwritingCharacter:
             "bounding_box": self.bounding_box,
             "style": self.style.value,
             "alternate_predictions": [
-                {"char": char, "confidence": conf}
-                for char, conf in self.alternate_predictions
-            ]
+                {"char": char, "confidence": conf} for char, conf in self.alternate_predictions
+            ],
         }
 
 
 @dataclass
 class HandwritingWord:
     """Represents a recognized handwritten word."""
+
     text: str
     confidence: float
     bounding_box: Tuple[int, int, int, int]
@@ -96,13 +99,14 @@ class HandwritingWord:
             "confidence": self.confidence,
             "bounding_box": self.bounding_box,
             "characters": [char.to_dict() for char in self.characters],
-            "style": self.style.value
+            "style": self.style.value,
         }
 
 
 @dataclass
 class HandwritingResult:
     """Complete handwriting recognition result."""
+
     words: List[HandwritingWord] = field(default_factory=list)
     full_text: str = ""
     average_confidence: float = 0.0
@@ -118,7 +122,7 @@ class HandwritingResult:
             "average_confidence": self.average_confidence,
             "dominant_style": self.dominant_style.value,
             "processing_time_ms": self.processing_time_ms,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -153,12 +157,8 @@ class HandwritingRecognizer:
             config: Configuration dictionary for recognition parameters
         """
         self.config = config or {}
-        self.preprocessor = ImagePreprocessor(
-            config=self.config.get("preprocessing", {})
-        )
-        self.segmenter = CharacterSegmenter(
-            config=self.config.get("segmentation", {})
-        )
+        self.preprocessor = ImagePreprocessor(config=self.config.get("preprocessing", {}))
+        self.segmenter = CharacterSegmenter(config=self.config.get("segmentation", {}))
 
         # Age group configuration
         self.age_group = None
@@ -193,13 +193,13 @@ class HandwritingRecognizer:
     def _get_text_charset(self) -> List[str]:
         """Get character set for text recognition."""
         # Uppercase letters
-        uppercase = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
+        uppercase = [chr(i) for i in range(ord("A"), ord("Z") + 1)]
         # Lowercase letters
-        lowercase = [chr(i) for i in range(ord('a'), ord('z') + 1)]
+        lowercase = [chr(i) for i in range(ord("a"), ord("z") + 1)]
         # Digits
         digits = [str(i) for i in range(10)]
         # Common punctuation
-        punctuation = ['.', ',', '!', '?', ';', ':', "'", '"', '-', '(', ')']
+        punctuation = [".", ",", "!", "?", ";", ":", "'", '"', "-", "(", ")"]
 
         return uppercase + lowercase + digits + punctuation
 
@@ -208,19 +208,19 @@ class HandwritingRecognizer:
         # Digits
         digits = [str(i) for i in range(10)]
         # Math operators
-        operators = ['+', '-', '×', '÷', '=', '<', '>', '≤', '≥', '±']
+        operators = ["+", "-", "×", "÷", "=", "<", ">", "≤", "≥", "±"]
         # Math symbols
-        symbols = ['(', ')', '[', ']', '{', '}', '/', '.', ',', '%', '$']
+        symbols = ["(", ")", "[", "]", "{", "}", "/", ".", ",", "%", "$"]
         # Letters (for variables)
-        letters = [chr(i) for i in range(ord('a'), ord('z') + 1)]
-        letters.extend([chr(i) for i in range(ord('A'), ord('Z') + 1)])
+        letters = [chr(i) for i in range(ord("a"), ord("z") + 1)]
+        letters.extend([chr(i) for i in range(ord("A"), ord("Z") + 1)])
 
         return digits + operators + symbols + letters[:10]  # Limit to common variable letters
 
     def configure_for_children(
         self,
         age_group: AgeGroup = AgeGroup.MID_ELEMENTARY,
-        optimize_for_style: Optional[HandwritingStyle] = None
+        optimize_for_style: Optional[HandwritingStyle] = None,
     ) -> None:
         """
         Configure recognizer for specific age group and style.
@@ -239,47 +239,53 @@ class HandwritingRecognizer:
 
         if age_group == AgeGroup.EARLY_ELEMENTARY:
             # 6-8 years: Larger, more irregular letters
-            preprocessing_config.update({
-                "denoise": True,
-                "denoise_method": "bilateral",
-                "enhance_contrast": True,
-                "binarization_method": "adaptive",
-                "adaptive_block_size": 15,
-                "adaptive_c": 3,
-                "min_component_area": 30,
-                "char_spacing_factor": 0.4,
-                "word_spacing_factor": 2.0
-            })
+            preprocessing_config.update(
+                {
+                    "denoise": True,
+                    "denoise_method": "bilateral",
+                    "enhance_contrast": True,
+                    "binarization_method": "adaptive",
+                    "adaptive_block_size": 15,
+                    "adaptive_c": 3,
+                    "min_component_area": 30,
+                    "char_spacing_factor": 0.4,
+                    "word_spacing_factor": 2.0,
+                }
+            )
             self.min_confidence = 0.60  # Lower threshold for emerging writers
 
         elif age_group == AgeGroup.MID_ELEMENTARY:
             # 9-10 years: More consistent but still developing
-            preprocessing_config.update({
-                "denoise": True,
-                "denoise_method": "bilateral",
-                "enhance_contrast": True,
-                "binarization_method": "adaptive",
-                "adaptive_block_size": 11,
-                "adaptive_c": 2,
-                "min_component_area": 20,
-                "char_spacing_factor": 0.3,
-                "word_spacing_factor": 1.5
-            })
+            preprocessing_config.update(
+                {
+                    "denoise": True,
+                    "denoise_method": "bilateral",
+                    "enhance_contrast": True,
+                    "binarization_method": "adaptive",
+                    "adaptive_block_size": 11,
+                    "adaptive_c": 2,
+                    "min_component_area": 20,
+                    "char_spacing_factor": 0.3,
+                    "word_spacing_factor": 1.5,
+                }
+            )
             self.min_confidence = 0.70
 
         elif age_group == AgeGroup.LATE_ELEMENTARY:
             # 11-12 years: More mature handwriting
-            preprocessing_config.update({
-                "denoise": True,
-                "denoise_method": "bilateral",
-                "enhance_contrast": True,
-                "binarization_method": "adaptive",
-                "adaptive_block_size": 11,
-                "adaptive_c": 2,
-                "min_component_area": 15,
-                "char_spacing_factor": 0.25,
-                "word_spacing_factor": 1.2
-            })
+            preprocessing_config.update(
+                {
+                    "denoise": True,
+                    "denoise_method": "bilateral",
+                    "enhance_contrast": True,
+                    "binarization_method": "adaptive",
+                    "adaptive_block_size": 11,
+                    "adaptive_c": 2,
+                    "min_component_area": 15,
+                    "char_spacing_factor": 0.25,
+                    "word_spacing_factor": 1.2,
+                }
+            )
             self.min_confidence = 0.75
 
         # Update preprocessor and segmenter
@@ -289,7 +295,7 @@ class HandwritingRecognizer:
         segmentation_config = {
             "min_component_area": preprocessing_config.get("min_component_area", 20),
             "char_spacing_factor": preprocessing_config.get("char_spacing_factor", 0.3),
-            "word_spacing_factor": preprocessing_config.get("word_spacing_factor", 1.5)
+            "word_spacing_factor": preprocessing_config.get("word_spacing_factor", 1.5),
         }
         self.segmenter = CharacterSegmenter(config=segmentation_config)
 
@@ -299,9 +305,7 @@ class HandwritingRecognizer:
         )
 
     def preprocess_handwriting(
-        self,
-        image: np.ndarray,
-        custom_pipeline: Optional[List[str]] = None
+        self, image: np.ndarray, custom_pipeline: Optional[List[str]] = None
     ) -> np.ndarray:
         """
         Preprocess handwriting image with specialized techniques.
@@ -413,9 +417,7 @@ class HandwritingRecognizer:
             return image
 
     def segment_characters(
-        self,
-        image: np.ndarray,
-        segment_words: bool = True
+        self, image: np.ndarray, segment_words: bool = True
     ) -> SegmentationResult:
         """
         Segment handwritten text into characters and words.
@@ -433,10 +435,7 @@ class HandwritingRecognizer:
         try:
             # Perform segmentation
             result = self.segmenter.segment_all(
-                image,
-                segment_lines=True,
-                segment_words=segment_words,
-                segment_characters=True
+                image, segment_lines=True, segment_words=segment_words, segment_characters=True
             )
 
             logger.debug(
@@ -451,9 +450,7 @@ class HandwritingRecognizer:
             return SegmentationResult()
 
     def recognize_handwriting(
-        self,
-        image: np.ndarray,
-        preprocess: bool = True
+        self, image: np.ndarray, preprocess: bool = True
     ) -> HandwritingResult:
         """
         Perform complete handwriting recognition.
@@ -472,6 +469,7 @@ class HandwritingRecognizer:
             HandwritingResult with complete recognition results
         """
         import time
+
         start_time = time.time()
 
         if image is None or image.size == 0:
@@ -501,10 +499,7 @@ class HandwritingRecognizer:
 
             elif segmentation.characters:
                 # Process characters without word boundaries
-                word_result = self._recognize_characters_as_word(
-                    processed,
-                    segmentation.characters
-                )
+                word_result = self._recognize_characters_as_word(processed, segmentation.characters)
                 if word_result:
                     result.words.append(word_result)
 
@@ -527,7 +522,7 @@ class HandwritingRecognizer:
                 "num_words": len(result.words),
                 "num_characters": sum(len(word.characters) for word in result.words),
                 "age_group": self.age_group.value if self.age_group else None,
-                "recognition_mode": self.recognition_mode
+                "recognition_mode": self.recognition_mode,
             }
 
             # Processing time
@@ -547,9 +542,7 @@ class HandwritingRecognizer:
             return HandwritingResult()
 
     def recognize_math_handwriting(
-        self,
-        image: np.ndarray,
-        preprocess: bool = True
+        self, image: np.ndarray, preprocess: bool = True
     ) -> HandwritingResult:
         """
         Recognize mathematical handwritten expressions.
@@ -584,10 +577,7 @@ class HandwritingRecognizer:
             self.recognition_mode = original_mode
 
     def _recognize_word(
-        self,
-        image: np.ndarray,
-        word_segment: Segment,
-        segmentation: SegmentationResult
+        self, image: np.ndarray, word_segment: Segment, segmentation: SegmentationResult
     ) -> Optional[HandwritingWord]:
         """
         Recognize a single word from its segment.
@@ -603,15 +593,18 @@ class HandwritingRecognizer:
         try:
             # Extract word image
             word_img = image[
-                word_segment.y:word_segment.y + word_segment.height,
-                word_segment.x:word_segment.x + word_segment.width
+                word_segment.y : word_segment.y + word_segment.height,
+                word_segment.x : word_segment.x + word_segment.width,
             ]
 
             # Find characters belonging to this word
             word_chars = [
-                char for char in segmentation.characters
-                if (char.x >= word_segment.x and
-                    char.x + char.width <= word_segment.x + word_segment.width)
+                char
+                for char in segmentation.characters
+                if (
+                    char.x >= word_segment.x
+                    and char.x + char.width <= word_segment.x + word_segment.width
+                )
             ]
 
             # Sort characters left to right
@@ -641,9 +634,9 @@ class HandwritingRecognizer:
                     word_segment.x,
                     word_segment.y,
                     word_segment.x + word_segment.width,
-                    word_segment.y + word_segment.height
+                    word_segment.y + word_segment.height,
                 ),
-                characters=recognized_chars
+                characters=recognized_chars,
             )
 
             return word
@@ -653,9 +646,7 @@ class HandwritingRecognizer:
             return None
 
     def _recognize_characters_as_word(
-        self,
-        image: np.ndarray,
-        characters: List[Segment]
+        self, image: np.ndarray, characters: List[Segment]
     ) -> Optional[HandwritingWord]:
         """
         Recognize characters as a single word.
@@ -693,7 +684,7 @@ class HandwritingRecognizer:
                 text=text,
                 confidence=avg_confidence,
                 bounding_box=(x_min, y_min, x_max, y_max),
-                characters=recognized_chars
+                characters=recognized_chars,
             )
 
             return word
@@ -703,9 +694,7 @@ class HandwritingRecognizer:
             return None
 
     def _recognize_character(
-        self,
-        image: np.ndarray,
-        char_segment: Segment
+        self, image: np.ndarray, char_segment: Segment
     ) -> Optional[HandwritingCharacter]:
         """
         Recognize a single character.
@@ -723,8 +712,8 @@ class HandwritingRecognizer:
         try:
             # Extract character image
             char_img = image[
-                char_segment.y:char_segment.y + char_segment.height,
-                char_segment.x:char_segment.x + char_segment.width
+                char_segment.y : char_segment.y + char_segment.height,
+                char_segment.x : char_segment.x + char_segment.width,
             ]
 
             if char_img.size == 0:
@@ -755,9 +744,9 @@ class HandwritingRecognizer:
                     char_segment.x,
                     char_segment.y,
                     char_segment.x + char_segment.width,
-                    char_segment.y + char_segment.height
+                    char_segment.y + char_segment.height,
                 ),
-                alternate_predictions=predictions[1:5]  # Top 5 alternatives
+                alternate_predictions=predictions[1:5],  # Top 5 alternatives
             )
 
             return char_result
@@ -789,7 +778,7 @@ class HandwritingRecognizer:
             # Center the character
             y_offset = (max_dim - h) // 2
             x_offset = (max_dim - w) // 2
-            padded[y_offset:y_offset+h, x_offset:x_offset+w] = char_img
+            padded[y_offset : y_offset + h, x_offset : x_offset + w] = char_img
 
             # Resize to standard size
             resized = cv2.resize(padded, (self.char_width, self.char_height))
@@ -804,10 +793,7 @@ class HandwritingRecognizer:
             return char_img
 
     def _get_character_predictions(
-        self,
-        char_img: np.ndarray,
-        charset: List[str],
-        top_k: int = 5
+        self, char_img: np.ndarray, charset: List[str], top_k: int = 5
     ) -> List[Tuple[str, float]]:
         """
         Get character predictions with confidences.
@@ -830,10 +816,10 @@ class HandwritingRecognizer:
         # This should be replaced with actual CNN inference
         if self.recognition_mode == "math":
             # Common math characters
-            common_chars = ['1', '2', '3', '+', '-', '=', '×', '÷']
+            common_chars = ["1", "2", "3", "+", "-", "=", "×", "÷"]
         else:
             # Common text characters
-            common_chars = ['a', 'e', 'i', 'o', 'u', 't', 'n', 's', 'r', 'h']
+            common_chars = ["a", "e", "i", "o", "u", "t", "n", "s", "r", "h"]
 
         # Generate mock predictions
         predictions = []
@@ -845,10 +831,7 @@ class HandwritingRecognizer:
 
         return predictions
 
-    def get_confidence_scores(
-        self,
-        result: HandwritingResult
-    ) -> Dict[str, Any]:
+    def get_confidence_scores(self, result: HandwritingResult) -> Dict[str, Any]:
         """
         Get detailed confidence scores for recognition result.
 
@@ -864,7 +847,7 @@ class HandwritingRecognizer:
                 "per_word": [],
                 "per_character": [],
                 "high_confidence_ratio": 0.0,
-                "low_confidence_count": 0
+                "low_confidence_count": 0,
             }
 
         per_word = []
@@ -873,16 +856,10 @@ class HandwritingRecognizer:
         low_conf_count = 0
 
         for word in result.words:
-            per_word.append({
-                "text": word.text,
-                "confidence": word.confidence
-            })
+            per_word.append({"text": word.text, "confidence": word.confidence})
 
             for char in word.characters:
-                per_char.append({
-                    "character": char.character,
-                    "confidence": char.confidence
-                })
+                per_char.append({"character": char.character, "confidence": char.confidence})
 
                 if char.confidence >= self.high_confidence_threshold:
                     high_conf_count += 1
@@ -898,7 +875,7 @@ class HandwritingRecognizer:
             "per_character": per_char,
             "high_confidence_ratio": high_conf_ratio,
             "low_confidence_count": low_conf_count,
-            "total_characters": total_chars
+            "total_characters": total_chars,
         }
 
     def _detect_dominant_style(self, words: List[HandwritingWord]) -> HandwritingStyle:
@@ -927,14 +904,14 @@ class HandwritingRecognizer:
         """
         # Apply common math corrections
         corrections = {
-            'x': '×',  # Common confusion
-            'X': '×',
-            '/': '÷',
-            'O': '0',
-            'I': '1',
-            'l': '1',
-            'S': '5',
-            'Z': '2'
+            "x": "×",  # Common confusion
+            "X": "×",
+            "/": "÷",
+            "O": "0",
+            "I": "1",
+            "l": "1",
+            "S": "5",
+            "Z": "2",
         }
 
         for word in result.words:

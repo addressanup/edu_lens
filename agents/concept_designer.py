@@ -11,10 +11,10 @@ This agent handles Phase 1 of the orchestration pipeline:
 from typing import Any, Dict, List, Optional
 
 from agents.base_agent import (
-    BaseAgent,
     AgentCapability,
     AgentContext,
     AgentResult,
+    BaseAgent,
 )
 
 
@@ -90,99 +90,105 @@ class ConceptDesignerAgent(BaseAgent):
 
         # Add any existing requirements
         if context.input_data.get("requirements"):
-            prompt_parts.extend([
-                "## Initial Requirements",
-                str(context.input_data["requirements"]),
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Initial Requirements",
+                    str(context.input_data["requirements"]),
+                    "",
+                ]
+            )
 
         # Add constraints
         if context.constraints:
-            prompt_parts.extend([
-                "## Constraints",
-                str(context.constraints),
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Constraints",
+                    str(context.constraints),
+                    "",
+                ]
+            )
 
         # Add the request
-        prompt_parts.extend([
-            "## Required Output",
-            "",
-            "Please provide a comprehensive project specification in JSON format with the following structure:",
-            "",
-            "```json",
-            "{",
-            '  "project_overview": {',
-            '    "name": "Project name",',
-            '    "description": "Brief description",',
-            '    "objectives": ["objective1", "objective2"],',
-            '    "scope": "Project scope definition"',
-            "  },",
-            '  "requirements": [',
-            "    {",
-            '      "id": "REQ-001",',
-            '      "type": "functional|non-functional",',
-            '      "priority": "high|medium|low",',
-            '      "description": "Requirement description",',
-            '      "acceptance_criteria": ["criterion1", "criterion2"]',
-            "    }",
-            "  ],",
-            '  "architecture": {',
-            '    "pattern": "microservices|monolith|serverless",',
-            '    "components": [',
-            "      {",
-            '        "name": "Component name",',
-            '        "responsibility": "What it does",',
-            '        "interfaces": ["interface1"]',
-            "      }",
-            "    ],",
-            '    "data_flow": "Description of data flow",',
-            '    "integrations": ["external systems"]',
-            "  },",
-            '  "technology_stack": {',
-            '    "backend": {',
-            '      "language": "Python/Node.js/etc",',
-            '      "framework": "Framework name",',
-            '      "rationale": "Why this choice"',
-            "    },",
-            '    "frontend": {',
-            '      "framework": "React/Vue/etc",',
-            '      "rationale": "Why this choice"',
-            "    },",
-            '    "database": {',
-            '      "type": "PostgreSQL/MongoDB/etc",',
-            '      "rationale": "Why this choice"',
-            "    },",
-            '    "infrastructure": {',
-            '      "cloud": "AWS/GCP/Azure",',
-            '      "services": ["service1", "service2"]',
-            "    }",
-            "  },",
-            '  "deliverables": [',
-            "    {",
-            '      "name": "Deliverable name",',
-            '      "description": "What it includes",',
-            '      "dependencies": ["dep1"]',
-            "    }",
-            "  ],",
-            '  "risks": [',
-            "    {",
-            '      "id": "RISK-001",',
-            '      "description": "Risk description",',
-            '      "probability": "high|medium|low",',
-            '      "impact": "high|medium|low",',
-            '      "mitigation": "How to mitigate"',
-            "    }",
-            "  ],",
-            '  "acceptance_criteria": [',
-            '    "Criterion 1",',
-            '    "Criterion 2"',
-            "  ]",
-            "}",
-            "```",
-            "",
-            "Ensure your response is valid JSON and covers all aspects thoroughly.",
-        ])
+        prompt_parts.extend(
+            [
+                "## Required Output",
+                "",
+                "Please provide a comprehensive project specification in JSON format with the following structure:",
+                "",
+                "```json",
+                "{",
+                '  "project_overview": {',
+                '    "name": "Project name",',
+                '    "description": "Brief description",',
+                '    "objectives": ["objective1", "objective2"],',
+                '    "scope": "Project scope definition"',
+                "  },",
+                '  "requirements": [',
+                "    {",
+                '      "id": "REQ-001",',
+                '      "type": "functional|non-functional",',
+                '      "priority": "high|medium|low",',
+                '      "description": "Requirement description",',
+                '      "acceptance_criteria": ["criterion1", "criterion2"]',
+                "    }",
+                "  ],",
+                '  "architecture": {',
+                '    "pattern": "microservices|monolith|serverless",',
+                '    "components": [',
+                "      {",
+                '        "name": "Component name",',
+                '        "responsibility": "What it does",',
+                '        "interfaces": ["interface1"]',
+                "      }",
+                "    ],",
+                '    "data_flow": "Description of data flow",',
+                '    "integrations": ["external systems"]',
+                "  },",
+                '  "technology_stack": {',
+                '    "backend": {',
+                '      "language": "Python/Node.js/etc",',
+                '      "framework": "Framework name",',
+                '      "rationale": "Why this choice"',
+                "    },",
+                '    "frontend": {',
+                '      "framework": "React/Vue/etc",',
+                '      "rationale": "Why this choice"',
+                "    },",
+                '    "database": {',
+                '      "type": "PostgreSQL/MongoDB/etc",',
+                '      "rationale": "Why this choice"',
+                "    },",
+                '    "infrastructure": {',
+                '      "cloud": "AWS/GCP/Azure",',
+                '      "services": ["service1", "service2"]',
+                "    }",
+                "  },",
+                '  "deliverables": [',
+                "    {",
+                '      "name": "Deliverable name",',
+                '      "description": "What it includes",',
+                '      "dependencies": ["dep1"]',
+                "    }",
+                "  ],",
+                '  "risks": [',
+                "    {",
+                '      "id": "RISK-001",',
+                '      "description": "Risk description",',
+                '      "probability": "high|medium|low",',
+                '      "impact": "high|medium|low",',
+                '      "mitigation": "How to mitigate"',
+                "    }",
+                "  ],",
+                '  "acceptance_criteria": [',
+                '    "Criterion 1",',
+                '    "Criterion 2"',
+                "  ]",
+                "}",
+                "```",
+                "",
+                "Ensure your response is valid JSON and covers all aspects thoroughly.",
+            ]
+        )
 
         return "\n".join(prompt_parts)
 
@@ -206,6 +212,7 @@ class ConceptDesignerAgent(BaseAgent):
             # If it has a text/content field, try to parse it
             if "text" in response:
                 import json
+
                 try:
                     # Try to extract JSON from the text
                     text = response["text"]

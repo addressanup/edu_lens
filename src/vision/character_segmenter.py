@@ -16,10 +16,11 @@ Author: Vision Processing Agent (VIS-001)
 Target: Handle varied child handwriting styles
 """
 
-import numpy as np
-from typing import List, Tuple, Optional, Dict, Any
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     import cv2
@@ -42,6 +43,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Segment:
     """Represents a segmented region (character or word)."""
+
     x: int
     y: int
     width: int
@@ -58,7 +60,7 @@ class Segment:
             "width": self.width,
             "height": self.height,
             "segment_type": self.segment_type,
-            "confidence": self.confidence
+            "confidence": self.confidence,
         }
 
     def get_bbox(self) -> Tuple[int, int, int, int]:
@@ -69,6 +71,7 @@ class Segment:
 @dataclass
 class SegmentationResult:
     """Complete segmentation result."""
+
     lines: List[Segment] = field(default_factory=list)
     words: List[Segment] = field(default_factory=list)
     characters: List[Segment] = field(default_factory=list)
@@ -80,7 +83,7 @@ class SegmentationResult:
             "lines": [line.to_dict() for line in self.lines],
             "words": [word.to_dict() for word in self.words],
             "characters": [char.to_dict() for char in self.characters],
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -140,7 +143,7 @@ class CharacterSegmenter:
         image: np.ndarray,
         segment_lines: bool = True,
         segment_words: bool = True,
-        segment_characters: bool = True
+        segment_characters: bool = True,
     ) -> SegmentationResult:
         """
         Perform complete segmentation (lines, words, characters).
@@ -175,7 +178,7 @@ class CharacterSegmenter:
             if result.lines:
                 # Segment words within each line
                 for line in result.lines:
-                    line_image = binary[line.y:line.y+line.height, line.x:line.x+line.width]
+                    line_image = binary[line.y : line.y + line.height, line.x : line.x + line.width]
                     words = self.segment_words(line_image)
                     # Adjust coordinates to global space
                     for word in words:
@@ -192,7 +195,7 @@ class CharacterSegmenter:
             if result.words:
                 # Segment characters within each word
                 for word in result.words:
-                    word_image = binary[word.y:word.y+word.height, word.x:word.x+word.width]
+                    word_image = binary[word.y : word.y + word.height, word.x : word.x + word.width]
                     chars = self.segment_characters(word_image)
                     # Adjust coordinates to global space
                     for char in chars:
@@ -209,7 +212,7 @@ class CharacterSegmenter:
             "image_shape": image.shape,
             "num_lines": len(result.lines),
             "num_words": len(result.words),
-            "num_characters": len(result.characters)
+            "num_characters": len(result.characters),
         }
 
         return result
@@ -246,9 +249,7 @@ class CharacterSegmenter:
             if kernel_size % 2 == 0:
                 kernel_size += 1
             h_projection_smooth = cv2.GaussianBlur(
-                h_projection.reshape(-1, 1).astype(np.float32),
-                (1, kernel_size),
-                0
+                h_projection.reshape(-1, 1).astype(np.float32), (1, kernel_size), 0
             ).flatten()
 
             # Find valleys (spaces between lines)
@@ -270,7 +271,7 @@ class CharacterSegmenter:
                             y=line_start,
                             width=image.shape[1],
                             height=i - line_start,
-                            segment_type="line"
+                            segment_type="line",
                         )
                         lines.append(line)
                     in_line = False
@@ -282,7 +283,7 @@ class CharacterSegmenter:
                     y=line_start,
                     width=image.shape[1],
                     height=image.shape[0] - line_start,
-                    segment_type="line"
+                    segment_type="line",
                 )
                 lines.append(line)
 
@@ -338,7 +339,7 @@ class CharacterSegmenter:
                     char_widths.append(i - char_start)
                     in_char = False
                 elif value == 0 and not in_char:
-                    if i > 0 and v_projection[i-1] == 0:
+                    if i > 0 and v_projection[i - 1] == 0:
                         gaps.append(i)
 
             # Calculate adaptive spacing threshold
@@ -393,7 +394,7 @@ class CharacterSegmenter:
                             y=y_start,
                             width=content_end - content_start,
                             height=y_end - y_start,
-                            segment_type="word"
+                            segment_type="word",
                         )
                         words.append(word)
 
@@ -478,13 +479,7 @@ class CharacterSegmenter:
                 if w < 3 or h < 5:
                     continue
 
-                char = Segment(
-                    x=x,
-                    y=y,
-                    width=w,
-                    height=h,
-                    segment_type="character"
-                )
+                char = Segment(x=x, y=y, width=w, height=h, segment_type="character")
                 characters.append(char)
 
             return characters
@@ -537,7 +532,7 @@ class CharacterSegmenter:
                                 y=y_start,
                                 width=i - char_start,
                                 height=y_end - y_start,
-                                segment_type="character"
+                                segment_type="character",
                             )
                             characters.append(char)
 
@@ -558,7 +553,7 @@ class CharacterSegmenter:
                         y=y_start,
                         width=len(v_projection) - char_start,
                         height=y_end - y_start,
-                        segment_type="character"
+                        segment_type="character",
                     )
                     characters.append(char)
 
@@ -569,9 +564,7 @@ class CharacterSegmenter:
             return []
 
     def detect_word_boundaries(
-        self,
-        image: np.ndarray,
-        characters: List[Segment]
+        self, image: np.ndarray, characters: List[Segment]
     ) -> List[Tuple[int, int]]:
         """
         Detect word boundaries from character segments.
@@ -646,21 +639,12 @@ class CharacterSegmenter:
 
         # Apply adaptive thresholding
         binary = cv2.adaptiveThreshold(
-            gray,
-            255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY,
-            11,
-            2
+            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
         )
 
         return binary
 
-    def refine_segmentation(
-        self,
-        segments: List[Segment],
-        image: np.ndarray
-    ) -> List[Segment]:
+    def refine_segmentation(self, segments: List[Segment], image: np.ndarray) -> List[Segment]:
         """
         Refine segmentation by merging or splitting segments.
 
@@ -691,7 +675,9 @@ class CharacterSegmenter:
 
                     # Merge if very close and similar height
                     gap = next_seg.x - (current.x + current.width)
-                    height_ratio = min(current.height, next_seg.height) / max(current.height, next_seg.height)
+                    height_ratio = min(current.height, next_seg.height) / max(
+                        current.height, next_seg.height
+                    )
 
                     if gap < 5 and height_ratio > 0.7:
                         # Merge segments
@@ -699,8 +685,9 @@ class CharacterSegmenter:
                             x=current.x,
                             y=min(current.y, next_seg.y),
                             width=(next_seg.x + next_seg.width) - current.x,
-                            height=max(current.y + current.height, next_seg.y + next_seg.height) - min(current.y, next_seg.y),
-                            segment_type=current.segment_type
+                            height=max(current.y + current.height, next_seg.y + next_seg.height)
+                            - min(current.y, next_seg.y),
+                            segment_type=current.segment_type,
                         )
                         refined.append(merged)
                         i += 2

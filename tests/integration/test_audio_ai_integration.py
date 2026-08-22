@@ -16,10 +16,10 @@ import numpy as np
 import pytest
 
 from src.integration.voice_to_ai_bridge import (
-    VoiceToAIBridge,
-    VoiceQuery,
     QueryIntent,
     SpeechResponse,
+    VoiceQuery,
+    VoiceToAIBridge,
 )
 
 

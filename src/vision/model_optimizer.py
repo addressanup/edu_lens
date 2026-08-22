@@ -15,16 +15,17 @@ Author: Vision Processing Agent (VIS-001)
 
 import logging
 import time
-from pathlib import Path
-from typing import Dict, Any, Optional, Union, Tuple, List
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 
 try:
     import torch
     import torch.nn as nn
-    from torch.quantization import quantize_dynamic, quantize_static, prepare, convert
+    from torch.quantization import convert, prepare, quantize_dynamic, quantize_static
 except ImportError:
     torch = None
     nn = None
@@ -49,6 +50,7 @@ logger = logging.getLogger(__name__)
 
 class QuantizationType(Enum):
     """Supported quantization types."""
+
     INT8 = "int8"
     FP16 = "fp16"
     DYNAMIC = "dynamic"
@@ -57,6 +59,7 @@ class QuantizationType(Enum):
 
 class ModelFramework(Enum):
     """Supported model frameworks."""
+
     PYTORCH = "pytorch"
     TENSORFLOW = "tensorflow"
     ONNX = "onnx"
@@ -64,6 +67,7 @@ class ModelFramework(Enum):
 
 class DeviceType(Enum):
     """Target device types."""
+
     ARM_CPU = "arm_cpu"
     X86_CPU = "x86_cpu"
     GPU = "gpu"
@@ -73,6 +77,7 @@ class DeviceType(Enum):
 @dataclass
 class OptimizationConfig:
     """Configuration for model optimization."""
+
     quantization_type: QuantizationType = QuantizationType.INT8
     target_device: DeviceType = DeviceType.ARM_CPU
     max_memory_mb: int = 500
@@ -94,13 +99,14 @@ class OptimizationConfig:
             "min_accuracy_threshold": self.min_accuracy_threshold,
             "enable_pruning": self.enable_pruning,
             "pruning_ratio": self.pruning_ratio,
-            "enable_operator_fusion": self.enable_operator_fusion
+            "enable_operator_fusion": self.enable_operator_fusion,
         }
 
 
 @dataclass
 class BenchmarkResult:
     """Results from model benchmarking."""
+
     avg_inference_time_ms: float
     min_inference_time_ms: float
     max_inference_time_ms: float
@@ -122,7 +128,7 @@ class BenchmarkResult:
             "model_size_mb": self.model_size_mb,
             "throughput_samples_per_sec": self.throughput_samples_per_sec,
             "accuracy": self.accuracy,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -150,7 +156,7 @@ class ModelOptimizer:
     def __init__(
         self,
         config: Optional[OptimizationConfig] = None,
-        framework: ModelFramework = ModelFramework.PYTORCH
+        framework: ModelFramework = ModelFramework.PYTORCH,
     ):
         """
         Initialize the model optimizer.
@@ -185,15 +191,13 @@ class ModelOptimizer:
             )
 
         if onnx is None or ort is None:
-            logger.warning(
-                "ONNX not available. Install with: pip install onnx onnxruntime"
-            )
+            logger.warning("ONNX not available. Install with: pip install onnx onnxruntime")
 
     def quantize_model(
         self,
         model: Any,
         calibration_data: Optional[Any] = None,
-        quantization_type: Optional[QuantizationType] = None
+        quantization_type: Optional[QuantizationType] = None,
     ) -> Any:
         """
         Quantize model to reduce memory footprint and improve inference speed.
@@ -225,10 +229,7 @@ class ModelOptimizer:
             raise ValueError(f"Quantization not supported for {self.framework.value}")
 
     def _quantize_pytorch_model(
-        self,
-        model: Any,
-        calibration_data: Optional[Any],
-        quant_type: QuantizationType
+        self, model: Any, calibration_data: Optional[Any], quant_type: QuantizationType
     ) -> Any:
         """Quantize PyTorch model."""
         if torch is None:
@@ -240,9 +241,7 @@ class ModelOptimizer:
             if quant_type == QuantizationType.DYNAMIC:
                 # Dynamic quantization (good for LSTMs, RNNs)
                 quantized_model = quantize_dynamic(
-                    model,
-                    {nn.Linear, nn.LSTM, nn.GRU},
-                    dtype=torch.qint8
+                    model, {nn.Linear, nn.LSTM, nn.GRU}, dtype=torch.qint8
                 )
                 logger.info("Applied dynamic INT8 quantization")
 
@@ -252,7 +251,7 @@ class ModelOptimizer:
                     raise ValueError("Calibration data required for static quantization")
 
                 # Prepare model for quantization
-                model.qconfig = torch.quantization.get_default_qconfig('fbgemm')
+                model.qconfig = torch.quantization.get_default_qconfig("fbgemm")
                 prepared_model = prepare(model)
 
                 # Calibrate with sample data
@@ -280,10 +279,7 @@ class ModelOptimizer:
             raise
 
     def _quantize_tensorflow_model(
-        self,
-        model: Any,
-        calibration_data: Optional[Any],
-        quant_type: QuantizationType
+        self, model: Any, calibration_data: Optional[Any], quant_type: QuantizationType
     ) -> Any:
         """Quantize TensorFlow model."""
         if tf is None:
@@ -302,9 +298,7 @@ class ModelOptimizer:
                             yield [data]
 
                     converter.representative_dataset = representative_dataset
-                    converter.target_spec.supported_ops = [
-                        tf.lite.OpsSet.TFLITE_BUILTINS_INT8
-                    ]
+                    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
                     converter.inference_input_type = tf.int8
                     converter.inference_output_type = tf.int8
 
@@ -328,10 +322,7 @@ class ModelOptimizer:
             raise
 
     def prune_model(
-        self,
-        model: Any,
-        pruning_ratio: Optional[float] = None,
-        preserve_accuracy: bool = True
+        self, model: Any, pruning_ratio: Optional[float] = None, preserve_accuracy: bool = True
     ) -> Any:
         """
         Prune model by removing unnecessary weights.
@@ -358,12 +349,7 @@ class ModelOptimizer:
         else:
             raise ValueError(f"Pruning not supported for {self.framework.value}")
 
-    def _prune_pytorch_model(
-        self,
-        model: Any,
-        ratio: float,
-        preserve_accuracy: bool
-    ) -> Any:
+    def _prune_pytorch_model(self, model: Any, ratio: float, preserve_accuracy: bool) -> Any:
         """Prune PyTorch model."""
         if torch is None:
             raise ImportError("PyTorch not available")
@@ -374,9 +360,9 @@ class ModelOptimizer:
             # Apply magnitude-based pruning to all conv and linear layers
             for name, module in model.named_modules():
                 if isinstance(module, (nn.Conv2d, nn.Linear)):
-                    prune.l1_unstructured(module, name='weight', amount=ratio)
+                    prune.l1_unstructured(module, name="weight", amount=ratio)
                     # Make pruning permanent
-                    prune.remove(module, 'weight')
+                    prune.remove(module, "weight")
 
             logger.info(f"Pruned {ratio*100}% of model weights")
             return model
@@ -385,12 +371,7 @@ class ModelOptimizer:
             logger.error(f"PyTorch pruning failed: {e}")
             raise
 
-    def _prune_tensorflow_model(
-        self,
-        model: Any,
-        ratio: float,
-        preserve_accuracy: bool
-    ) -> Any:
+    def _prune_tensorflow_model(self, model: Any, ratio: float, preserve_accuracy: bool) -> Any:
         """Prune TensorFlow model."""
         if tf is None:
             raise ImportError("TensorFlow not available")
@@ -400,19 +381,13 @@ class ModelOptimizer:
 
             # Define pruning schedule
             pruning_params = {
-                'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
-                    initial_sparsity=0.0,
-                    final_sparsity=ratio,
-                    begin_step=0,
-                    end_step=1000
+                "pruning_schedule": tfmot.sparsity.keras.PolynomialDecay(
+                    initial_sparsity=0.0, final_sparsity=ratio, begin_step=0, end_step=1000
                 )
             }
 
             # Apply pruning
-            pruned_model = tfmot.sparsity.keras.prune_low_magnitude(
-                model,
-                **pruning_params
-            )
+            pruned_model = tfmot.sparsity.keras.prune_low_magnitude(model, **pruning_params)
 
             logger.info(f"Configured TensorFlow model for {ratio*100}% pruning")
             return pruned_model
@@ -433,7 +408,7 @@ class ModelOptimizer:
         input_shape: Tuple[int, ...],
         output_path: Union[str, Path],
         opset_version: int = 13,
-        optimize: bool = True
+        optimize: bool = True,
     ) -> str:
         """
         Convert model to ONNX format for cross-platform deployment.
@@ -461,13 +436,9 @@ class ModelOptimizer:
         logger.info(f"Converting model to ONNX format...")
 
         if self.framework == ModelFramework.PYTORCH:
-            self._convert_pytorch_to_onnx(
-                model, input_shape, output_path, opset_version
-            )
+            self._convert_pytorch_to_onnx(model, input_shape, output_path, opset_version)
         elif self.framework == ModelFramework.TENSORFLOW:
-            self._convert_tensorflow_to_onnx(
-                model, input_shape, output_path, opset_version
-            )
+            self._convert_tensorflow_to_onnx(model, input_shape, output_path, opset_version)
         else:
             raise ValueError(f"ONNX conversion not supported for {self.framework.value}")
 
@@ -479,11 +450,7 @@ class ModelOptimizer:
         return str(output_path)
 
     def _convert_pytorch_to_onnx(
-        self,
-        model: Any,
-        input_shape: Tuple[int, ...],
-        output_path: Path,
-        opset_version: int
+        self, model: Any, input_shape: Tuple[int, ...], output_path: Path, opset_version: int
     ) -> None:
         """Convert PyTorch model to ONNX."""
         if torch is None:
@@ -503,12 +470,9 @@ class ModelOptimizer:
                 export_params=True,
                 opset_version=opset_version,
                 do_constant_folding=True,
-                input_names=['input'],
-                output_names=['output'],
-                dynamic_axes={
-                    'input': {0: 'batch_size'},
-                    'output': {0: 'batch_size'}
-                }
+                input_names=["input"],
+                output_names=["output"],
+                dynamic_axes={"input": {0: "batch_size"}, "output": {0: "batch_size"}},
             )
 
             logger.info("PyTorch model converted to ONNX")
@@ -518,11 +482,7 @@ class ModelOptimizer:
             raise
 
     def _convert_tensorflow_to_onnx(
-        self,
-        model: Any,
-        input_shape: Tuple[int, ...],
-        output_path: Path,
-        opset_version: int
+        self, model: Any, input_shape: Tuple[int, ...], output_path: Path, opset_version: int
     ) -> None:
         """Convert TensorFlow model to ONNX."""
         try:
@@ -531,9 +491,7 @@ class ModelOptimizer:
             # Convert TensorFlow model to ONNX
             spec = (tf.TensorSpec(input_shape, tf.float32, name="input"),)
             onnx_model, _ = tf2onnx.convert.from_keras(
-                model,
-                input_signature=spec,
-                opset=opset_version
+                model, input_signature=spec, opset=opset_version
             )
 
             # Save ONNX model
@@ -543,9 +501,7 @@ class ModelOptimizer:
             logger.info("TensorFlow model converted to ONNX")
 
         except ImportError:
-            logger.error(
-                "tf2onnx not available. Install with: pip install tf2onnx"
-            )
+            logger.error("tf2onnx not available. Install with: pip install tf2onnx")
             raise
         except Exception as e:
             logger.error(f"TensorFlow to ONNX conversion failed: {e}")
@@ -566,9 +522,9 @@ class ModelOptimizer:
 
             optimized_model = optimize_model(
                 str(model_path),
-                model_type='bert',  # Generic optimization
+                model_type="bert",  # Generic optimization
                 num_heads=0,
-                hidden_size=0
+                hidden_size=0,
             )
 
             # Save optimized model
@@ -582,11 +538,7 @@ class ModelOptimizer:
             logger.warning(f"ONNX optimization failed: {e}")
 
     def benchmark_model(
-        self,
-        model: Any,
-        input_data: Any,
-        num_iterations: int = 100,
-        warmup_iterations: int = 10
+        self, model: Any, input_data: Any, num_iterations: int = 100, warmup_iterations: int = 10
     ) -> BenchmarkResult:
         """
         Benchmark model performance.
@@ -652,8 +604,8 @@ class ModelOptimizer:
             metadata={
                 "num_iterations": num_iterations,
                 "warmup_iterations": warmup_iterations,
-                "framework": self.framework.value
-            }
+                "framework": self.framework.value,
+            },
         )
 
         logger.info(
@@ -687,6 +639,7 @@ class ModelOptimizer:
             try:
                 # Save to temporary buffer and get size
                 import io
+
                 buffer = io.BytesIO()
                 torch.save(model.state_dict(), buffer)
                 size_bytes = buffer.tell()
@@ -696,11 +649,7 @@ class ModelOptimizer:
 
         return 0.0
 
-    def optimize_for_device(
-        self,
-        model: Any,
-        device_type: Optional[DeviceType] = None
-    ) -> Any:
+    def optimize_for_device(self, model: Any, device_type: Optional[DeviceType] = None) -> Any:
         """
         Apply device-specific optimizations.
 
@@ -749,7 +698,7 @@ class ModelOptimizer:
         model: Any,
         input_shape: Tuple[int, ...],
         output_path: Union[str, Path],
-        calibration_data: Optional[Any] = None
+        calibration_data: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
         Run complete optimization pipeline.
@@ -773,11 +722,7 @@ class ModelOptimizer:
         logger.info("Starting optimization pipeline...")
         start_time = time.time()
 
-        results = {
-            "original_model": {},
-            "optimized_model": {},
-            "optimizations_applied": []
-        }
+        results = {"original_model": {}, "optimized_model": {}, "optimizations_applied": []}
 
         # Benchmark original model
         logger.info("Benchmarking original model...")
@@ -804,7 +749,9 @@ class ModelOptimizer:
         # 2. Quantization
         logger.info("Applying quantization...")
         optimized_model = self.quantize_model(optimized_model, calibration_data)
-        results["optimizations_applied"].append(f"quantization_{self.config.quantization_type.value}")
+        results["optimizations_applied"].append(
+            f"quantization_{self.config.quantization_type.value}"
+        )
 
         # 3. Device-specific optimizations
         logger.info("Applying device-specific optimizations...")
@@ -818,7 +765,7 @@ class ModelOptimizer:
                 optimized_model,
                 input_shape,
                 output_path,
-                optimize=self.config.enable_operator_fusion
+                optimize=self.config.enable_operator_fusion,
             )
             results["onnx_model_path"] = onnx_path
             results["optimizations_applied"].append("onnx_conversion")
@@ -846,7 +793,7 @@ class ModelOptimizer:
             results["improvements"] = {
                 "speedup": f"{speedup:.2f}x",
                 "size_reduction": f"{size_reduction:.1f}%",
-                "inference_time_reduction_ms": orig_time - opt_time
+                "inference_time_reduction_ms": orig_time - opt_time,
             }
 
         total_time = time.time() - start_time

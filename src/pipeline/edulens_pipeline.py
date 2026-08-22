@@ -19,28 +19,34 @@ from enum import Enum, auto
 from typing import Any, Optional
 from uuid import uuid4
 
-from ..audio.audio_pipeline import AudioPipeline, PipelineConfig as AudioConfig, PipelineState as AudioState
-from ..ai.tutor_inference import TutorEngine, ResponseType
+from ..ai.tutor_inference import ResponseType, TutorEngine
+from ..audio.audio_pipeline import (
+    AudioPipeline,
+)
+from ..audio.audio_pipeline import PipelineConfig as AudioConfig
+from ..audio.audio_pipeline import PipelineState as AudioState
 from ..core.component_manager import Component, ComponentHealth, ComponentState
 from ..core.event_bus import Event, EventBus, EventType, get_event_bus
-from ..integration.vision_to_ai_bridge import VisionToAIBridge, VisualContext
-from ..integration.voice_to_ai_bridge import VoiceToAIBridge, VoiceQuery, SpeechResponse
 from ..integration.context_builder import ContextBuilder
+from ..integration.vision_to_ai_bridge import VisionToAIBridge, VisualContext
+from ..integration.voice_to_ai_bridge import SpeechResponse, VoiceQuery, VoiceToAIBridge
 
 logger = logging.getLogger(__name__)
 
 
 class PipelineMode(Enum):
     """Operating modes for the pipeline."""
-    FULL = auto()          # Complete vision + audio + AI
-    AUDIO_ONLY = auto()    # Audio interaction without vision
-    VISION_ONLY = auto()   # Vision processing without audio
-    MANUAL = auto()        # Manual control for testing
+
+    FULL = auto()  # Complete vision + audio + AI
+    AUDIO_ONLY = auto()  # Audio interaction without vision
+    VISION_ONLY = auto()  # Vision processing without audio
+    MANUAL = auto()  # Manual control for testing
 
 
 @dataclass
 class PipelineStats:
     """Statistics for pipeline operations."""
+
     sessions_started: int = 0
     frames_processed: int = 0
     queries_handled: int = 0
@@ -105,9 +111,7 @@ class EduLensPipeline(Component):
     """
 
     def __init__(
-        self,
-        config: Optional[PipelineConfig] = None,
-        event_bus: Optional[EventBus] = None
+        self, config: Optional[PipelineConfig] = None, event_bus: Optional[EventBus] = None
     ) -> None:
         """
         Initialize the EduLens pipeline.
@@ -167,10 +171,7 @@ class EduLensPipeline(Component):
                 logger.info("Audio pipeline initialized")
 
             # Initialize AI tutor engine
-            self._tutor_engine = TutorEngine(
-                model_name=self.config.ai_model,
-                config_path=None
-            )
+            self._tutor_engine = TutorEngine(model_name=self.config.ai_model, config_path=None)
             logger.info(f"Tutor engine initialized with {self.config.ai_model}")
 
             # Initialize context builder
@@ -179,7 +180,9 @@ class EduLensPipeline(Component):
 
             # Subscribe to relevant events
             self.event_bus.subscribe(EventType.VISION_TEXT_DETECTED, self._on_vision_text_detected)
-            self.event_bus.subscribe(EventType.AUDIO_TRANSCRIPTION_READY, self._on_audio_transcription)
+            self.event_bus.subscribe(
+                EventType.AUDIO_TRANSCRIPTION_READY, self._on_audio_transcription
+            )
             self.event_bus.subscribe(EventType.AI_ERROR, self._on_ai_error)
 
             self._state = ComponentState.READY
@@ -212,10 +215,7 @@ class EduLensPipeline(Component):
                 Event(
                     event_type=EventType.SYSTEM_READY,
                     source=self.name,
-                    payload={
-                        "mode": self.config.mode.name,
-                        "student_id": self.config.student_id
-                    }
+                    payload={"mode": self.config.mode.name, "student_id": self.config.student_id},
                 )
             )
 
@@ -272,7 +272,9 @@ class EduLensPipeline(Component):
 
             # Check processing state
             if self._is_processing and len(self._pending_operations) > 10:
-                error_messages.append(f"Too many pending operations: {len(self._pending_operations)}")
+                error_messages.append(
+                    f"Too many pending operations: {len(self._pending_operations)}"
+                )
 
             # Collect metrics
             if self._start_time:
@@ -286,7 +288,7 @@ class EduLensPipeline(Component):
                 "responses_generated": self._stats.responses_generated,
                 "errors_encountered": self._stats.errors_encountered,
                 "uptime_seconds": self._stats.uptime_seconds,
-                "pending_operations": len(self._pending_operations)
+                "pending_operations": len(self._pending_operations),
             }
 
         except Exception as e:
@@ -297,7 +299,7 @@ class EduLensPipeline(Component):
             is_healthy=is_healthy,
             state=self._state,
             error_message="; ".join(error_messages) if error_messages else None,
-            metrics=metrics
+            metrics=metrics,
         )
 
     async def start_session(self, student_id: Optional[str] = None) -> str:
@@ -327,8 +329,8 @@ class EduLensPipeline(Component):
                 payload={
                     "session_id": session_id,
                     "student_id": self.config.student_id,
-                    "timestamp": datetime.utcnow().isoformat()
-                }
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             )
         )
 
@@ -339,7 +341,7 @@ class EduLensPipeline(Component):
         frame_data: Any,
         ocr_result: Optional[dict] = None,
         layout_result: Optional[dict] = None,
-        handwriting_result: Optional[dict] = None
+        handwriting_result: Optional[dict] = None,
     ) -> Optional[VisualContext]:
         """
         Process a camera frame through the vision pipeline.
@@ -363,7 +365,7 @@ class EduLensPipeline(Component):
             visual_context = self._vision_bridge.process_vision_output(
                 ocr_result=ocr_result or {},
                 layout_result=layout_result,
-                handwriting_result=handwriting_result
+                handwriting_result=handwriting_result,
             )
 
             # Store current visual context
@@ -384,8 +386,8 @@ class EduLensPipeline(Component):
                         "session_id": self._current_session_id,
                         "visual_context": visual_context.to_ai_prompt_context(),
                         "subject": visual_context.subject_area.value,
-                        "content_type": visual_context.content_type.name
-                    }
+                        "content_type": visual_context.content_type.name,
+                    },
                 )
             )
 
@@ -400,7 +402,7 @@ class EduLensPipeline(Component):
         self,
         student_query: Optional[str] = None,
         visual_context: Optional[VisualContext] = None,
-        response_type: Optional[ResponseType] = None
+        response_type: Optional[ResponseType] = None,
     ) -> Optional[dict[str, Any]]:
         """
         Generate AI tutoring response.
@@ -426,7 +428,7 @@ class EduLensPipeline(Component):
                     "age": self.config.student_age,
                     "grade": self.config.student_grade,
                     "subject": "general",
-                    "session_id": self._current_session_id
+                    "session_id": self._current_session_id,
                 }
 
                 # Add visual context if available
@@ -446,9 +448,7 @@ class EduLensPipeline(Component):
                 logger.info(f"Generating response for query: {query_text[:50]}...")
 
                 response = self._tutor_engine.generate_response(
-                    student_query=query_text,
-                    context=context,
-                    response_type=response_type
+                    student_query=query_text, context=context, response_type=response_type
                 )
 
                 self._stats.responses_generated += 1
@@ -466,8 +466,8 @@ class EduLensPipeline(Component):
                         payload={
                             "session_id": self._current_session_id,
                             "response": response["response"],
-                            "response_type": response["response_type"]
-                        }
+                            "response_type": response["response_type"],
+                        },
                     )
                 )
 
@@ -482,10 +482,7 @@ class EduLensPipeline(Component):
                     Event(
                         event_type=EventType.AI_ERROR,
                         source=self.name,
-                        payload={
-                            "session_id": self._current_session_id,
-                            "error": str(e)
-                        }
+                        payload={"session_id": self._current_session_id, "error": str(e)},
                     )
                 )
 
@@ -495,9 +492,7 @@ class EduLensPipeline(Component):
                 self._is_processing = False
 
     async def deliver_response(
-        self,
-        response_text: str,
-        response_type: str = "explanation"
+        self, response_text: str, response_type: str = "explanation"
     ) -> bool:
         """
         Deliver AI response via text-to-speech.
@@ -516,8 +511,7 @@ class EduLensPipeline(Component):
         try:
             # Prepare speech response
             speech_response = self._voice_bridge.prepare_speech_response(
-                ai_response=response_text,
-                response_type=response_type
+                ai_response=response_text, response_type=response_type
             )
 
             # Play through audio pipeline
@@ -533,8 +527,8 @@ class EduLensPipeline(Component):
                     payload={
                         "session_id": self._current_session_id,
                         "text": response_text,
-                        "tone": speech_response.tone
-                    }
+                        "tone": speech_response.tone,
+                    },
                 )
             )
 
@@ -546,9 +540,7 @@ class EduLensPipeline(Component):
             return False
 
     async def process_interaction(
-        self,
-        student_query: str,
-        visual_context: Optional[VisualContext] = None
+        self, student_query: str, visual_context: Optional[VisualContext] = None
     ) -> Optional[str]:
         """
         Process a complete interaction: query → AI → TTS.
@@ -563,8 +555,7 @@ class EduLensPipeline(Component):
         try:
             # Generate AI response
             response = await self.generate_response(
-                student_query=student_query,
-                visual_context=visual_context
+                student_query=student_query, visual_context=visual_context
             )
 
             if not response:
@@ -589,7 +580,7 @@ class EduLensPipeline(Component):
     async def _handle_audio_event(self, event: Any) -> None:
         """Handle events from audio pipeline."""
         try:
-            if hasattr(event, 'state'):
+            if hasattr(event, "state"):
                 logger.debug(f"Audio pipeline state: {event.state.value}")
 
         except Exception as e:
@@ -610,8 +601,7 @@ class EduLensPipeline(Component):
             if transcription and self._voice_bridge:
                 # Process voice input
                 voice_query = self._voice_bridge.process_voice_input(
-                    transcription=transcription,
-                    confidence=event.payload.get("confidence", 0.0)
+                    transcription=transcription, confidence=event.payload.get("confidence", 0.0)
                 )
 
                 self._current_voice_query = voice_query
@@ -623,7 +613,7 @@ class EduLensPipeline(Component):
                 task = asyncio.create_task(
                     self.process_interaction(
                         student_query=voice_query.transcription,
-                        visual_context=self._current_visual_context
+                        visual_context=self._current_visual_context,
                     )
                 )
                 self._pending_operations.add(task)
@@ -643,9 +633,7 @@ class EduLensPipeline(Component):
             logger.error(f"Error handling AI error event: {e}", exc_info=True)
 
 
-async def create_pipeline(
-    config: Optional[PipelineConfig] = None
-) -> EduLensPipeline:
+async def create_pipeline(config: Optional[PipelineConfig] = None) -> EduLensPipeline:
     """
     Create and initialize an EduLens pipeline.
 

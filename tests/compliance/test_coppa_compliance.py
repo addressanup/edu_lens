@@ -11,30 +11,30 @@ Task: SEC-001-T5 - COPPA Compliance Audit
 Last Updated: 2025-12-10
 """
 
-import pytest
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
-
-import sys
 import os
+import sys
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+import pytest
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../"))
 
 from src.privacy.coppa_validator import (
-    COPPAValidator,
-    ComplianceLevel,
     ComplianceCategory,
     ComplianceIssue,
+    ComplianceLevel,
     ComplianceReport,
+    COPPAValidator,
 )
 from src.privacy.data_handler import (
-    DataHandler,
-    DataClassification,
-    ConsentStatus,
-    ProcessingLocation,
     ConsentRecord,
+    ConsentStatus,
+    DataClassification,
+    DataHandler,
     DataItem,
+    ProcessingLocation,
 )
 
 
@@ -85,10 +85,7 @@ class TestDataCollectionValidation:
 
         # Should be CRITICAL violation
         assert level == ComplianceLevel.CRITICAL
-        assert any(
-            issue.category == ComplianceCategory.DATA_SECURITY
-            for issue in issues
-        )
+        assert any(issue.category == ComplianceCategory.DATA_SECURITY for issue in issues)
         assert any("prohibited location" in issue.description.lower() for issue in issues)
 
     def test_voice_data_not_stored(self):
@@ -161,14 +158,13 @@ class TestConsentValidation:
         level, issues = validator.validate_consent(
             parent_account_id="parent_123",
             child_pseudonym="student_1",
-            required_categories=[DataClassification.SENSITIVE_VISUAL]
+            required_categories=[DataClassification.SENSITIVE_VISUAL],
         )
 
         # Should be CRITICAL (no consent provided)
         assert level == ComplianceLevel.CRITICAL
         assert any(
-            "missing required parental consent" in issue.description.lower()
-            for issue in issues
+            "missing required parental consent" in issue.description.lower() for issue in issues
         )
 
     def test_valid_consent_compliant(self):
@@ -181,14 +177,14 @@ class TestConsentValidation:
             child_pseudonym="student_1",
             category=DataClassification.SENSITIVE_VISUAL,
             consent_method="CREDIT_CARD",
-            verification_method="STRIPE_VERIFICATION"
+            verification_method="STRIPE_VERIFICATION",
         )
 
         validator = COPPAValidator(handler)
         level, issues = validator.validate_consent(
             parent_account_id="parent_123",
             child_pseudonym="student_1",
-            required_categories=[DataClassification.SENSITIVE_VISUAL]
+            required_categories=[DataClassification.SENSITIVE_VISUAL],
         )
 
         # Should be COMPLIANT
@@ -222,7 +218,7 @@ class TestConsentValidation:
         level, issues = validator.validate_consent(
             parent_account_id="parent_123",
             child_pseudonym="student_1",
-            required_categories=[DataClassification.SENSITIVE_VISUAL]
+            required_categories=[DataClassification.SENSITIVE_VISUAL],
         )
 
         # Should detect expiration
@@ -238,20 +234,20 @@ class TestConsentValidation:
             child_pseudonym="student_1",
             category=DataClassification.SENSITIVE_VISUAL,
             consent_method="CREDIT_CARD",
-            verification_method="STRIPE_VERIFICATION"
+            verification_method="STRIPE_VERIFICATION",
         )
 
         handler.revoke_consent(
             parent_account_id="parent_123",
             child_pseudonym="student_1",
-            category=DataClassification.SENSITIVE_VISUAL
+            category=DataClassification.SENSITIVE_VISUAL,
         )
 
         validator = COPPAValidator(handler)
         level, issues = validator.validate_consent(
             parent_account_id="parent_123",
             child_pseudonym="student_1",
-            required_categories=[DataClassification.SENSITIVE_VISUAL]
+            required_categories=[DataClassification.SENSITIVE_VISUAL],
         )
 
         # Should detect revocation
@@ -285,7 +281,7 @@ class TestConsentValidation:
         level, issues = validator.validate_consent(
             parent_account_id="parent_123",
             child_pseudonym="student_1",
-            required_categories=[DataClassification.SENSITIVE_VISUAL]
+            required_categories=[DataClassification.SENSITIVE_VISUAL],
         )
 
         # Should flag non-compliant method
@@ -478,13 +474,12 @@ class TestComplianceReportGeneration:
             child_pseudonym="student_1",
             category=DataClassification.SENSITIVE_VISUAL,
             consent_method="CREDIT_CARD",
-            verification_method="STRIPE_VERIFICATION"
+            verification_method="STRIPE_VERIFICATION",
         )
 
         validator = COPPAValidator(handler)
         report = validator.generate_audit_report(
-            parent_account_id="parent_123",
-            child_pseudonym="student_1"
+            parent_account_id="parent_123", child_pseudonym="student_1"
         )
 
         # Validate report structure
@@ -509,6 +504,7 @@ class TestComplianceReportGeneration:
 
         # Should be valid JSON
         import json
+
         parsed = json.loads(json_str)
         assert "report_id" in parsed
         assert "overall_status" in parsed
@@ -552,7 +548,7 @@ class TestComplianceReportGeneration:
             child_pseudonym="student_1",
             category=DataClassification.SENSITIVE_VISUAL,
             consent_method="CREDIT_CARD",
-            verification_method="STRIPE_VERIFICATION"
+            verification_method="STRIPE_VERIFICATION",
         )
 
         handler.grant_consent(
@@ -560,7 +556,7 @@ class TestComplianceReportGeneration:
             child_pseudonym="student_1",
             category=DataClassification.VOICE_DATA,
             consent_method="CREDIT_CARD",
-            verification_method="STRIPE_VERIFICATION"
+            verification_method="STRIPE_VERIFICATION",
         )
 
         # Create compliant data items
@@ -576,16 +572,11 @@ class TestComplianceReportGeneration:
 
         validator = COPPAValidator(handler)
         report = validator.generate_audit_report(
-            parent_account_id="parent_123",
-            child_pseudonym="student_1",
-            data_items=compliant_items
+            parent_account_id="parent_123", child_pseudonym="student_1", data_items=compliant_items
         )
 
         # Should be compliant or have only warnings
-        assert report.overall_status in [
-            ComplianceLevel.COMPLIANT,
-            ComplianceLevel.WARNING
-        ]
+        assert report.overall_status in [ComplianceLevel.COMPLIANT, ComplianceLevel.WARNING]
         assert report.critical_issues == 0
 
 
@@ -600,7 +591,7 @@ class TestComplianceIssue:
             title="Missing consent",
             description="Parental consent not obtained",
             regulation="16 CFR 312.5",
-            recommendation="Obtain verifiable parental consent"
+            recommendation="Obtain verifiable parental consent",
         )
 
         assert issue.category == ComplianceCategory.CONSENT
@@ -615,7 +606,7 @@ class TestComplianceIssue:
             title="Data stored in wrong location",
             description="Sensitive data found in cloud storage",
             regulation="16 CFR 312.8",
-            recommendation="Move to volatile RAM immediately"
+            recommendation="Move to volatile RAM immediately",
         )
 
         issue_dict = issue.to_dict()
@@ -642,7 +633,7 @@ class TestIntegration:
             child_pseudonym="student_1",
             category=DataClassification.SENSITIVE_VISUAL,
             consent_method="CREDIT_CARD",
-            verification_method="STRIPE_VERIFICATION"
+            verification_method="STRIPE_VERIFICATION",
         )
 
         # 2. Create compliant data
@@ -673,14 +664,11 @@ class TestIntegration:
             parent_account_id="parent_123",
             child_pseudonym="student_1",
             data_items=data_items,
-            third_party_processors=processors
+            third_party_processors=processors,
         )
 
         # Should pass compliance
-        assert report.overall_status in [
-            ComplianceLevel.COMPLIANT,
-            ComplianceLevel.WARNING
-        ]
+        assert report.overall_status in [ComplianceLevel.COMPLIANT, ComplianceLevel.WARNING]
 
     def test_data_handler_coppa_validator_integration(self):
         """Test integration between DataHandler and COPPAValidator."""

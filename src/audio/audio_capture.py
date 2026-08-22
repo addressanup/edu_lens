@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AudioConfig:
     """Audio configuration parameters."""
+
     sample_rate: int = 16000  # Hz - standard for speech recognition
     channels: int = 1  # Mono
     chunk_size: int = 1024  # Samples per frame
@@ -92,10 +93,7 @@ class AudioBuffer:
             Numpy array of audio samples
         """
         with self._lock:
-            num_samples = min(
-                int(duration_seconds * self.sample_rate),
-                len(self._buffer)
-            )
+            num_samples = min(int(duration_seconds * self.sample_rate), len(self._buffer))
 
             if num_samples == 0:
                 return np.array([], dtype=np.float32)
@@ -147,7 +145,7 @@ class MicrophoneStream:
     def __init__(
         self,
         config: Optional[AudioConfig] = None,
-        callback: Optional[Callable[[np.ndarray], None]] = None
+        callback: Optional[Callable[[np.ndarray], None]] = None,
     ):
         """
         Initialize microphone stream.
@@ -165,8 +163,7 @@ class MicrophoneStream:
         self._lock = threading.Lock()
 
         self.buffer = AudioBuffer(
-            max_size=self.config.buffer_size,
-            sample_rate=self.config.sample_rate
+            max_size=self.config.buffer_size, sample_rate=self.config.sample_rate
         )
 
         logger.info(
@@ -196,7 +193,7 @@ class MicrophoneStream:
                     input=True,
                     input_device_index=device_index,
                     frames_per_buffer=self.config.chunk_size,
-                    stream_callback=self._audio_callback
+                    stream_callback=self._audio_callback,
                 )
 
                 self._is_streaming = True
@@ -220,11 +217,7 @@ class MicrophoneStream:
             logger.info("Stopped audio stream")
 
     def _audio_callback(
-        self,
-        in_data: bytes,
-        frame_count: int,
-        time_info: dict,
-        status_flags: int
+        self, in_data: bytes, frame_count: int, time_info: dict, status_flags: int
     ) -> tuple:
         """
         PyAudio callback for audio data.
@@ -270,7 +263,7 @@ class MicrophoneStream:
         try:
             default_device = self._pyaudio.get_default_input_device_info()
             logger.info(f"Using default input device: {default_device['name']}")
-            return default_device['index']
+            return default_device["index"]
         except Exception as e:
             logger.warning(f"Could not get default input device: {e}")
             return None
@@ -317,11 +310,7 @@ class AsyncMicrophoneStream:
     Enables async/await patterns for audio processing pipelines.
     """
 
-    def __init__(
-        self,
-        config: Optional[AudioConfig] = None,
-        queue_size: int = 100
-    ):
+    def __init__(self, config: Optional[AudioConfig] = None, queue_size: int = 100):
         """
         Initialize async microphone stream.
 
@@ -331,10 +320,7 @@ class AsyncMicrophoneStream:
         """
         self.config = config or AudioConfig()
         self._queue = asyncio.Queue(maxsize=queue_size)
-        self._stream = MicrophoneStream(
-            config=self.config,
-            callback=self._enqueue_audio
-        )
+        self._stream = MicrophoneStream(config=self.config, callback=self._enqueue_audio)
         self._loop = None
 
     def _enqueue_audio(self, audio_data: np.ndarray) -> None:
@@ -345,10 +331,7 @@ class AsyncMicrophoneStream:
             audio_data: Audio samples
         """
         if self._loop and not self._queue.full():
-            asyncio.run_coroutine_threadsafe(
-                self._queue.put(audio_data),
-                self._loop
-            )
+            asyncio.run_coroutine_threadsafe(self._queue.put(audio_data), self._loop)
 
     async def start(self) -> None:
         """Start the audio stream."""
@@ -379,11 +362,7 @@ class AsyncMicrophoneStream:
         return await self.read_chunk()
 
 
-def convert_audio_format(
-    audio_data: np.ndarray,
-    source_rate: int,
-    target_rate: int
-) -> np.ndarray:
+def convert_audio_format(audio_data: np.ndarray, source_rate: int, target_rate: int) -> np.ndarray:
     """
     Convert audio sample rate using linear interpolation.
 
@@ -423,7 +402,7 @@ def normalize_audio(audio_data: np.ndarray, target_db: float = -20.0) -> np.ndar
         return audio_data
 
     # Calculate current RMS
-    rms = np.sqrt(np.mean(audio_data ** 2))
+    rms = np.sqrt(np.mean(audio_data**2))
 
     if rms > 0:
         # Calculate scaling factor

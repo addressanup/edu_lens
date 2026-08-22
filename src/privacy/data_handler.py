@@ -9,15 +9,14 @@ Author: Security and Privacy Team (SEC-001)
 Last Updated: 2025-12-10
 """
 
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from enum import Enum
-from typing import Optional, Dict, Any, List, Set
-from hashlib import sha256
 import json
 import logging
 from abc import ABC, abstractmethod
-
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from hashlib import sha256
+from typing import Any, Dict, List, Optional, Set
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -256,16 +255,19 @@ class DataItem:
 
 class PrivacyViolationError(Exception):
     """Raised when a privacy policy violation is detected."""
+
     pass
 
 
 class ConsentRequiredError(Exception):
     """Raised when an operation requires parental consent that hasn't been granted."""
+
     pass
 
 
 class DataRetentionViolationError(Exception):
     """Raised when data exceeds retention policy limits."""
+
     pass
 
 
@@ -299,7 +301,7 @@ class DataHandler:
             retention=RetentionPolicy(
                 classification=DataClassification.PUBLIC,
                 max_retention_days=36500,  # 100 years (effectively unlimited)
-                description="Public information, no retention limit"
+                description="Public information, no retention limit",
             ),
             allowed_locations={
                 ProcessingLocation.EDGE_DEVICE,
@@ -318,7 +320,7 @@ class DataHandler:
             retention=RetentionPolicy(
                 classification=DataClassification.DEVICE_METADATA,
                 max_retention_days=365,
-                description="Device metadata, 1-year retention"
+                description="Device metadata, 1-year retention",
             ),
             allowed_locations={
                 ProcessingLocation.EDGE_DEVICE,
@@ -337,7 +339,7 @@ class DataHandler:
             retention=RetentionPolicy(
                 classification=DataClassification.ANONYMOUS_TELEMETRY,
                 max_retention_days=90,
-                description="Anonymized telemetry, 90-day retention maximum"
+                description="Anonymized telemetry, 90-day retention maximum",
             ),
             allowed_locations={
                 ProcessingLocation.EDGE_DEVICE,
@@ -356,7 +358,7 @@ class DataHandler:
             retention=RetentionPolicy(
                 classification=DataClassification.EDUCATIONAL_CONTENT,
                 max_retention_days=36500,  # Persistent until updated
-                description="Educational content, persistent storage"
+                description="Educational content, persistent storage",
             ),
             allowed_locations={
                 ProcessingLocation.EDGE_DEVICE,
@@ -373,7 +375,7 @@ class DataHandler:
             retention=RetentionPolicy(
                 classification=DataClassification.PARENTAL_ACCOUNT,
                 max_retention_days=1095 + 365,  # Account lifetime + 3 years
-                description="Parental account data, account + 3 years"
+                description="Parental account data, account + 3 years",
             ),
             allowed_locations={
                 ProcessingLocation.CLOUD_PRIVACY_GATEWAY,
@@ -392,7 +394,7 @@ class DataHandler:
                 classification=DataClassification.SENSITIVE_VISUAL,
                 max_retention_days=0,  # IMMEDIATE deletion
                 auto_purge_enabled=True,
-                description="Images NEVER stored, volatile RAM only"
+                description="Images NEVER stored, volatile RAM only",
             ),
             allowed_locations={
                 ProcessingLocation.VOLATILE_RAM,
@@ -411,7 +413,7 @@ class DataHandler:
                 classification=DataClassification.VOICE_DATA,
                 max_retention_days=0,  # IMMEDIATE deletion
                 auto_purge_enabled=True,
-                description="Voice data NEVER stored, secure enclave only"
+                description="Voice data NEVER stored, secure enclave only",
             ),
             allowed_locations={
                 ProcessingLocation.SECURE_ENCLAVE,
@@ -429,7 +431,7 @@ class DataHandler:
                 classification=DataClassification.LEARNING_INTERACTION,
                 max_retention_days=0,  # Session only (hours, not days)
                 auto_purge_enabled=True,
-                description="Session context, volatile RAM, cleared on sleep"
+                description="Session context, volatile RAM, cleared on sleep",
             ),
             allowed_locations={
                 ProcessingLocation.VOLATILE_RAM,
@@ -447,7 +449,7 @@ class DataHandler:
             retention=RetentionPolicy(
                 classification=DataClassification.CONSENT_METADATA,
                 max_retention_days=2555,  # 7 years (compliance requirement)
-                description="Consent records, 7-year retention for compliance"
+                description="Consent records, 7-year retention for compliance",
             ),
             allowed_locations={
                 ProcessingLocation.CLOUD_PRIVACY_GATEWAY,
@@ -460,7 +462,9 @@ class DataHandler:
             audit_all_access=True,
         )
 
-    def classify_data(self, content: Any, metadata: Optional[Dict[str, Any]] = None) -> DataClassification:
+    def classify_data(
+        self, content: Any, metadata: Optional[Dict[str, Any]] = None
+    ) -> DataClassification:
         """
         Classify data based on content and metadata.
 
@@ -544,12 +548,14 @@ class DataHandler:
         data.metadata = essential_metadata
 
         # Log minimization action
-        self._audit_log({
-            "action": "DATA_MINIMIZATION",
-            "data_id": data.data_id,
-            "classification": data.classification.name,
-            "timestamp": datetime.utcnow().isoformat(),
-        })
+        self._audit_log(
+            {
+                "action": "DATA_MINIMIZATION",
+                "data_id": data.data_id,
+                "classification": data.classification.name,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
         return data
 
@@ -578,14 +584,16 @@ class DataHandler:
                 f"exceeded {policy.retention.max_retention_days} day retention limit"
             )
 
-            self._audit_log({
-                "action": "RETENTION_VIOLATION",
-                "data_id": data.data_id,
-                "classification": data.classification.name,
-                "created_at": data.created_at.isoformat(),
-                "max_retention_days": policy.retention.max_retention_days,
-                "timestamp": datetime.utcnow().isoformat(),
-            })
+            self._audit_log(
+                {
+                    "action": "RETENTION_VIOLATION",
+                    "data_id": data.data_id,
+                    "classification": data.classification.name,
+                    "created_at": data.created_at.isoformat(),
+                    "max_retention_days": policy.retention.max_retention_days,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
 
             if policy.retention.auto_purge_enabled:
                 logger.info(f"Auto-purge enabled, initiating deletion of {data.data_id}")
@@ -597,10 +605,7 @@ class DataHandler:
         return not is_expired
 
     def get_consent_status(
-        self,
-        parent_account_id: str,
-        child_pseudonym: str,
-        category: DataClassification
+        self, parent_account_id: str, child_pseudonym: str, category: DataClassification
     ) -> ConsentStatus:
         """
         Get current consent status for a specific data category.
@@ -627,22 +632,21 @@ class DataHandler:
             consent_record.status = ConsentStatus.EXPIRED
             self.consent_records[consent_key] = consent_record
 
-            self._audit_log({
-                "action": "CONSENT_EXPIRED",
-                "consent_id": consent_record.consent_id,
-                "parent_account_id": parent_account_id,
-                "child_pseudonym": child_pseudonym,
-                "category": category.name,
-                "timestamp": datetime.utcnow().isoformat(),
-            })
+            self._audit_log(
+                {
+                    "action": "CONSENT_EXPIRED",
+                    "consent_id": consent_record.consent_id,
+                    "parent_account_id": parent_account_id,
+                    "child_pseudonym": child_pseudonym,
+                    "category": category.name,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
 
         return consent_record.status
 
     def verify_consent(
-        self,
-        parent_account_id: str,
-        child_pseudonym: str,
-        category: DataClassification
+        self, parent_account_id: str, child_pseudonym: str, category: DataClassification
     ) -> bool:
         """
         Verify that valid parental consent exists for data operation.
@@ -675,14 +679,16 @@ class DataHandler:
 
             # Verify consent is still valid (not expired or revoked)
             if consent_record.is_valid():
-                self._audit_log({
-                    "action": "CONSENT_VERIFIED",
-                    "consent_id": consent_record.consent_id,
-                    "parent_account_id": parent_account_id,
-                    "child_pseudonym": child_pseudonym,
-                    "category": category.name,
-                    "timestamp": datetime.utcnow().isoformat(),
-                })
+                self._audit_log(
+                    {
+                        "action": "CONSENT_VERIFIED",
+                        "consent_id": consent_record.consent_id,
+                        "parent_account_id": parent_account_id,
+                        "child_pseudonym": child_pseudonym,
+                        "category": category.name,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                )
                 return True
 
         # Consent not granted or invalid
@@ -691,14 +697,16 @@ class DataHandler:
             f"Current status: {status.value}"
         )
 
-        self._audit_log({
-            "action": "CONSENT_VIOLATION",
-            "parent_account_id": parent_account_id,
-            "child_pseudonym": child_pseudonym,
-            "category": category.name,
-            "consent_status": status.value,
-            "timestamp": datetime.utcnow().isoformat(),
-        })
+        self._audit_log(
+            {
+                "action": "CONSENT_VIOLATION",
+                "parent_account_id": parent_account_id,
+                "child_pseudonym": child_pseudonym,
+                "category": category.name,
+                "consent_status": status.value,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
         raise ConsentRequiredError(
             f"Parental consent required for {category.name} (current status: {status.value})"
@@ -711,7 +719,7 @@ class DataHandler:
         category: DataClassification,
         consent_method: str,
         verification_method: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> ConsentRecord:
         """
         Record parental consent for data collection.
@@ -758,10 +766,7 @@ class DataHandler:
         return consent_record
 
     def revoke_consent(
-        self,
-        parent_account_id: str,
-        child_pseudonym: str,
-        category: DataClassification
+        self, parent_account_id: str, child_pseudonym: str, category: DataClassification
     ) -> bool:
         """
         Revoke previously granted parental consent.
@@ -787,15 +792,17 @@ class DataHandler:
         self.consent_records[consent_key] = consent_record
 
         # Audit log
-        self._audit_log({
-            "action": "CONSENT_REVOKED",
-            "consent_id": consent_record.consent_id,
-            "parent_account_id": parent_account_id,
-            "child_pseudonym": child_pseudonym,
-            "category": category.name,
-            "revoked_at": consent_record.revoked_at.isoformat(),
-            "timestamp": datetime.utcnow().isoformat(),
-        })
+        self._audit_log(
+            {
+                "action": "CONSENT_REVOKED",
+                "consent_id": consent_record.consent_id,
+                "parent_account_id": parent_account_id,
+                "child_pseudonym": child_pseudonym,
+                "category": category.name,
+                "revoked_at": consent_record.revoked_at.isoformat(),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
         logger.info(
             f"Consent REVOKED: {category.name} for child {child_pseudonym} "
@@ -837,19 +844,19 @@ class DataHandler:
         data.anonymized = True
 
         # Audit log
-        self._audit_log({
-            "action": "DATA_ANONYMIZED",
-            "data_id": data.data_id,
-            "classification": data.classification.name,
-            "timestamp": datetime.utcnow().isoformat(),
-        })
+        self._audit_log(
+            {
+                "action": "DATA_ANONYMIZED",
+                "data_id": data.data_id,
+                "classification": data.classification.name,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
         return data
 
     def validate_processing_location(
-        self,
-        data: DataItem,
-        target_location: ProcessingLocation
+        self, data: DataItem, target_location: ProcessingLocation
     ) -> bool:
         """
         Validate that data can be processed at the target location.
@@ -877,14 +884,16 @@ class DataHandler:
                 f"{[loc.value for loc in policy.allowed_locations]}"
             )
 
-            self._audit_log({
-                "action": "LOCATION_VIOLATION",
-                "data_id": data.data_id,
-                "classification": data.classification.name,
-                "attempted_location": target_location.value,
-                "allowed_locations": [loc.value for loc in policy.allowed_locations],
-                "timestamp": datetime.utcnow().isoformat(),
-            })
+            self._audit_log(
+                {
+                    "action": "LOCATION_VIOLATION",
+                    "data_id": data.data_id,
+                    "classification": data.classification.name,
+                    "attempted_location": target_location.value,
+                    "allowed_locations": [loc.value for loc in policy.allowed_locations],
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
 
             raise PrivacyViolationError(
                 f"{data.classification.name} cannot be processed at {target_location.value}"
@@ -899,7 +908,7 @@ class DataHandler:
         processing_location: ProcessingLocation,
         parent_account_id: Optional[str] = None,
         child_pseudonym: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> DataItem:
         """
         Create a new data item with privacy controls applied.
@@ -967,10 +976,12 @@ class DataHandler:
         data_item = self.apply_minimization(data_item)
 
         # Audit log
-        self._audit_log({
-            "action": "DATA_CREATED",
-            **data_item.to_audit_log(),
-        })
+        self._audit_log(
+            {
+                "action": "DATA_CREATED",
+                **data_item.to_audit_log(),
+            }
+        )
 
         return data_item
 
@@ -1002,12 +1013,14 @@ class DataHandler:
             if consent.parent_account_id == parent_account_id
         ]
 
-        self._audit_log({
-            "action": "CONSENT_EXPORT",
-            "parent_account_id": parent_account_id,
-            "record_count": len(parent_consents),
-            "timestamp": datetime.utcnow().isoformat(),
-        })
+        self._audit_log(
+            {
+                "action": "CONSENT_EXPORT",
+                "parent_account_id": parent_account_id,
+                "record_count": len(parent_consents),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
         return parent_consents
 
@@ -1020,7 +1033,9 @@ class DataHandler:
         self, parent_account_id: str, child_pseudonym: str, category: DataClassification
     ) -> str:
         """Generate unique consent ID."""
-        data = f"{parent_account_id}:{child_pseudonym}:{category.name}:{datetime.utcnow().isoformat()}"
+        data = (
+            f"{parent_account_id}:{child_pseudonym}:{category.name}:{datetime.utcnow().isoformat()}"
+        )
         return f"consent_{sha256(data.encode()).hexdigest()[:16]}"
 
     def _hash_identifier(self, identifier: str) -> str:

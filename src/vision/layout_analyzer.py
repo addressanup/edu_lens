@@ -10,21 +10,21 @@ Target: 90% layout segmentation accuracy
 Task: VIS-001-T3
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import List, Dict, Tuple, Optional, Any, Set
-import numpy as np
-from pathlib import Path
 import logging
 from collections import defaultdict
+from dataclasses import dataclass, field
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+import numpy as np
 
 try:
     import cv2
 except ImportError:
     cv2 = None
 
-from src.vision.ocr_engine import BoundingBox, TextRegion, OCRResult
-
+from src.vision.ocr_engine import BoundingBox, OCRResult, TextRegion
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 class RegionType(Enum):
     """Types of regions that can be detected in educational documents."""
+
     QUESTION = "question"
     ANSWER_SPACE = "answer_space"
     DIAGRAM = "diagram"
@@ -51,6 +52,7 @@ class RegionType(Enum):
 
 class ContentType(Enum):
     """Content types within regions."""
+
     TEXT = "text"
     MATH = "math"
     IMAGE = "image"
@@ -75,6 +77,7 @@ class LayoutRegion:
         parent_id: ID of parent region if part of hierarchy
         reading_order: Position in document reading order
     """
+
     region_id: str
     region_type: RegionType
     bounding_box: BoundingBox
@@ -82,7 +85,7 @@ class LayoutRegion:
     confidence: float = 0.0
     text_content: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
-    children: List['LayoutRegion'] = field(default_factory=list)
+    children: List["LayoutRegion"] = field(default_factory=list)
     parent_id: Optional[str] = None
     reading_order: int = -1
 
@@ -98,14 +101,14 @@ class LayoutRegion:
             "metadata": self.metadata,
             "children": [child.to_dict() for child in self.children],
             "parent_id": self.parent_id,
-            "reading_order": self.reading_order
+            "reading_order": self.reading_order,
         }
 
     def area(self) -> int:
         """Calculate region area in pixels."""
         return self.bounding_box.width * self.bounding_box.height
 
-    def overlaps(self, other: 'LayoutRegion', threshold: float = 0.5) -> bool:
+    def overlaps(self, other: "LayoutRegion", threshold: float = 0.5) -> bool:
         """
         Check if this region overlaps with another region.
 
@@ -147,6 +150,7 @@ class DocumentStructure:
         num_columns: Detected number of columns
         layout_type: Type of layout (single-column, multi-column, etc.)
     """
+
     regions: List[LayoutRegion] = field(default_factory=list)
     hierarchy: Dict[str, List[str]] = field(default_factory=dict)
     reading_order: List[str] = field(default_factory=list)
@@ -162,7 +166,7 @@ class DocumentStructure:
             "reading_order": self.reading_order,
             "metadata": self.metadata,
             "num_columns": self.num_columns,
-            "layout_type": self.layout_type
+            "layout_type": self.layout_type,
         }
 
     def get_region_by_id(self, region_id: str) -> Optional[LayoutRegion]:
@@ -190,7 +194,7 @@ class LayoutAnalyzer:
         min_region_size: int = 100,
         merge_threshold: float = 0.5,
         whitespace_threshold: int = 20,
-        min_confidence: float = 0.6
+        min_confidence: float = 0.6,
     ):
         """
         Initialize the LayoutAnalyzer.
@@ -211,9 +215,7 @@ class LayoutAnalyzer:
             logger.warning("OpenCV not available. Some layout analysis features will be limited.")
 
     def analyze_layout(
-        self,
-        image: np.ndarray,
-        ocr_result: Optional[OCRResult] = None
+        self, image: np.ndarray, ocr_result: Optional[OCRResult] = None
     ) -> DocumentStructure:
         """
         Perform complete layout analysis on a document image.
@@ -245,15 +247,15 @@ class LayoutAnalyzer:
         structure.num_columns = self._detect_columns(regions, image.shape[1])
         structure.layout_type = self._determine_layout_type(structure)
 
-        logger.info(f"Layout analysis complete: {len(regions)} regions detected, "
-                   f"{structure.num_columns} columns, {structure.layout_type} layout")
+        logger.info(
+            f"Layout analysis complete: {len(regions)} regions detected, "
+            f"{structure.num_columns} columns, {structure.layout_type} layout"
+        )
 
         return structure
 
     def detect_regions(
-        self,
-        image: np.ndarray,
-        ocr_result: Optional[OCRResult] = None
+        self, image: np.ndarray, ocr_result: Optional[OCRResult] = None
     ) -> List[LayoutRegion]:
         """
         Detect distinct content regions in the document.
@@ -287,8 +289,7 @@ class LayoutAnalyzer:
 
         # Apply adaptive thresholding
         binary = cv2.adaptiveThreshold(
-            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY_INV, 11, 2
+            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
         )
 
         # Detect text regions using morphological operations
@@ -310,7 +311,7 @@ class LayoutAnalyzer:
                 region_id=self._get_next_region_id(),
                 region_type=RegionType.TEXT_BLOCK,  # Will be classified later
                 bounding_box=bbox,
-                confidence=0.7
+                confidence=0.7,
             )
             regions.append(region)
 
@@ -322,10 +323,7 @@ class LayoutAnalyzer:
         return regions
 
     def classify_region(
-        self,
-        region: LayoutRegion,
-        image: np.ndarray,
-        ocr_result: Optional[OCRResult] = None
+        self, region: LayoutRegion, image: np.ndarray, ocr_result: Optional[OCRResult] = None
     ) -> RegionType:
         """
         Classify a region into its type (question, answer, diagram, etc.).
@@ -347,10 +345,7 @@ class LayoutAnalyzer:
         return self._classify_region(region, image, ocr_result)
 
     def _classify_region(
-        self,
-        region: LayoutRegion,
-        image: np.ndarray,
-        ocr_result: Optional[OCRResult] = None
+        self, region: LayoutRegion, image: np.ndarray, ocr_result: Optional[OCRResult] = None
     ) -> RegionType:
         """Internal method for region classification."""
         # Extract region image
@@ -408,9 +403,7 @@ class LayoutAnalyzer:
         return RegionType.TEXT_BLOCK
 
     def extract_structure(
-        self,
-        regions: List[LayoutRegion],
-        image: np.ndarray
+        self, regions: List[LayoutRegion], image: np.ndarray
     ) -> DocumentStructure:
         """
         Extract hierarchical document structure from regions.
@@ -446,10 +439,8 @@ class LayoutAnalyzer:
 
             elif region.region_type == RegionType.DIAGRAM:
                 # Find nearby questions that might reference this diagram
-                nearby_questions = self._find_nearby_questions(
-                    region, regions, spatial_index
-                )
-                region.metadata['related_questions'] = [q.region_id for q in nearby_questions]
+                nearby_questions = self._find_nearby_questions(region, regions, spatial_index)
+                region.metadata["related_questions"] = [q.region_id for q in nearby_questions]
 
         # Identify section headers and their content
         headers = [r for r in regions if r.region_type in [RegionType.HEADER, RegionType.TITLE]]
@@ -459,7 +450,9 @@ class LayoutAnalyzer:
                 if content_region.parent_id is None:  # Don't override existing parent
                     content_region.parent_id = header.region_id
                     header.children.append(content_region)
-                    structure.hierarchy.setdefault(header.region_id, []).append(content_region.region_id)
+                    structure.hierarchy.setdefault(header.region_id, []).append(
+                        content_region.region_id
+                    )
 
         return structure
 
@@ -487,7 +480,11 @@ class LayoutAnalyzer:
         # Separate by type
         headers = [r for r in regions if r.region_type in [RegionType.HEADER, RegionType.TITLE]]
         footers = [r for r in regions if r.region_type == RegionType.FOOTER]
-        content = [r for r in regions if r.region_type not in [RegionType.HEADER, RegionType.TITLE, RegionType.FOOTER]]
+        content = [
+            r
+            for r in regions
+            if r.region_type not in [RegionType.HEADER, RegionType.TITLE, RegionType.FOOTER]
+        ]
 
         # Sort headers by vertical position
         headers.sort(key=lambda r: r.bounding_box.y)
@@ -598,8 +595,12 @@ class LayoutAnalyzer:
         x1_2, y1_2, x2_2, y2_2 = box2.to_coordinates()
 
         # Check for overlap or proximity
-        h_overlap = not (x2_1 < x1_2 - self.whitespace_threshold or x2_2 < x1_1 - self.whitespace_threshold)
-        v_overlap = not (y2_1 < y1_2 - self.whitespace_threshold or y2_2 < y1_1 - self.whitespace_threshold)
+        h_overlap = not (
+            x2_1 < x1_2 - self.whitespace_threshold or x2_2 < x1_1 - self.whitespace_threshold
+        )
+        v_overlap = not (
+            y2_1 < y1_2 - self.whitespace_threshold or y2_2 < y1_1 - self.whitespace_threshold
+        )
 
         return h_overlap and v_overlap
 
@@ -612,7 +613,7 @@ class LayoutAnalyzer:
                 region_type=RegionType.TEXT_BLOCK,
                 bounding_box=text_region.bounding_box,
                 text_content=text_region.text,
-                confidence=text_region.confidence
+                confidence=text_region.confidence,
             )
             regions.append(region)
         return regions
@@ -639,21 +640,32 @@ class LayoutAnalyzer:
         y_pos = region.bounding_box.y / image.shape[0]
 
         # Title characteristics: short, near top, possibly centered
-        return (len(text) < 80 and
-                y_pos < 0.2 and
-                not text.endswith('?') and
-                not any(c.isdigit() for c in text[:3]))
+        return (
+            len(text) < 80
+            and y_pos < 0.2
+            and not text.endswith("?")
+            and not any(c.isdigit() for c in text[:3])
+        )
 
     def _is_question_region(self, region: LayoutRegion, text: str) -> bool:
         """Check if region contains a question."""
         question_patterns = [
-            r'^\d+[\.\)]\s',  # Starts with number
-            r'\?',  # Contains question mark
-            r'\bwhat\b', r'\bwhere\b', r'\bwhen\b', r'\bwho\b', r'\bwhy\b', r'\bhow\b',
-            r'\bsolve\b', r'\bcalculate\b', r'\bfind\b', r'\bwrite\b'
+            r"^\d+[\.\)]\s",  # Starts with number
+            r"\?",  # Contains question mark
+            r"\bwhat\b",
+            r"\bwhere\b",
+            r"\bwhen\b",
+            r"\bwho\b",
+            r"\bwhy\b",
+            r"\bhow\b",
+            r"\bsolve\b",
+            r"\bcalculate\b",
+            r"\bfind\b",
+            r"\bwrite\b",
         ]
 
         import re
+
         for pattern in question_patterns:
             if re.search(pattern, text):
                 return True
@@ -672,7 +684,9 @@ class LayoutAnalyzer:
 
         # Check for horizontal lines (common in answer spaces)
         edges = cv2.Canny(gray, 50, 150)
-        lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=50, minLineLength=50, maxLineGap=10)
+        lines = cv2.HoughLinesP(
+            edges, 1, np.pi / 180, threshold=50, minLineLength=50, maxLineGap=10
+        )
 
         # Answer spaces typically have lines and low text density
         has_lines = lines is not None and len(lines) > 0
@@ -686,8 +700,9 @@ class LayoutAnalyzer:
     def _is_multiple_choice(self, text: str) -> bool:
         """Check if region contains multiple choice options."""
         import re
+
         # Look for A. B. C. D. or (A) (B) (C) pattern
-        pattern = r'[A-D][\.\)]\s+\w+'
+        pattern = r"[A-D][\.\)]\s+\w+"
         matches = re.findall(pattern, text)
         return len(matches) >= 2
 
@@ -711,8 +726,15 @@ class LayoutAnalyzer:
     def _is_instruction_region(self, text: str) -> bool:
         """Check if region contains instructions."""
         instruction_keywords = [
-            'directions', 'instructions', 'read carefully', 'complete',
-            'fill in', 'circle', 'underline', 'match', 'draw'
+            "directions",
+            "instructions",
+            "read carefully",
+            "complete",
+            "fill in",
+            "circle",
+            "underline",
+            "match",
+            "draw",
         ]
         text_lower = text.lower()
         return any(keyword in text_lower for keyword in instruction_keywords)
@@ -750,16 +772,13 @@ class LayoutAnalyzer:
     def _build_spatial_index(self, regions: List[LayoutRegion]) -> Dict[str, Any]:
         """Build spatial index for efficient region queries."""
         return {
-            'regions': regions,
-            'sorted_by_y': sorted(regions, key=lambda r: r.bounding_box.y),
-            'sorted_by_x': sorted(regions, key=lambda r: r.bounding_box.x)
+            "regions": regions,
+            "sorted_by_y": sorted(regions, key=lambda r: r.bounding_box.y),
+            "sorted_by_x": sorted(regions, key=lambda r: r.bounding_box.x),
         }
 
     def _find_answer_spaces_for_question(
-        self,
-        question: LayoutRegion,
-        all_regions: List[LayoutRegion],
-        spatial_index: Dict[str, Any]
+        self, question: LayoutRegion, all_regions: List[LayoutRegion], spatial_index: Dict[str, Any]
     ) -> List[LayoutRegion]:
         """Find answer spaces associated with a question."""
         answer_spaces = []
@@ -771,8 +790,10 @@ class LayoutAnalyzer:
                 if region.bounding_box.y >= q_bottom - 10:
                     # Check horizontal alignment
                     h_overlap = not (
-                        question.bounding_box.x + question.bounding_box.width < region.bounding_box.x or
-                        region.bounding_box.x + region.bounding_box.width < question.bounding_box.x
+                        question.bounding_box.x + question.bounding_box.width
+                        < region.bounding_box.x
+                        or region.bounding_box.x + region.bounding_box.width
+                        < question.bounding_box.x
                     )
                     if h_overlap:
                         answer_spaces.append(region)
@@ -780,10 +801,7 @@ class LayoutAnalyzer:
         return answer_spaces
 
     def _find_nearby_questions(
-        self,
-        diagram: LayoutRegion,
-        all_regions: List[LayoutRegion],
-        spatial_index: Dict[str, Any]
+        self, diagram: LayoutRegion, all_regions: List[LayoutRegion], spatial_index: Dict[str, Any]
     ) -> List[LayoutRegion]:
         """Find questions near a diagram."""
         nearby = []
@@ -796,7 +814,7 @@ class LayoutAnalyzer:
                 r_center_y = region.bounding_box.y + region.bounding_box.height // 2
 
                 # Calculate distance
-                distance = np.sqrt((d_center_x - r_center_x)**2 + (d_center_y - r_center_y)**2)
+                distance = np.sqrt((d_center_x - r_center_x) ** 2 + (d_center_y - r_center_y) ** 2)
 
                 # Consider nearby if within reasonable distance
                 if distance < 300:  # pixels
@@ -805,10 +823,7 @@ class LayoutAnalyzer:
         return nearby
 
     def _find_section_content(
-        self,
-        header: LayoutRegion,
-        all_regions: List[LayoutRegion],
-        page_height: int
+        self, header: LayoutRegion, all_regions: List[LayoutRegion], page_height: int
     ) -> List[LayoutRegion]:
         """Find content belonging to a section header."""
         content = []
@@ -817,16 +832,20 @@ class LayoutAnalyzer:
         # Find next header or end of page
         next_header_y = page_height
         for region in all_regions:
-            if (region.region_type in [RegionType.HEADER, RegionType.TITLE] and
-                region.region_id != header.region_id and
-                region.bounding_box.y > header_bottom):
+            if (
+                region.region_type in [RegionType.HEADER, RegionType.TITLE]
+                and region.region_id != header.region_id
+                and region.bounding_box.y > header_bottom
+            ):
                 next_header_y = region.bounding_box.y
                 break
 
         # Collect regions between this header and next
         for region in all_regions:
-            if (region.region_id != header.region_id and
-                header_bottom <= region.bounding_box.y < next_header_y):
+            if (
+                region.region_id != header.region_id
+                and header_bottom <= region.bounding_box.y < next_header_y
+            ):
                 content.append(region)
 
         return content
@@ -836,9 +855,7 @@ class LayoutAnalyzer:
         return sorted(regions, key=lambda r: (r.bounding_box.y, r.bounding_box.x))
 
     def _sort_multi_column(
-        self,
-        regions: List[LayoutRegion],
-        num_columns: int
+        self, regions: List[LayoutRegion], num_columns: int
     ) -> List[LayoutRegion]:
         """Sort regions for multi-column layout."""
         if not regions:
@@ -854,10 +871,7 @@ class LayoutAnalyzer:
         column_width = (max_x - min_x) / num_columns
 
         for i in range(num_columns):
-            column_boundaries.append((
-                min_x + i * column_width,
-                min_x + (i + 1) * column_width
-            ))
+            column_boundaries.append((min_x + i * column_width, min_x + (i + 1) * column_width))
 
         # Assign regions to columns
         columns = [[] for _ in range(num_columns)]

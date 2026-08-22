@@ -20,12 +20,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-
 logger = logging.getLogger(__name__)
 
 
 class MasteryLevel(Enum):
     """Mastery levels for concept understanding."""
+
     NOT_ATTEMPTED = 0
     BEGINNER = 1
     DEVELOPING = 2
@@ -36,6 +36,7 @@ class MasteryLevel(Enum):
 
 class LearningStyle(Enum):
     """Learning style preferences."""
+
     VISUAL = "visual"
     VERBAL = "verbal"
     ANALYTICAL = "analytical"
@@ -45,6 +46,7 @@ class LearningStyle(Enum):
 
 class LearningPace(Enum):
     """Optimal learning pace indicators."""
+
     VERY_SLOW = 1
     SLOW = 2
     MODERATE = 3
@@ -55,6 +57,7 @@ class LearningPace(Enum):
 @dataclass
 class InteractionRecord:
     """Record of a single tutoring interaction."""
+
     timestamp: float
     concept_id: str
     problem_type: str
@@ -68,19 +71,19 @@ class InteractionRecord:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'timestamp': self.timestamp,
-            'concept_id': self.concept_id,
-            'problem_type': self.problem_type,
-            'correct': self.correct,
-            'attempts': self.attempts,
-            'time_spent': self.time_spent,
-            'hint_level_used': self.hint_level_used,
-            'student_response': self.student_response,
-            'difficulty_level': self.difficulty_level
+            "timestamp": self.timestamp,
+            "concept_id": self.concept_id,
+            "problem_type": self.problem_type,
+            "correct": self.correct,
+            "attempts": self.attempts,
+            "time_spent": self.time_spent,
+            "hint_level_used": self.hint_level_used,
+            "student_response": self.student_response,
+            "difficulty_level": self.difficulty_level,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'InteractionRecord':
+    def from_dict(cls, data: Dict[str, Any]) -> "InteractionRecord":
         """Create from dictionary."""
         return cls(**data)
 
@@ -88,6 +91,7 @@ class InteractionRecord:
 @dataclass
 class ConceptKnowledgeState:
     """Bayesian knowledge state for a single concept."""
+
     concept_id: str
     probability_known: float = 0.0  # P(L) - probability student has learned
     probability_slip: float = 0.15  # P(S) - probability of making a mistake when known
@@ -116,11 +120,13 @@ class ConceptKnowledgeState:
 
             numerator = p_correct_given_known * self.probability_known
             denominator = (
-                p_correct_given_known * self.probability_known +
-                p_correct_given_unknown * (1 - self.probability_known)
+                p_correct_given_known * self.probability_known
+                + p_correct_given_unknown * (1 - self.probability_known)
             )
 
-            self.probability_known = numerator / denominator if denominator > 0 else self.probability_known
+            self.probability_known = (
+                numerator / denominator if denominator > 0 else self.probability_known
+            )
             self.correct_count += 1
         else:
             # P(L|incorrect) using Bayes' rule
@@ -129,16 +135,20 @@ class ConceptKnowledgeState:
 
             numerator = p_incorrect_given_known * self.probability_known
             denominator = (
-                p_incorrect_given_known * self.probability_known +
-                p_incorrect_given_unknown * (1 - self.probability_known)
+                p_incorrect_given_known * self.probability_known
+                + p_incorrect_given_unknown * (1 - self.probability_known)
             )
 
-            self.probability_known = numerator / denominator if denominator > 0 else self.probability_known
+            self.probability_known = (
+                numerator / denominator if denominator > 0 else self.probability_known
+            )
             self.incorrect_count += 1
 
         # Apply learning (transition)
         # P(L_t+1) = P(L_t) + (1 - P(L_t)) * P(T)
-        self.probability_known = self.probability_known + (1 - self.probability_known) * self.probability_transit
+        self.probability_known = (
+            self.probability_known + (1 - self.probability_known) * self.probability_transit
+        )
 
         # Ensure probability stays in [0, 1]
         self.probability_known = max(0.0, min(1.0, self.probability_known))
@@ -175,20 +185,20 @@ class ConceptKnowledgeState:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'concept_id': self.concept_id,
-            'probability_known': self.probability_known,
-            'probability_slip': self.probability_slip,
-            'probability_guess': self.probability_guess,
-            'probability_transit': self.probability_transit,
-            'attempts': self.attempts,
-            'correct_count': self.correct_count,
-            'incorrect_count': self.incorrect_count,
-            'last_interaction': self.last_interaction,
-            'total_time_spent': self.total_time_spent
+            "concept_id": self.concept_id,
+            "probability_known": self.probability_known,
+            "probability_slip": self.probability_slip,
+            "probability_guess": self.probability_guess,
+            "probability_transit": self.probability_transit,
+            "attempts": self.attempts,
+            "correct_count": self.correct_count,
+            "incorrect_count": self.incorrect_count,
+            "last_interaction": self.last_interaction,
+            "total_time_spent": self.total_time_spent,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ConceptKnowledgeState':
+    def from_dict(cls, data: Dict[str, Any]) -> "ConceptKnowledgeState":
         """Create from dictionary."""
         return cls(**data)
 
@@ -201,13 +211,7 @@ class StudentModel:
     and predicts optimal difficulty without storing raw personal data.
     """
 
-    def __init__(
-        self,
-        student_id: str,
-        age: int,
-        grade: int,
-        storage_path: Optional[str] = None
-    ):
+    def __init__(self, student_id: str, age: int, grade: int, storage_path: Optional[str] = None):
         """
         Initialize StudentModel.
 
@@ -257,7 +261,7 @@ class StudentModel:
         time_spent: float,
         hint_level_used: int,
         student_response: str,
-        difficulty_level: int
+        difficulty_level: int,
     ) -> Dict[str, Any]:
         """
         Learn from a tutoring interaction.
@@ -285,7 +289,7 @@ class StudentModel:
             time_spent=time_spent,
             hint_level_used=hint_level_used,
             student_response=student_response,
-            difficulty_level=difficulty_level
+            difficulty_level=difficulty_level,
         )
 
         # Add to recent history (maintain size limit for privacy)
@@ -313,13 +317,15 @@ class StudentModel:
         # Update optimal difficulty
         self._update_optimal_difficulty(concept_id, difficulty_level, correct)
 
-        logger.debug(f"Updated model for concept {concept_id}: mastery={self.get_mastery_level(concept_id)}")
+        logger.debug(
+            f"Updated model for concept {concept_id}: mastery={self.get_mastery_level(concept_id)}"
+        )
 
         return {
-            'mastery_level': self.get_mastery_level(concept_id).name,
-            'probability_known': self.concept_states[concept_id].probability_known,
-            'learning_style': self.get_learning_style().name,
-            'optimal_difficulty': self.predict_difficulty(concept_id)
+            "mastery_level": self.get_mastery_level(concept_id).name,
+            "probability_known": self.concept_states[concept_id].probability_known,
+            "learning_style": self.get_learning_style().name,
+            "optimal_difficulty": self.predict_difficulty(concept_id),
         }
 
     def get_mastery_level(self, concept_id: str) -> MasteryLevel:
@@ -479,16 +485,17 @@ class StudentModel:
                 mastery_counts[state.get_mastery_level().name] += 1
 
         return {
-            'student_id': self.student_id,
-            'age': self.age,
-            'grade': self.grade,
-            'session_count': self.session_count,
-            'total_problems_attempted': self.total_problems_attempted,
-            'concepts_attempted': len([s for s in self.concept_states.values() if s.attempts > 0]),
-            'mastery_distribution': dict(mastery_counts),
-            'learning_style': self.get_learning_style().name,
-            'pace': self.get_pace().name,
-            'average_time_per_problem': sum(self.average_time_per_problem.values()) / max(len(self.average_time_per_problem), 1)
+            "student_id": self.student_id,
+            "age": self.age,
+            "grade": self.grade,
+            "session_count": self.session_count,
+            "total_problems_attempted": self.total_problems_attempted,
+            "concepts_attempted": len([s for s in self.concept_states.values() if s.attempts > 0]),
+            "mastery_distribution": dict(mastery_counts),
+            "learning_style": self.get_learning_style().name,
+            "pace": self.get_pace().name,
+            "average_time_per_problem": sum(self.average_time_per_problem.values())
+            / max(len(self.average_time_per_problem), 1),
         }
 
     def save(self, path: Optional[str] = None) -> bool:
@@ -508,28 +515,28 @@ class StudentModel:
 
         try:
             save_data = {
-                'student_id': self.student_id,
-                'age': self.age,
-                'grade': self.grade,
-                'concept_states': {
+                "student_id": self.student_id,
+                "age": self.age,
+                "grade": self.grade,
+                "concept_states": {
                     cid: state.to_dict() for cid, state in self.concept_states.items()
                 },
-                'learning_style_scores': {
+                "learning_style_scores": {
                     style.name: score for style, score in self.learning_style_scores.items()
                 },
-                'session_count': self.session_count,
-                'total_problems_attempted': self.total_problems_attempted,
-                'total_time_spent': self.total_time_spent,
-                'pace_score': self.pace_score,
-                'optimal_difficulty_by_concept': self.optimal_difficulty_by_concept,
-                'average_time_per_problem': self.average_time_per_problem,
-                'last_updated': time.time()
+                "session_count": self.session_count,
+                "total_problems_attempted": self.total_problems_attempted,
+                "total_time_spent": self.total_time_spent,
+                "pace_score": self.pace_score,
+                "optimal_difficulty_by_concept": self.optimal_difficulty_by_concept,
+                "average_time_per_problem": self.average_time_per_problem,
+                "last_updated": time.time(),
             }
 
             path_obj = Path(save_path)
             path_obj.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(path_obj, 'w') as f:
+            with open(path_obj, "w") as f:
                 json.dump(save_data, f, indent=2)
 
             logger.info(f"Saved student model to {save_path}")
@@ -540,7 +547,7 @@ class StudentModel:
             return False
 
     @classmethod
-    def load(cls, path: str) -> Optional['StudentModel']:
+    def load(cls, path: str) -> Optional["StudentModel"]:
         """
         Load student model from disk.
 
@@ -551,22 +558,22 @@ class StudentModel:
             StudentModel instance or None if failed
         """
         try:
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 data = json.load(f)
 
             model = cls(
-                student_id=data['student_id'],
-                age=data['age'],
-                grade=data['grade'],
-                storage_path=path
+                student_id=data["student_id"],
+                age=data["age"],
+                grade=data["grade"],
+                storage_path=path,
             )
 
             # Restore concept states
-            for cid, state_data in data.get('concept_states', {}).items():
+            for cid, state_data in data.get("concept_states", {}).items():
                 model.concept_states[cid] = ConceptKnowledgeState.from_dict(state_data)
 
             # Restore learning style scores
-            for style_name, score in data.get('learning_style_scores', {}).items():
+            for style_name, score in data.get("learning_style_scores", {}).items():
                 try:
                     style = LearningStyle[style_name]
                     model.learning_style_scores[style] = score
@@ -574,12 +581,12 @@ class StudentModel:
                     pass
 
             # Restore other fields
-            model.session_count = data.get('session_count', 0)
-            model.total_problems_attempted = data.get('total_problems_attempted', 0)
-            model.total_time_spent = data.get('total_time_spent', 0.0)
-            model.pace_score = data.get('pace_score', 3.0)
-            model.optimal_difficulty_by_concept = data.get('optimal_difficulty_by_concept', {})
-            model.average_time_per_problem = data.get('average_time_per_problem', {})
+            model.session_count = data.get("session_count", 0)
+            model.total_problems_attempted = data.get("total_problems_attempted", 0)
+            model.total_time_spent = data.get("total_time_spent", 0.0)
+            model.pace_score = data.get("pace_score", 3.0)
+            model.optimal_difficulty_by_concept = data.get("optimal_difficulty_by_concept", {})
+            model.average_time_per_problem = data.get("average_time_per_problem", {})
 
             logger.info(f"Loaded student model from {path}")
             return model
@@ -629,12 +636,13 @@ class StudentModel:
             # Exponential moving average
             alpha = 0.2
             self.average_time_per_problem[problem_type] = (
-                alpha * time_spent +
-                (1 - alpha) * self.average_time_per_problem[problem_type]
+                alpha * time_spent + (1 - alpha) * self.average_time_per_problem[problem_type]
             )
 
         # Calculate overall pace score (1-5 scale)
-        avg_time = sum(self.average_time_per_problem.values()) / max(len(self.average_time_per_problem), 1)
+        avg_time = sum(self.average_time_per_problem.values()) / max(
+            len(self.average_time_per_problem), 1
+        )
 
         # Adjust pace score based on average time
         # Faster = higher pace score
@@ -662,16 +670,12 @@ class StudentModel:
         # Exponential moving average
         alpha = 0.3
         self.optimal_difficulty_by_concept[concept_id] = (
-            alpha * new_difficulty +
-            (1 - alpha) * current_optimal
+            alpha * new_difficulty + (1 - alpha) * current_optimal
         )
 
 
 def create_student_model(
-    student_id: str,
-    age: int,
-    grade: int,
-    storage_path: Optional[str] = None
+    student_id: str, age: int, grade: int, storage_path: Optional[str] = None
 ) -> StudentModel:
     """
     Create a new StudentModel instance.
@@ -693,11 +697,7 @@ if __name__ == "__main__":
     print("=== EduLens Student Model ===\n")
 
     # Create a student model
-    model = create_student_model(
-        student_id="anon_student_123",
-        age=9,
-        grade=4
-    )
+    model = create_student_model(student_id="anon_student_123", age=9, grade=4)
 
     print(f"Created model for {model.student_id}")
     print(f"Age: {model.age}, Grade: {model.grade}\n")
@@ -714,7 +714,7 @@ if __name__ == "__main__":
         time_spent=45.0,
         hint_level_used=1,
         student_response="I tried 5x3=15",
-        difficulty_level=2
+        difficulty_level=2,
     )
     print(f"After interaction 1: {result1}")
 
@@ -727,7 +727,7 @@ if __name__ == "__main__":
         time_spent=20.0,
         hint_level_used=0,
         student_response="6x4=24",
-        difficulty_level=2
+        difficulty_level=2,
     )
     print(f"After interaction 2: {result2}")
 
@@ -740,7 +740,7 @@ if __name__ == "__main__":
         time_spent=15.0,
         hint_level_used=0,
         student_response="7x3=21",
-        difficulty_level=3
+        difficulty_level=3,
     )
     print(f"After interaction 3: {result3}\n")
 

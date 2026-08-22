@@ -13,30 +13,27 @@ Author: Vision Processing Agent (VIS-001)
 Target: 85% accuracy on child handwriting samples
 """
 
-import unittest
-import numpy as np
-import time
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Any
 import json
+import time
+import unittest
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     import cv2
 except ImportError:
     cv2 = None
 
+from src.vision.character_segmenter import CharacterSegmenter, Segment, SegmentationResult
 from src.vision.handwriting_engine import (
-    HandwritingRecognizer,
-    HandwritingStyle,
     AgeGroup,
+    HandwritingCharacter,
+    HandwritingRecognizer,
     HandwritingResult,
+    HandwritingStyle,
     HandwritingWord,
-    HandwritingCharacter
-)
-from src.vision.character_segmenter import (
-    CharacterSegmenter,
-    Segment,
-    SegmentationResult
 )
 from src.vision.preprocessing import ImagePreprocessor
 
@@ -52,7 +49,7 @@ class HandwritingTestFixtures:
         font_scale: float = 1.0,
         noise_level: float = 0.1,
         rotation: float = 0.0,
-        irregularity: float = 0.2
+        irregularity: float = 0.2,
     ) -> np.ndarray:
         """
         Create synthetic handwriting image for testing.
@@ -91,14 +88,7 @@ class HandwritingTestFixtures:
 
             # Draw character
             cv2.putText(
-                image,
-                char,
-                (char_x, char_y),
-                font,
-                font_scale,
-                (0, 0, 0),
-                thickness,
-                cv2.LINE_AA
+                image, char, (char_x, char_y), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA
             )
 
             # Update x position
@@ -115,20 +105,14 @@ class HandwritingTestFixtures:
             center = (width // 2, height // 2)
             rotation_matrix = cv2.getRotationMatrix2D(center, rotation, 1.0)
             image = cv2.warpAffine(
-                image,
-                rotation_matrix,
-                (width, height),
-                borderValue=(255, 255, 255)
+                image, rotation_matrix, (width, height), borderValue=(255, 255, 255)
             )
 
         return image
 
     @staticmethod
     def create_child_handwriting_simulation(
-        text: str,
-        age_group: AgeGroup,
-        width: int = 800,
-        height: int = 200
+        text: str, age_group: AgeGroup, width: int = 800, height: int = 200
     ) -> np.ndarray:
         """
         Create handwriting simulating a specific age group.
@@ -151,7 +135,7 @@ class HandwritingTestFixtures:
                 font_scale=1.5,
                 noise_level=0.15,
                 rotation=np.random.uniform(-8, 8),
-                irregularity=0.3
+                irregularity=0.3,
             )
         elif age_group == AgeGroup.MID_ELEMENTARY:
             # 9-10 years: More consistent
@@ -162,7 +146,7 @@ class HandwritingTestFixtures:
                 font_scale=1.2,
                 noise_level=0.1,
                 rotation=np.random.uniform(-5, 5),
-                irregularity=0.2
+                irregularity=0.2,
             )
         else:  # LATE_ELEMENTARY
             # 11-12 years: Mature handwriting
@@ -173,14 +157,12 @@ class HandwritingTestFixtures:
                 font_scale=1.0,
                 noise_level=0.05,
                 rotation=np.random.uniform(-3, 3),
-                irregularity=0.1
+                irregularity=0.1,
             )
 
     @staticmethod
     def create_math_expression_image(
-        expression: str,
-        width: int = 600,
-        height: int = 150
+        expression: str, width: int = 600, height: int = 150
     ) -> np.ndarray:
         """
         Create image with mathematical expression.
@@ -212,25 +194,13 @@ class HandwritingTestFixtures:
         y = (height + text_height) // 2
 
         # Draw expression
-        cv2.putText(
-            image,
-            expression,
-            (x, y),
-            font,
-            font_scale,
-            (0, 0, 0),
-            thickness,
-            cv2.LINE_AA
-        )
+        cv2.putText(image, expression, (x, y), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
 
         return image
 
     @staticmethod
     def create_multi_line_handwriting(
-        lines: List[str],
-        age_group: AgeGroup,
-        width: int = 800,
-        height: int = 600
+        lines: List[str], age_group: AgeGroup, width: int = 800, height: int = 600
     ) -> np.ndarray:
         """
         Create multi-line handwriting image.
@@ -272,19 +242,10 @@ class HandwritingTestFixtures:
 
             for char in line_text:
                 cv2.putText(
-                    image,
-                    char,
-                    (x, y),
-                    font,
-                    font_scale,
-                    (0, 0, 0),
-                    thickness,
-                    cv2.LINE_AA
+                    image, char, (x, y), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA
                 )
 
-                (char_width, _), _ = cv2.getTextSize(
-                    char, font, font_scale, thickness
-                )
+                (char_width, _), _ = cv2.getTextSize(char, font, font_scale, thickness)
                 x += char_width + 5
 
             y_offset += line_spacing
@@ -297,9 +258,7 @@ class HandwritingAccuracyMetrics:
 
     @staticmethod
     def calculate_character_accuracy(
-        ground_truth: str,
-        recognized: str,
-        case_sensitive: bool = False
+        ground_truth: str, recognized: str, case_sensitive: bool = False
     ) -> float:
         """
         Calculate character-level accuracy.
@@ -334,9 +293,7 @@ class HandwritingAccuracyMetrics:
 
     @staticmethod
     def calculate_word_accuracy(
-        ground_truth: str,
-        recognized: str,
-        case_sensitive: bool = False
+        ground_truth: str, recognized: str, case_sensitive: bool = False
     ) -> float:
         """
         Calculate word-level accuracy.
@@ -391,8 +348,7 @@ class HandwritingAccuracyMetrics:
 
     @staticmethod
     def calculate_confusion_matrix(
-        predictions: List[str],
-        ground_truths: List[str]
+        predictions: List[str], ground_truths: List[str]
     ) -> Dict[str, Dict[str, int]]:
         """
         Calculate confusion matrix for character predictions.
@@ -462,8 +418,7 @@ class TestHandwritingRecognizer(unittest.TestCase):
 
         for word in test_words:
             image = self.fixtures.create_child_handwriting_simulation(
-                word,
-                AgeGroup.EARLY_ELEMENTARY
+                word, AgeGroup.EARLY_ELEMENTARY
             )
 
             result = self.recognizer.recognize_handwriting(image)
@@ -478,16 +433,11 @@ class TestHandwritingRecognizer(unittest.TestCase):
         """Test recognition of mid elementary handwriting (ages 9-10)."""
         self.recognizer.configure_for_children(AgeGroup.MID_ELEMENTARY)
 
-        test_sentences = [
-            "The cat is happy",
-            "I like to read",
-            "Math is fun"
-        ]
+        test_sentences = ["The cat is happy", "I like to read", "Math is fun"]
 
         for sentence in test_sentences:
             image = self.fixtures.create_child_handwriting_simulation(
-                sentence,
-                AgeGroup.MID_ELEMENTARY
+                sentence, AgeGroup.MID_ELEMENTARY
             )
 
             result = self.recognizer.recognize_handwriting(image)
@@ -504,16 +454,11 @@ class TestHandwritingRecognizer(unittest.TestCase):
         """Test recognition of late elementary handwriting (ages 11-12)."""
         self.recognizer.configure_for_children(AgeGroup.LATE_ELEMENTARY)
 
-        test_sentences = [
-            "The quick brown fox",
-            "Science is interesting",
-            "Reading comprehension"
-        ]
+        test_sentences = ["The quick brown fox", "Science is interesting", "Reading comprehension"]
 
         for sentence in test_sentences:
             image = self.fixtures.create_child_handwriting_simulation(
-                sentence,
-                AgeGroup.LATE_ELEMENTARY
+                sentence, AgeGroup.LATE_ELEMENTARY
             )
 
             result = self.recognizer.recognize_handwriting(image)
@@ -527,11 +472,7 @@ class TestHandwritingRecognizer(unittest.TestCase):
     def test_handwriting_preprocessing(self):
         """Test handwriting-specific preprocessing."""
         test_text = "Hello"
-        image = self.fixtures.create_synthetic_handwriting(
-            test_text,
-            noise_level=0.2,
-            rotation=5.0
-        )
+        image = self.fixtures.create_synthetic_handwriting(test_text, noise_level=0.2, rotation=5.0)
 
         # Test preprocessing
         preprocessed = self.recognizer.preprocess_handwriting(image)
@@ -563,12 +504,7 @@ class TestHandwritingRecognizer(unittest.TestCase):
         """Test recognition of mathematical expressions."""
         self.recognizer.configure_for_children(AgeGroup.MID_ELEMENTARY)
 
-        test_expressions = [
-            "2 + 2 = 4",
-            "5 - 3 = 2",
-            "3 × 4 = 12",
-            "10 ÷ 2 = 5"
-        ]
+        test_expressions = ["2 + 2 = 4", "5 - 3 = 2", "3 × 4 = 12", "10 ÷ 2 = 5"]
 
         for expression in test_expressions:
             image = self.fixtures.create_math_expression_image(expression)
@@ -587,8 +523,7 @@ class TestHandwritingRecognizer(unittest.TestCase):
 
         test_text = "test"
         image = self.fixtures.create_child_handwriting_simulation(
-            test_text,
-            AgeGroup.MID_ELEMENTARY
+            test_text, AgeGroup.MID_ELEMENTARY
         )
 
         result = self.recognizer.recognize_handwriting(image)
@@ -610,16 +545,9 @@ class TestHandwritingRecognizer(unittest.TestCase):
         """Test recognition of multi-line handwriting."""
         self.recognizer.configure_for_children(AgeGroup.MID_ELEMENTARY)
 
-        lines = [
-            "Line one",
-            "Line two",
-            "Line three"
-        ]
+        lines = ["Line one", "Line two", "Line three"]
 
-        image = self.fixtures.create_multi_line_handwriting(
-            lines,
-            AgeGroup.MID_ELEMENTARY
-        )
+        image = self.fixtures.create_multi_line_handwriting(lines, AgeGroup.MID_ELEMENTARY)
 
         result = self.recognizer.recognize_handwriting(image)
 
@@ -674,10 +602,7 @@ class TestCharacterSegmenter(unittest.TestCase):
         """Test line segmentation."""
         lines = ["First line", "Second line"]
         image = self.fixtures.create_multi_line_handwriting(
-            lines,
-            AgeGroup.MID_ELEMENTARY,
-            width=600,
-            height=300
+            lines, AgeGroup.MID_ELEMENTARY, width=600, height=300
         )
 
         # Convert to grayscale
@@ -732,10 +657,7 @@ class TestCharacterSegmenter(unittest.TestCase):
         image = self.fixtures.create_synthetic_handwriting(text)
 
         result = self.segmenter.segment_all(
-            image,
-            segment_lines=True,
-            segment_words=True,
-            segment_characters=True
+            image, segment_lines=True, segment_words=True, segment_characters=True
         )
 
         print(f"Complete segmentation:")
@@ -764,8 +686,7 @@ class TestHandwritingPerformance(unittest.TestCase):
         """Test processing time for handwriting recognition."""
         test_text = "Performance test"
         image = self.fixtures.create_child_handwriting_simulation(
-            test_text,
-            AgeGroup.MID_ELEMENTARY
+            test_text, AgeGroup.MID_ELEMENTARY
         )
 
         start_time = time.time()
@@ -784,10 +705,7 @@ class TestHandwritingPerformance(unittest.TestCase):
 
         total_time = 0
         for word in test_words:
-            image = self.fixtures.create_child_handwriting_simulation(
-                word,
-                AgeGroup.MID_ELEMENTARY
-            )
+            image = self.fixtures.create_child_handwriting_simulation(word, AgeGroup.MID_ELEMENTARY)
 
             start = time.time()
             result = self.recognizer.recognize_handwriting(image)
@@ -819,20 +737,16 @@ class TestAccuracyBenchmarks(unittest.TestCase):
         """Test accuracy target for ages 6-8 (80% target)."""
         self.recognizer.configure_for_children(AgeGroup.EARLY_ELEMENTARY)
 
-        test_cases = [
-            "cat", "dog", "sun", "run", "bat",
-            "hat", "mat", "sat", "rat", "pat"
-        ]
+        test_cases = ["cat", "dog", "sun", "run", "bat", "hat", "mat", "sat", "rat", "pat"]
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("EARLY ELEMENTARY (Ages 6-8) ACCURACY BENCHMARK")
-        print("="*70)
+        print("=" * 70)
 
         total_accuracy = 0.0
         for text in test_cases:
             image = self.fixtures.create_child_handwriting_simulation(
-                text,
-                AgeGroup.EARLY_ELEMENTARY
+                text, AgeGroup.EARLY_ELEMENTARY
             )
 
             result = self.recognizer.recognize_handwriting(image)
@@ -840,90 +754,83 @@ class TestAccuracyBenchmarks(unittest.TestCase):
             # Note: With placeholder recognition, we can't measure real accuracy
             # In production, calculate: accuracy = metrics.calculate_character_accuracy(text, result.full_text)
 
-            print(f"  Expected: '{text}', Got: '{result.full_text}', "
-                  f"Confidence: {result.average_confidence:.2f}")
+            print(
+                f"  Expected: '{text}', Got: '{result.full_text}', "
+                f"Confidence: {result.average_confidence:.2f}"
+            )
 
         print(f"Target accuracy: 80% (Note: Using placeholder recognition)")
-        print("="*70)
+        print("=" * 70)
 
     def test_mid_elementary_accuracy_target(self):
         """Test accuracy target for ages 9-10 (85% target)."""
         self.recognizer.configure_for_children(AgeGroup.MID_ELEMENTARY)
 
-        test_cases = [
-            "reading", "writing", "counting", "learning", "studying"
-        ]
+        test_cases = ["reading", "writing", "counting", "learning", "studying"]
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("MID ELEMENTARY (Ages 9-10) ACCURACY BENCHMARK")
-        print("="*70)
+        print("=" * 70)
 
         for text in test_cases:
-            image = self.fixtures.create_child_handwriting_simulation(
-                text,
-                AgeGroup.MID_ELEMENTARY
-            )
+            image = self.fixtures.create_child_handwriting_simulation(text, AgeGroup.MID_ELEMENTARY)
 
             result = self.recognizer.recognize_handwriting(image)
 
-            print(f"  Expected: '{text}', Got: '{result.full_text}', "
-                  f"Confidence: {result.average_confidence:.2f}")
+            print(
+                f"  Expected: '{text}', Got: '{result.full_text}', "
+                f"Confidence: {result.average_confidence:.2f}"
+            )
 
         print(f"Target accuracy: 85% (Note: Using placeholder recognition)")
-        print("="*70)
+        print("=" * 70)
 
     def test_late_elementary_accuracy_target(self):
         """Test accuracy target for ages 11-12 (90% target)."""
         self.recognizer.configure_for_children(AgeGroup.LATE_ELEMENTARY)
 
-        test_cases = [
-            "comprehension", "vocabulary", "mathematics", "science", "history"
-        ]
+        test_cases = ["comprehension", "vocabulary", "mathematics", "science", "history"]
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("LATE ELEMENTARY (Ages 11-12) ACCURACY BENCHMARK")
-        print("="*70)
+        print("=" * 70)
 
         for text in test_cases:
             image = self.fixtures.create_child_handwriting_simulation(
-                text,
-                AgeGroup.LATE_ELEMENTARY
+                text, AgeGroup.LATE_ELEMENTARY
             )
 
             result = self.recognizer.recognize_handwriting(image)
 
-            print(f"  Expected: '{text}', Got: '{result.full_text}', "
-                  f"Confidence: {result.average_confidence:.2f}")
+            print(
+                f"  Expected: '{text}', Got: '{result.full_text}', "
+                f"Confidence: {result.average_confidence:.2f}"
+            )
 
         print(f"Target accuracy: 90% (Note: Using placeholder recognition)")
-        print("="*70)
+        print("=" * 70)
 
     def test_math_symbol_accuracy(self):
         """Test accuracy on mathematical symbols."""
         self.recognizer.configure_for_children(AgeGroup.MID_ELEMENTARY)
 
-        test_expressions = [
-            "1 + 1 = 2",
-            "5 - 3 = 2",
-            "2 × 3 = 6",
-            "8 ÷ 2 = 4",
-            "7 > 5",
-            "3 < 9"
-        ]
+        test_expressions = ["1 + 1 = 2", "5 - 3 = 2", "2 × 3 = 6", "8 ÷ 2 = 4", "7 > 5", "3 < 9"]
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("MATH SYMBOL RECOGNITION BENCHMARK")
-        print("="*70)
+        print("=" * 70)
 
         for expression in test_expressions:
             image = self.fixtures.create_math_expression_image(expression)
 
             result = self.recognizer.recognize_math_handwriting(image)
 
-            print(f"  Expected: '{expression}', Got: '{result.full_text}', "
-                  f"Confidence: {result.average_confidence:.2f}")
+            print(
+                f"  Expected: '{expression}', Got: '{result.full_text}', "
+                f"Confidence: {result.average_confidence:.2f}"
+            )
 
-        print("="*70)
+        print("=" * 70)
 
 
 def run_comprehensive_handwriting_tests():
@@ -954,24 +861,25 @@ def run_comprehensive_handwriting_tests():
         "failures": len(result.failures),
         "errors": len(result.errors),
         "success_rate": (
-            (result.testsRun - len(result.failures) - len(result.errors))
-            / result.testsRun * 100
-        ) if result.testsRun > 0 else 0
+            ((result.testsRun - len(result.failures) - len(result.errors)) / result.testsRun * 100)
+            if result.testsRun > 0
+            else 0
+        ),
     }
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("HANDWRITING RECOGNITION TEST SUMMARY")
-    print("="*70)
+    print("=" * 70)
     print(f"Total Tests: {summary['total_tests']}")
     print(f"Successes: {summary['successes']}")
     print(f"Failures: {summary['failures']}")
     print(f"Errors: {summary['errors']}")
     print(f"Success Rate: {summary['success_rate']:.2f}%")
-    print("="*70)
+    print("=" * 70)
     print("\nNOTE: This test suite uses placeholder character recognition.")
     print("For production deployment, integrate trained CNN models for")
     print("actual accuracy measurement against the 85% target.")
-    print("="*70)
+    print("=" * 70)
 
     return summary
 

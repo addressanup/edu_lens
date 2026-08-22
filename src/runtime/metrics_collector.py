@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 class MetricType(Enum):
     """Types of metrics."""
 
-    COUNTER = auto()      # Cumulative count
-    GAUGE = auto()        # Current value
-    HISTOGRAM = auto()    # Distribution
-    TIMER = auto()        # Duration measurements
+    COUNTER = auto()  # Cumulative count
+    GAUGE = auto()  # Current value
+    HISTOGRAM = auto()  # Distribution
+    TIMER = auto()  # Duration measurements
 
 
 @dataclass
@@ -151,10 +151,7 @@ class MetricsCollector:
         cutoff = datetime.utcnow() - timedelta(hours=self.retention_hours)
 
         for name in list(self._time_series.keys()):
-            self._time_series[name] = [
-                v for v in self._time_series[name]
-                if v.timestamp > cutoff
-            ]
+            self._time_series[name] = [v for v in self._time_series[name] if v.timestamp > cutoff]
             if not self._time_series[name]:
                 del self._time_series[name]
 
@@ -305,10 +302,7 @@ class MetricsCollector:
                 }
                 for name, h in self._histograms.items()
             },
-            "timers": {
-                name: self.get_timer_stats(name)
-                for name in self._timers.keys()
-            },
+            "timers": {name: self.get_timer_stats(name) for name in self._timers.keys()},
         }
 
     def get_time_series(

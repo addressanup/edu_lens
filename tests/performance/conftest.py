@@ -17,11 +17,10 @@ import tracemalloc
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Generator
+from typing import Any, Callable, Dict, Generator, List, Optional
 
 import numpy as np
 import pytest
-
 
 # ============================================================================
 # Performance Timing Utilities
@@ -31,6 +30,7 @@ import pytest
 @dataclass
 class TimingResult:
     """Result of a timing measurement."""
+
     operation: str
     duration_ms: float
     timestamp: float
@@ -73,7 +73,7 @@ class PerformanceTimer:
             operation=self.name,
             duration_ms=duration_ms,
             timestamp=self.start_time,
-            metadata={"laps": self.laps}
+            metadata={"laps": self.laps},
         )
 
     def __enter__(self):
@@ -103,6 +103,7 @@ def perf_timer():
 @pytest.fixture
 def timer():
     """Simple timer fixture."""
+
     class SimpleTimer:
         def __init__(self):
             self.start_time = None
@@ -129,6 +130,7 @@ def timer():
 @dataclass
 class MemorySnapshot:
     """Memory usage snapshot."""
+
     timestamp: float
     rss_mb: float
     vms_mb: float
@@ -147,6 +149,7 @@ class MemoryProfiler:
 
         try:
             import psutil
+
             self.process = psutil.Process()
             self.psutil_available = True
         except ImportError:
@@ -166,18 +169,13 @@ class MemoryProfiler:
                 timestamp=time.time(),
                 rss_mb=mem_info.rss / 1024 / 1024,
                 vms_mb=mem_info.vms / 1024 / 1024,
-                percent=mem_percent
+                percent=mem_percent,
             )
 
     def snapshot(self) -> MemorySnapshot:
         """Take a memory snapshot."""
         if not self.psutil_available:
-            return MemorySnapshot(
-                timestamp=time.time(),
-                rss_mb=0,
-                vms_mb=0,
-                percent=0
-            )
+            return MemorySnapshot(timestamp=time.time(), rss_mb=0, vms_mb=0, percent=0)
 
         mem_info = self.process.memory_info()
         mem_percent = self.process.memory_percent()
@@ -189,7 +187,7 @@ class MemoryProfiler:
             rss_mb=mem_info.rss / 1024 / 1024,
             vms_mb=mem_info.vms / 1024 / 1024,
             percent=mem_percent,
-            traced_mb=current / 1024 / 1024
+            traced_mb=current / 1024 / 1024,
         )
 
         self.snapshots.append(snapshot)
@@ -205,7 +203,7 @@ class MemoryProfiler:
                 timestamp=time.time(),
                 rss_mb=mem_info.rss / 1024 / 1024,
                 vms_mb=mem_info.vms / 1024 / 1024,
-                percent=mem_percent
+                percent=mem_percent,
             )
 
         current, peak = tracemalloc.get_traced_memory()
@@ -217,12 +215,18 @@ class MemoryProfiler:
         }
 
         if self.start_snapshot and self.end_snapshot:
-            stats.update({
-                "start_rss_mb": self.start_snapshot.rss_mb,
-                "end_rss_mb": self.end_snapshot.rss_mb,
-                "delta_rss_mb": self.end_snapshot.rss_mb - self.start_snapshot.rss_mb,
-                "peak_rss_mb": max(s.rss_mb for s in self.snapshots) if self.snapshots else self.end_snapshot.rss_mb,
-            })
+            stats.update(
+                {
+                    "start_rss_mb": self.start_snapshot.rss_mb,
+                    "end_rss_mb": self.end_snapshot.rss_mb,
+                    "delta_rss_mb": self.end_snapshot.rss_mb - self.start_snapshot.rss_mb,
+                    "peak_rss_mb": (
+                        max(s.rss_mb for s in self.snapshots)
+                        if self.snapshots
+                        else self.end_snapshot.rss_mb
+                    ),
+                }
+            )
 
         return stats
 
@@ -248,10 +252,7 @@ def memory_profiler():
 
 
 def benchmark(
-    name: Optional[str] = None,
-    iterations: int = 1,
-    warmup: int = 0,
-    track_memory: bool = False
+    name: Optional[str] = None, iterations: int = 1, warmup: int = 0, track_memory: bool = False
 ):
     """
     Decorator to benchmark a function.
@@ -262,6 +263,7 @@ def benchmark(
         warmup: Number of warmup iterations
         track_memory: Whether to track memory usage
     """
+
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -307,14 +309,11 @@ def benchmark(
             return result, stats
 
         return wrapper
+
     return decorator
 
 
-def async_benchmark(
-    name: Optional[str] = None,
-    iterations: int = 1,
-    warmup: int = 0
-):
+def async_benchmark(name: Optional[str] = None, iterations: int = 1, warmup: int = 0):
     """
     Decorator to benchmark an async function.
 
@@ -323,6 +322,7 @@ def async_benchmark(
         iterations: Number of iterations
         warmup: Number of warmup iterations
     """
+
     def decorator(func):
         @functools.wraps(func)
         async def wrapper(*args, **kwargs):
@@ -354,6 +354,7 @@ def async_benchmark(
             return result, stats
 
         return wrapper
+
     return decorator
 
 
@@ -369,10 +370,7 @@ class PerformanceCollector:
         self.metrics: List[Dict[str, Any]] = []
 
     def record(
-        self,
-        operation: str,
-        duration_ms: float,
-        metadata: Optional[Dict[str, Any]] = None
+        self, operation: str, duration_ms: float, metadata: Optional[Dict[str, Any]] = None
     ) -> None:
         """Record a performance metric."""
         metric = {
@@ -411,11 +409,15 @@ class PerformanceCollector:
         """Export metrics to JSON file."""
         import json
 
-        with open(path, 'w') as f:
-            json.dump({
-                "metrics": self.metrics,
-                "summary": self.get_stats(),
-            }, f, indent=2)
+        with open(path, "w") as f:
+            json.dump(
+                {
+                    "metrics": self.metrics,
+                    "summary": self.get_stats(),
+                },
+                f,
+                indent=2,
+            )
 
 
 @pytest.fixture
@@ -441,16 +443,11 @@ class BenchmarkComparator:
         import json
 
         if self.baseline_path and self.baseline_path.exists():
-            with open(self.baseline_path, 'r') as f:
+            with open(self.baseline_path, "r") as f:
                 return json.load(f)
         return {}
 
-    def compare(
-        self,
-        operation: str,
-        current_ms: float,
-        tolerance: float = 0.1
-    ) -> Dict[str, Any]:
+    def compare(self, operation: str, current_ms: float, tolerance: float = 0.1) -> Dict[str, Any]:
         """
         Compare current result against baseline.
 
@@ -499,45 +496,22 @@ def benchmark_comparator(tmp_path):
 
 def pytest_configure(config):
     """Configure pytest with performance test markers."""
-    config.addinivalue_line(
-        "markers",
-        "performance: Performance tests (use --performance to run)"
-    )
-    config.addinivalue_line(
-        "markers",
-        "slow: Slow performance tests (use --slow to run)"
-    )
-    config.addinivalue_line(
-        "markers",
-        "benchmark: Benchmark tests (use --benchmark to run)"
-    )
+    config.addinivalue_line("markers", "performance: Performance tests (use --performance to run)")
+    config.addinivalue_line("markers", "slow: Slow performance tests (use --slow to run)")
+    config.addinivalue_line("markers", "benchmark: Benchmark tests (use --benchmark to run)")
 
 
 def pytest_addoption(parser):
     """Add command line options for performance tests."""
     parser.addoption(
-        "--performance",
-        action="store_true",
-        default=False,
-        help="Run performance tests"
+        "--performance", action="store_true", default=False, help="Run performance tests"
     )
     parser.addoption(
-        "--slow",
-        action="store_true",
-        default=False,
-        help="Run slow performance tests"
+        "--slow", action="store_true", default=False, help="Run slow performance tests"
     )
+    parser.addoption("--benchmark", action="store_true", default=False, help="Run benchmark tests")
     parser.addoption(
-        "--benchmark",
-        action="store_true",
-        default=False,
-        help="Run benchmark tests"
-    )
-    parser.addoption(
-        "--save-baseline",
-        action="store",
-        default=None,
-        help="Save benchmark results as baseline"
+        "--save-baseline", action="store", default=None, help="Save benchmark results as baseline"
     )
 
 
@@ -574,12 +548,14 @@ def resource_monitor():
 
             def sample(self):
                 """Take a resource usage sample."""
-                self.samples.append({
-                    "timestamp": time.time(),
-                    "cpu_percent": self.process.cpu_percent(),
-                    "memory_mb": self.process.memory_info().rss / 1024 / 1024,
-                    "threads": self.process.num_threads(),
-                })
+                self.samples.append(
+                    {
+                        "timestamp": time.time(),
+                        "cpu_percent": self.process.cpu_percent(),
+                        "memory_mb": self.process.memory_info().rss / 1024 / 1024,
+                        "threads": self.process.num_threads(),
+                    }
+                )
 
             def get_stats(self):
                 """Get statistics from samples."""
@@ -599,7 +575,7 @@ def resource_monitor():
                         "mean": np.mean(mem_values),
                         "max": np.max(mem_values),
                         "min": np.min(mem_values),
-                    }
+                    },
                 }
 
         return ResourceMonitor()
@@ -614,10 +590,7 @@ def resource_monitor():
 
 
 def assert_latency(
-    duration_ms: float,
-    target_ms: float,
-    operation: str = "operation",
-    tolerance: float = 0.0
+    duration_ms: float, target_ms: float, operation: str = "operation", tolerance: float = 0.0
 ):
     """
     Assert that latency meets target.
@@ -679,8 +652,7 @@ def measure():
 
 
 def calculate_percentiles(
-    values: List[float],
-    percentiles: List[int] = [50, 90, 95, 99]
+    values: List[float], percentiles: List[int] = [50, 90, 95, 99]
 ) -> Dict[str, float]:
     """
     Calculate percentiles for a list of values.
@@ -695,10 +667,7 @@ def calculate_percentiles(
     if not values:
         return {}
 
-    return {
-        f"p{p}": np.percentile(values, p)
-        for p in percentiles
-    }
+    return {f"p{p}": np.percentile(values, p) for p in percentiles}
 
 
 @pytest.fixture

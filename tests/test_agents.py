@@ -5,13 +5,14 @@ Tests cover the base agent class and all specialized agent implementations.
 """
 
 import asyncio
-import pytest
 from datetime import datetime, timezone
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
+
+import pytest
 
 # Import modules under test
-from agents.base_agent import BaseAgent, AgentCapability, AgentState
+from agents.base_agent import AgentCapability, AgentState, BaseAgent
 
 
 class TestAgentCapability:
@@ -329,7 +330,7 @@ class TestAgentCommunication:
     @pytest.mark.asyncio
     async def test_agent_to_agent_message(self):
         """Test agent communication via messages."""
-        from core.communication_protocol import create_message, MessageType
+        from core.communication_protocol import MessageType, create_message
 
         message = create_message(
             msg_type=MessageType.TASK_ASSIGNMENT,

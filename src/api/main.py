@@ -21,24 +21,40 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
-
-# WebSocket handler import
-from src.api.websocket_handler import GlassesWebSocketHandler, FrameMessage, ObservationEvent
-from src.api.session_broadcaster import SessionBroadcaster, ParentWebSocketHandler, ParentMessage
-from pydantic import BaseModel, Field
 from typing import List
+
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from pydantic import BaseModel, Field
 
 # Database imports
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
 from src.api.models import (
-    ChildDB, SessionDB, ChildCreate, ChildUpdate, ChildResponse,
-    init_db, create_async_db_engine, Base
+    Base,
+    ChildCreate,
+    ChildDB,
+    ChildResponse,
+    ChildUpdate,
+    SessionDB,
+    create_async_db_engine,
+    init_db,
 )
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from src.api.session_broadcaster import ParentMessage, ParentWebSocketHandler, SessionBroadcaster
+
+# WebSocket handler import
+from src.api.websocket_handler import FrameMessage, GlassesWebSocketHandler, ObservationEvent
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -63,6 +79,7 @@ class SimpleTutor:
 
     def __init__(self, provider: str = "deepseek"):
         from src.ai.llm_service import LLMService
+
         self.llm = LLMService(provider=provider, safety_filter=True)
         self.system_prompt = """You are EduLens, a friendly AI tutor for children ages 6-12.
 
@@ -99,19 +116,24 @@ Keep responses concise (2-3 sentences for simple questions)."""
     def generate_response(self, query: str, context: dict = None) -> dict:
         """Generate a tutoring response."""
         import asyncio
+
         from src.ai.llm_service import LLMMessage
 
-        age = context.get('age', 8) if context else 8
-        subject = context.get('subject', 'general') if context else 'general'
-        history = context.get('history', []) if context else []
-        language = context.get('language', 'en') if context else 'en'
+        age = context.get("age", 8) if context else 8
+        subject = context.get("subject", "general") if context else "general"
+        history = context.get("history", []) if context else []
+        language = context.get("language", "en") if context else "en"
 
         # Build system prompt with language instruction if not English
         system_content = self.system_prompt
-        if language != 'en':
+        if language != "en":
             lang_names = {
-                'es': 'Spanish', 'fr': 'French', 'de': 'German',
-                'zh': 'Chinese (Simplified)', 'hi': 'Hindi', 'ne': 'Nepali'
+                "es": "Spanish",
+                "fr": "French",
+                "de": "German",
+                "zh": "Chinese (Simplified)",
+                "hi": "Hindi",
+                "ne": "Nepali",
             }
             lang_name = lang_names.get(language, language)
             system_content += f"""
@@ -128,11 +150,13 @@ You MUST respond ONLY in {lang_name}. The child speaks {lang_name} as their prim
 
         # Add conversation history (last 6 exchanges)
         for turn in history[-6:]:
-            messages.append(LLMMessage(role="user", content=turn.get('query', '')))
-            messages.append(LLMMessage(role="assistant", content=turn.get('response', '')))
+            messages.append(LLMMessage(role="user", content=turn.get("query", "")))
+            messages.append(LLMMessage(role="assistant", content=turn.get("response", "")))
 
         # Add current query
-        messages.append(LLMMessage(role="user", content=f"[Student age: {age}, Subject: {subject}]\n\n{query}"))
+        messages.append(
+            LLMMessage(role="user", content=f"[Student age: {age}, Subject: {subject}]\n\n{query}")
+        )
 
         try:
             # Handle both sync and async contexts
@@ -140,6 +164,7 @@ You MUST respond ONLY in {lang_name}. The child speaks {lang_name} as their prim
                 loop = asyncio.get_running_loop()
                 # We're in an async context, need to run in executor
                 import concurrent.futures
+
                 with concurrent.futures.ThreadPoolExecutor() as pool:
                     future = pool.submit(asyncio.run, self.llm.generate(messages))
                     response = future.result(timeout=30)
@@ -147,31 +172,31 @@ You MUST respond ONLY in {lang_name}. The child speaks {lang_name} as their prim
                 # No running loop, can use asyncio.run directly
                 response = asyncio.run(self.llm.generate(messages))
 
-            return {
-                "response": response.content,
-                "type": "explanation",
-                "subject": subject
-            }
+            return {"response": response.content, "type": "explanation", "subject": subject}
         except Exception as e:
             logger.error(f"LLM error: {e}")
             return {
                 "response": "That's a great question! Can you tell me more about what you're trying to learn?",
                 "type": "fallback",
-                "error": str(e)
+                "error": str(e),
             }
 
 
 class TutorQuery(BaseModel):
     """Request model for tutoring queries."""
+
     query: str = Field(..., min_length=1, max_length=2000, description="The student's question")
     session_id: Optional[str] = Field(None, description="Session ID for conversation continuity")
     student_age: Optional[int] = Field(8, ge=6, le=12, description="Student's age (6-12)")
     student_grade: Optional[str] = Field("3", description="Student's grade level")
-    subject: Optional[str] = Field(None, description="Subject area (math, reading, science, social_studies)")
+    subject: Optional[str] = Field(
+        None, description="Subject area (math, reading, science, social_studies)"
+    )
 
 
 class TutorResponse(BaseModel):
     """Response model for tutoring queries."""
+
     response: str
     response_type: str
     session_id: str
@@ -181,6 +206,7 @@ class TutorResponse(BaseModel):
 
 class ImageQuery(BaseModel):
     """Request model for image-based queries."""
+
     session_id: Optional[str] = None
     student_age: Optional[int] = 8
     follow_up_question: Optional[str] = None
@@ -188,6 +214,7 @@ class ImageQuery(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str
     version: str
     llm_provider: str
@@ -214,7 +241,9 @@ async def lifespan(app: FastAPI):
             engine = create_async_db_engine()
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
-            async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+            async_session_factory = async_sessionmaker(
+                engine, class_=AsyncSession, expire_on_commit=False
+            )
             logger.info("Database initialized successfully")
         else:
             logger.warning("DATABASE_URL not set, using in-memory storage")
@@ -228,6 +257,7 @@ async def lifespan(app: FastAPI):
     # Try full tutor engine first
     try:
         from src.ai import create_tutor_engine
+
         tutor_engine = create_tutor_engine(llm_provider=provider)
         logger.info(f"Tutor engine initialized with {provider}")
     except Exception as e:
@@ -235,6 +265,7 @@ async def lifespan(app: FastAPI):
         # Fallback to simple LLM service wrapper
         try:
             from src.ai.llm_service import LLMService
+
             tutor_engine = SimpleTutor(provider)
             logger.info(f"Simple tutor initialized with {provider}")
         except Exception as e2:
@@ -253,7 +284,7 @@ app = FastAPI(
     title="EduLens API",
     description="AI-powered tutoring backend for EduLens smart glasses",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware
@@ -267,6 +298,7 @@ app.add_middleware(
 
 # Live tutoring WebSocket router (student app camera streaming)
 from src.api.live_ws import router as live_ws_router  # noqa: E402
+
 app.include_router(live_ws_router)
 
 
@@ -277,11 +309,7 @@ def get_or_create_session(session_id: Optional[str]) -> str:
 
     # Use provided session_id or generate new one
     new_id = session_id if session_id else str(uuid.uuid4())
-    sessions[new_id] = {
-        "created_at": time.time(),
-        "history": [],
-        "context": {}
-    }
+    sessions[new_id] = {"created_at": time.time(), "history": [], "context": {}}
     return new_id
 
 
@@ -292,7 +320,7 @@ async def health_check():
         status="healthy" if tutor_engine else "degraded",
         version="1.0.0",
         llm_provider=os.getenv("LLM_PROVIDER", "deepseek"),
-        uptime_seconds=time.time() - start_time
+        uptime_seconds=time.time() - start_time,
     )
 
 
@@ -304,7 +332,7 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs",
         "health": "/health",
-        "demo": "/demo"
+        "demo": "/demo",
     }
 
 
@@ -312,6 +340,7 @@ async def root():
 async def serve_demo():
     """Serve the web demo interface."""
     import os
+
     # Check multiple possible locations
     for path in ["web/index.html", "/app/web/index.html", "../../web/index.html"]:
         if os.path.exists(path):
@@ -335,7 +364,7 @@ async def tutor_query(request: TutorQuery):
     context = {
         "age": request.student_age,
         "grade": request.student_grade,
-        "subject": request.subject or "general"
+        "subject": request.subject or "general",
     }
 
     # Add session context if exists
@@ -352,18 +381,16 @@ async def tutor_query(request: TutorQuery):
 
         # Store in session history
         if session_id in sessions:
-            sessions[session_id]["history"].append({
-                "query": request.query,
-                "response": result["response"],
-                "timestamp": time.time()
-            })
+            sessions[session_id]["history"].append(
+                {"query": request.query, "response": result["response"], "timestamp": time.time()}
+            )
 
         return TutorResponse(
             response=result["response"],
             response_type=result.get("type", "explanation"),
             session_id=session_id,
             hints_remaining=result.get("hints_remaining"),
-            subject_detected=result.get("subject")
+            subject_detected=result.get("subject"),
         )
 
     except Exception as e:
@@ -376,7 +403,7 @@ async def tutor_image(
     image: UploadFile = File(..., description="Homework image to analyze"),
     session_id: Optional[str] = Form(None),
     student_age: int = Form(8),
-    question: Optional[str] = Form(None)
+    question: Optional[str] = Form(None),
 ):
     """
     Process a homework image.
@@ -397,6 +424,7 @@ async def tutor_image(
         try:
             import cv2
             import numpy as np
+
             from src.vision.ocr_engine import OCREngine
 
             # Decode image
@@ -411,9 +439,10 @@ async def tutor_image(
         except ImportError:
             # Fallback to pytesseract
             try:
+                import io
+
                 import pytesseract
                 from PIL import Image
-                import io
 
                 pil_image = Image.open(io.BytesIO(contents))
                 extracted_text = pytesseract.image_to_string(pil_image)
@@ -427,18 +456,24 @@ async def tutor_image(
         # Build context
         context = {
             "age": student_age,
-            "problem_statement": extracted_text[:1000] if extracted_text else "Image uploaded but text not detected"
+            "problem_statement": (
+                extracted_text[:1000] if extracted_text else "Image uploaded but text not detected"
+            ),
         }
 
         # Generate response
-        query = question if question else f"I see this problem: {extracted_text[:500]}. Can you help me understand it?"
+        query = (
+            question
+            if question
+            else f"I see this problem: {extracted_text[:500]}. Can you help me understand it?"
+        )
         result = tutor_engine.generate_response(query, context)
 
         return {
             "session_id": session_id,
             "extracted_text": extracted_text[:500] if extracted_text else None,
             "response": result["response"],
-            "response_type": result.get("type", "explanation")
+            "response_type": result.get("type", "explanation"),
         }
 
     except Exception as e:
@@ -475,7 +510,7 @@ async def tutor_vision(
         llm = tutor_engine.llm  # Shared LLMService instance
         prompt = (
             f"The child ({child_name}, age {child_age}) "
-            + (f"asks: \"{question}\"" if question else "needs help with what is shown.")
+            + (f'asks: "{question}"' if question else "needs help with what is shown.")
             + "\n\nLook at the attached image of their work and respond "
             "following your tutoring guidelines."
         )
@@ -515,7 +550,7 @@ async def get_session(session_id: str):
         "session_id": session_id,
         "created_at": session["created_at"],
         "history_count": len(session["history"]),
-        "history": session["history"][-10:]  # Last 10 interactions
+        "history": session["history"][-10:],  # Last 10 interactions
     }
 
 
@@ -536,7 +571,7 @@ async def list_subjects():
             {"id": "math", "name": "Mathematics", "grades": ["K-6"]},
             {"id": "reading", "name": "Reading & Language Arts", "grades": ["K-6"]},
             {"id": "science", "name": "Science", "grades": ["K-6"]},
-            {"id": "social_studies", "name": "Social Studies", "grades": ["K-6"]}
+            {"id": "social_studies", "name": "Social Studies", "grades": ["K-6"]},
         ]
     }
 
@@ -544,6 +579,7 @@ async def list_subjects():
 # ============================================
 # Database Dependency
 # ============================================
+
 
 async def get_db():
     """Get database session."""
@@ -557,6 +593,7 @@ async def get_db():
 # Child Profile API Endpoints
 # ============================================
 
+
 @app.post("/api/v1/children", response_model=ChildResponse)
 async def create_child(child: ChildCreate, db: AsyncSession = Depends(get_db)):
     """
@@ -569,7 +606,7 @@ async def create_child(child: ChildCreate, db: AsyncSession = Depends(get_db)):
         age=child.age,
         grade=child.grade,
         language=child.language,
-        parent_id=child.parent_id
+        parent_id=child.parent_id,
     )
     db.add(db_child)
     await db.commit()
@@ -580,10 +617,7 @@ async def create_child(child: ChildCreate, db: AsyncSession = Depends(get_db)):
 
 
 @app.get("/api/v1/children", response_model=List[ChildResponse])
-async def list_children(
-    parent_id: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
-):
+async def list_children(parent_id: Optional[str] = None, db: AsyncSession = Depends(get_db)):
     """
     List all children profiles.
 
@@ -612,11 +646,7 @@ async def get_child(child_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @app.put("/api/v1/children/{child_id}", response_model=ChildResponse)
-async def update_child(
-    child_id: str,
-    updates: ChildUpdate,
-    db: AsyncSession = Depends(get_db)
-):
+async def update_child(child_id: str, updates: ChildUpdate, db: AsyncSession = Depends(get_db)):
     """Update a child profile."""
     result = await db.execute(select(ChildDB).where(ChildDB.id == child_id))
     child = result.scalar_one_or_none()
@@ -660,8 +690,10 @@ async def delete_child(child_id: str, db: AsyncSession = Depends(get_db)):
 # Voice API Endpoints
 # ============================================
 
+
 class VoiceQueryRequest(BaseModel):
     """Request model for voice-based tutoring query."""
+
     transcript: str = Field(..., min_length=1, description="Transcribed speech text")
     child_id: Optional[str] = None
     session_id: Optional[str] = None
@@ -670,6 +702,7 @@ class VoiceQueryRequest(BaseModel):
 
 class VoiceQueryResponse(BaseModel):
     """Response model for voice query."""
+
     response: str
     response_type: str
     session_id: str
@@ -678,6 +711,7 @@ class VoiceQueryResponse(BaseModel):
 
 class TranscriptionResponse(BaseModel):
     """Response model for audio transcription."""
+
     transcript: str
     confidence: float
     language: str
@@ -686,7 +720,7 @@ class TranscriptionResponse(BaseModel):
 @app.post("/api/v1/voice/transcribe", response_model=TranscriptionResponse)
 async def transcribe_audio(
     audio: UploadFile = File(..., description="Audio file (WAV, MP3, M4A)"),
-    language: str = Form("en")
+    language: str = Form("en"),
 ):
     """
     Transcribe audio to text.
@@ -713,9 +747,10 @@ async def transcribe_audio(
         except ImportError:
             # Fallback to simple whisper
             try:
-                import whisper
-                import tempfile
                 import os
+                import tempfile
+
+                import whisper
 
                 # Save to temp file
                 suffix = "." + (audio.filename.split(".")[-1] if audio.filename else "wav")
@@ -725,7 +760,9 @@ async def transcribe_audio(
 
                 # Transcribe with whisper
                 model = whisper.load_model("base")
-                result = model.transcribe(temp_path, language=language if language != "auto" else None)
+                result = model.transcribe(
+                    temp_path, language=language if language != "auto" else None
+                )
                 transcript = result.get("text", "").strip()
                 confidence = 0.85
 
@@ -737,9 +774,7 @@ async def transcribe_audio(
                 raise HTTPException(status_code=500, detail=f"Transcription failed: {e}")
 
         return TranscriptionResponse(
-            transcript=transcript,
-            confidence=confidence,
-            language=language
+            transcript=transcript, confidence=confidence, language=language
         )
 
     except Exception as e:
@@ -779,7 +814,7 @@ async def voice_query(request: VoiceQueryRequest):
         "age": age,
         "subject": "general",
         "language": language,  # Include language for multi-lingual support
-        "history": sessions.get(session_id, {}).get("history", [])
+        "history": sessions.get(session_id, {}).get("history", []),
     }
 
     try:
@@ -788,22 +823,25 @@ async def voice_query(request: VoiceQueryRequest):
 
         # Store in session history
         if session_id in sessions:
-            sessions[session_id]["history"].append({
-                "query": request.transcript,
-                "response": result["response"],
-                "timestamp": time.time()
-            })
+            sessions[session_id]["history"].append(
+                {
+                    "query": request.transcript,
+                    "response": result["response"],
+                    "timestamp": time.time(),
+                }
+            )
 
         # Generate audio URL (for TTS with language)
         from urllib.parse import quote
-        encoded_text = quote(result['response'][:200])
+
+        encoded_text = quote(result["response"][:200])
         audio_url = f"/api/v1/voice/synthesize?text={encoded_text}&language={language}&session_id={session_id}"
 
         return VoiceQueryResponse(
             response=result["response"],
             response_type=result.get("type", "explanation"),
             session_id=session_id,
-            audio_url=audio_url
+            audio_url=audio_url,
         )
 
     except Exception as e:
@@ -817,7 +855,7 @@ async def synthesize_speech(
     voice: str = "child_friendly",
     language: str = "en",  # Language code for multi-language support
     session_id: Optional[str] = None,
-    child_id: Optional[str] = None  # Optional: auto-detect language from child profile
+    child_id: Optional[str] = None,  # Optional: auto-detect language from child profile
 ):
     """
     Synthesize text to speech audio in the specified language.
@@ -857,13 +895,13 @@ async def synthesize_speech(
 
         # Try to use TTS engine with language support
         try:
-            from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
+            from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
 
             config = TTSConfig(
                 backend=TTSBackend.EDGE_TTS,
                 language=language,
                 voice_id=voice_id,
-                speaking_rate=0.9  # Slightly slower for children
+                speaking_rate=0.9,  # Slightly slower for children
             )
             tts = TTSEngine(config=config)
             result = await tts.synthesize(text)
@@ -872,11 +910,12 @@ async def synthesize_speech(
         except ImportError:
             # Fallback to pyttsx3 or edge-tts
             try:
-                import pyttsx3
                 import tempfile
 
+                import pyttsx3
+
                 engine = pyttsx3.init()
-                engine.setProperty('rate', 150)  # Slower for children
+                engine.setProperty("rate", 150)  # Slower for children
 
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
                     temp_path = f.name
@@ -884,10 +923,11 @@ async def synthesize_speech(
                 engine.save_to_file(text, temp_path)
                 engine.runAndWait()
 
-                with open(temp_path, 'rb') as f:
+                with open(temp_path, "rb") as f:
                     audio_data = f.read()
 
                 import os
+
                 os.unlink(temp_path)
 
             except Exception as e:
@@ -895,8 +935,9 @@ async def synthesize_speech(
 
                 # Last resort: edge-tts with language-specific voice
                 try:
-                    import edge_tts
                     import asyncio
+
+                    import edge_tts
 
                     communicate = edge_tts.Communicate(text, voice_id)  # Language-specific voice
                     audio_buffer = io.BytesIO()
@@ -917,7 +958,9 @@ async def synthesize_speech(
         return StreamingResponse(
             io.BytesIO(audio_data),
             media_type="audio/wav",
-            headers={"Content-Disposition": f"attachment; filename=response_{session_id or 'audio'}.wav"}
+            headers={
+                "Content-Disposition": f"attachment; filename=response_{session_id or 'audio'}.wav"
+            },
         )
 
     except HTTPException:
@@ -931,11 +974,10 @@ async def synthesize_speech(
 # WebSocket Observation Endpoint
 # ============================================
 
+
 @app.websocket("/ws/observe/{session_id}")
 async def observation_websocket(
-    websocket: WebSocket,
-    session_id: str,
-    child_id: Optional[str] = None
+    websocket: WebSocket, session_id: str, child_id: Optional[str] = None
 ):
     """
     Bidirectional WebSocket for continuous observation mode.
@@ -950,6 +992,7 @@ async def observation_websocket(
     Event format (JSON):
     {"event_type": "intervention", "payload": {...}, "timestamp": ...}
     """
+
     # Create frame handler callback
     async def on_frame(frame: FrameMessage):
         """Process incoming frames for struggle detection."""
@@ -958,11 +1001,7 @@ async def observation_websocket(
         logger.debug(f"Frame {frame.frame_id} received: {len(frame.data)} bytes")
 
     # Create handler
-    handler = GlassesWebSocketHandler(
-        session_id=session_id,
-        child_id=child_id,
-        on_frame=on_frame
-    )
+    handler = GlassesWebSocketHandler(session_id=session_id, child_id=child_id, on_frame=on_frame)
 
     try:
         # Store handler
@@ -997,15 +1036,10 @@ async def list_observation_sessions():
     """List active observation sessions."""
     return {
         "active_sessions": [
-            {
-                "session_id": sid,
-                "child_id": h.child_id,
-                "state": h.state.value,
-                **h.get_stats()
-            }
+            {"session_id": sid, "child_id": h.child_id, "state": h.state.value, **h.get_stats()}
             for sid, h in observation_handlers.items()
         ],
-        "total": len(observation_handlers)
+        "total": len(observation_handlers),
     }
 
 
@@ -1035,6 +1069,7 @@ async def stop_observation_session(session_id: str):
 # Parent Live Monitoring WebSocket Endpoint
 # ============================================
 
+
 async def verify_parent_access(parent_id: str, session_id: str) -> bool:
     """
     Verify parent owns the child in this session.
@@ -1060,7 +1095,9 @@ async def verify_parent_access(parent_id: str, session_id: str) -> bool:
     if not child_id:
         # Allow access for testing/dev mode when no child is associated
         # In production, this should return False
-        logger.warning(f"Session {session_id} has no child_id - allowing parent access for dev mode")
+        logger.warning(
+            f"Session {session_id} has no child_id - allowing parent access for dev mode"
+        )
         return True
 
     # Get child from database and verify parent ownership
@@ -1071,9 +1108,7 @@ async def verify_parent_access(parent_id: str, session_id: str) -> bool:
 
     try:
         async with async_session_factory() as db:
-            result = await db.execute(
-                select(ChildDB).where(ChildDB.id == child_id)
-            )
+            result = await db.execute(select(ChildDB).where(ChildDB.id == child_id))
             child = result.scalar_one_or_none()
 
             if not child:
@@ -1087,7 +1122,9 @@ async def verify_parent_access(parent_id: str, session_id: str) -> bool:
         return False
 
 
-async def get_or_create_broadcaster(session_id: str, child_id: str, child_language: str = "en") -> SessionBroadcaster:
+async def get_or_create_broadcaster(
+    session_id: str, child_id: str, child_language: str = "en"
+) -> SessionBroadcaster:
     """Get existing broadcaster or create new one."""
     if session_id not in session_broadcasters:
         broadcaster = SessionBroadcaster(
@@ -1155,14 +1192,20 @@ async def parent_stream_websocket(
     if child_id and async_session_factory:
         try:
             async with async_session_factory() as db:
-                result = await db.execute(
-                    select(ChildDB).where(ChildDB.id == child_id)
-                )
+                result = await db.execute(select(ChildDB).where(ChildDB.id == child_id))
                 child = result.scalar_one_or_none()
                 if child:
                     child_language = child.language or "en"
-                    child_allow_monitoring = child.allow_remote_monitoring if hasattr(child, 'allow_remote_monitoring') else True
-                    child_notify_on_connect = child.notify_child_on_connect if hasattr(child, 'notify_child_on_connect') else True
+                    child_allow_monitoring = (
+                        child.allow_remote_monitoring
+                        if hasattr(child, "allow_remote_monitoring")
+                        else True
+                    )
+                    child_notify_on_connect = (
+                        child.notify_child_on_connect
+                        if hasattr(child, "notify_child_on_connect")
+                        else True
+                    )
         except Exception as e:
             logger.warning(f"Could not fetch child settings: {e}")
 
@@ -1175,11 +1218,7 @@ async def parent_stream_websocket(
     effective_notify_child = notify_child and child_notify_on_connect
 
     # Get or create broadcaster
-    broadcaster = await get_or_create_broadcaster(
-        session_id,
-        child_id or "unknown",
-        child_language
-    )
+    broadcaster = await get_or_create_broadcaster(session_id, child_id or "unknown", child_language)
 
     # Create parent handler
     parent_handler = ParentWebSocketHandler(
@@ -1243,14 +1282,19 @@ async def list_parent_sessions(parent_id: Optional[str] = None):
             "state": handler.state.value,
             "frame_count": handler.frame_count,
             "connected_at": handler.connected_at,
-            "parent_count": len(session_broadcasters.get(session_id, SessionBroadcaster(session_id, "")).parent_handlers) if session_id in session_broadcasters else 0,
+            "parent_count": (
+                len(
+                    session_broadcasters.get(
+                        session_id, SessionBroadcaster(session_id, "")
+                    ).parent_handlers
+                )
+                if session_id in session_broadcasters
+                else 0
+            ),
         }
         available_sessions.append(session_info)
 
-    return {
-        "sessions": available_sessions,
-        "total": len(available_sessions)
-    }
+    return {"sessions": available_sessions, "total": len(available_sessions)}
 
 
 @app.get("/api/v1/parent/sessions/{session_id}")
@@ -1282,17 +1326,15 @@ async def get_parent_session_details(session_id: str, parent_id: Optional[str] =
 async def global_exception_handler(request, exc):
     """Handle uncaught exceptions."""
     logger.error(f"Unhandled error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "An internal error occurred"}
-    )
+    return JSONResponse(status_code=500, content={"detail": "An internal error occurred"})
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "src.api.main:app",
         host=os.getenv("EDULENS_API_HOST", "0.0.0.0"),
         port=int(os.getenv("EDULENS_API_PORT", "8000")),
-        reload=True
+        reload=True,
     )

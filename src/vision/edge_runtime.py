@@ -15,10 +15,11 @@ Author: Vision Processing Agent (VIS-001)
 
 import logging
 import time
-from pathlib import Path
-from typing import Dict, Any, Optional, Union, List, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 
 try:
@@ -39,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 class ModelType(Enum):
     """Supported model types."""
+
     OCR = "ocr"
     HANDWRITING = "handwriting"
     LAYOUT = "layout"
@@ -47,6 +49,7 @@ class ModelType(Enum):
 
 class InferenceProvider(Enum):
     """Inference execution providers."""
+
     CPU = "CPUExecutionProvider"
     CUDA = "CUDAExecutionProvider"
     TENSORRT = "TensorrtExecutionProvider"
@@ -57,6 +60,7 @@ class InferenceProvider(Enum):
 @dataclass
 class ModelConfig:
     """Configuration for a loaded model."""
+
     model_type: ModelType
     model_path: str
     input_shape: Tuple[int, ...]
@@ -70,6 +74,7 @@ class ModelConfig:
 @dataclass
 class InferenceResult:
     """Result from model inference."""
+
     output: np.ndarray
     inference_time_ms: float
     preprocessing_time_ms: float = 0.0
@@ -89,7 +94,7 @@ class InferenceResult:
             "total_time_ms": self.total_time_ms,
             "memory_used_mb": self.memory_used_mb,
             "model_type": self.model_type.value if self.model_type else None,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -116,7 +121,7 @@ class EdgeVisionRuntime:
         self,
         memory_budget_mb: float = 500.0,
         enable_optimization: bool = True,
-        default_provider: InferenceProvider = InferenceProvider.CPU
+        default_provider: InferenceProvider = InferenceProvider.CPU,
     ):
         """
         Initialize the edge vision runtime.
@@ -154,9 +159,7 @@ class EdgeVisionRuntime:
     def _validate_dependencies(self) -> None:
         """Validate that required dependencies are available."""
         if ort is None:
-            raise ImportError(
-                "ONNX Runtime is required. Install with: pip install onnxruntime"
-            )
+            raise ImportError("ONNX Runtime is required. Install with: pip install onnxruntime")
         if cv2 is None:
             logger.warning(
                 "OpenCV not available. Image preprocessing may be limited. "
@@ -173,7 +176,7 @@ class EdgeVisionRuntime:
         self,
         model_path: Union[str, Path],
         model_type: ModelType,
-        config: Optional[ModelConfig] = None
+        config: Optional[ModelConfig] = None,
     ) -> None:
         """
         Load an optimized ONNX model for inference.
@@ -206,9 +209,7 @@ class EdgeVisionRuntime:
 
         # Enable optimizations
         if self.enable_optimization:
-            sess_options.graph_optimization_level = (
-                ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-            )
+            sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
             sess_options.optimized_model_filepath = str(
                 model_path.parent / f"{model_path.stem}_optimized.onnx"
             )
@@ -221,23 +222,19 @@ class EdgeVisionRuntime:
         sess_options.inter_op_num_threads = 1
 
         # Select execution provider
-        provider = config.provider.value if config and config.provider else self.default_provider.value
+        provider = (
+            config.provider.value if config and config.provider else self.default_provider.value
+        )
 
         # Create inference session
         try:
             if provider in self.available_providers:
                 providers = [provider]
             else:
-                logger.warning(
-                    f"Provider {provider} not available. Falling back to CPU."
-                )
-                providers = ['CPUExecutionProvider']
+                logger.warning(f"Provider {provider} not available. Falling back to CPU.")
+                providers = ["CPUExecutionProvider"]
 
-            session = ort.InferenceSession(
-                str(model_path),
-                sess_options,
-                providers=providers
-            )
+            session = ort.InferenceSession(str(model_path), sess_options, providers=providers)
 
             # Store session and config
             self.sessions[model_type] = session
@@ -269,10 +266,7 @@ class EdgeVisionRuntime:
             raise
 
     def _create_default_config(
-        self,
-        model_type: ModelType,
-        model_path: str,
-        session: Any
+        self, model_type: ModelType, model_path: str, session: Any
     ) -> ModelConfig:
         """Create default model configuration."""
         input_shape = tuple(session.get_inputs()[0].shape)
@@ -286,7 +280,7 @@ class EdgeVisionRuntime:
             model_path=model_path,
             input_shape=input_shape,
             output_shape=output_shape,
-            max_inference_time_ms=max_time
+            max_inference_time_ms=max_time,
         )
 
     def run_inference(
@@ -294,7 +288,7 @@ class EdgeVisionRuntime:
         input_data: np.ndarray,
         model_type: ModelType,
         preprocess: bool = True,
-        postprocess: bool = True
+        postprocess: bool = True,
     ) -> InferenceResult:
         """
         Run inference on input data.
@@ -363,8 +357,8 @@ class EdgeVisionRuntime:
                 "inference_number": self.inference_count[model_type],
                 "avg_inference_time_ms": (
                     self.total_inference_time[model_type] / self.inference_count[model_type]
-                )
-            }
+                ),
+            },
         )
 
         # Check if inference time exceeds limit
@@ -377,11 +371,7 @@ class EdgeVisionRuntime:
 
         return result
 
-    def _preprocess_input(
-        self,
-        input_data: np.ndarray,
-        model_type: ModelType
-    ) -> np.ndarray:
+    def _preprocess_input(self, input_data: np.ndarray, model_type: ModelType) -> np.ndarray:
         """
         Preprocess input data for model.
 
@@ -396,7 +386,11 @@ class EdgeVisionRuntime:
         input_shape = config.input_shape
 
         # Handle dynamic batch size
-        if input_shape[0] == 'batch_size' or input_shape[0] is None or isinstance(input_shape[0], str):
+        if (
+            input_shape[0] == "batch_size"
+            or input_shape[0] is None
+            or isinstance(input_shape[0], str)
+        ):
             target_shape = (1,) + tuple(input_shape[1:])
         else:
             target_shape = tuple(input_shape)
@@ -424,14 +418,14 @@ class EdgeVisionRuntime:
                 # Resize using OpenCV (more efficient)
                 batch_size, channels = processed.shape[:2]
                 target_h, target_w = target_shape[2:]
-                resized = np.zeros((batch_size, channels, target_h, target_w), dtype=processed.dtype)
+                resized = np.zeros(
+                    (batch_size, channels, target_h, target_w), dtype=processed.dtype
+                )
 
                 for b in range(batch_size):
                     for c in range(channels):
                         resized[b, c] = cv2.resize(
-                            processed[b, c],
-                            (target_w, target_h),
-                            interpolation=cv2.INTER_LINEAR
+                            processed[b, c], (target_w, target_h), interpolation=cv2.INTER_LINEAR
                         )
                 processed = resized
 
@@ -441,11 +435,7 @@ class EdgeVisionRuntime:
 
         return processed
 
-    def _postprocess_output(
-        self,
-        output: np.ndarray,
-        model_type: ModelType
-    ) -> np.ndarray:
+    def _postprocess_output(self, output: np.ndarray, model_type: ModelType) -> np.ndarray:
         """
         Postprocess model output.
 
@@ -477,10 +467,7 @@ class EdgeVisionRuntime:
         return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
 
     def batch_inference(
-        self,
-        input_batch: List[np.ndarray],
-        model_type: ModelType,
-        batch_size: int = 4
+        self, input_batch: List[np.ndarray], model_type: ModelType, batch_size: int = 4
     ) -> List[InferenceResult]:
         """
         Run inference on multiple inputs with batching.
@@ -513,22 +500,17 @@ class EdgeVisionRuntime:
             batch = input_batch[batch_start:batch_end]
 
             # Preprocess and stack inputs
-            processed_batch = [
-                self._preprocess_input(inp, model_type) for inp in batch
-            ]
+            processed_batch = [self._preprocess_input(inp, model_type) for inp in batch]
             stacked_batch = np.concatenate(processed_batch, axis=0)
 
             # Run batched inference
             batch_result = self.run_inference(
-                stacked_batch,
-                model_type,
-                preprocess=False,
-                postprocess=False
+                stacked_batch, model_type, preprocess=False, postprocess=False
             )
 
             # Split batch results
             for j in range(len(batch)):
-                output = batch_result.output[j:j+1]
+                output = batch_result.output[j : j + 1]
                 output = self._postprocess_output(output, model_type)
 
                 result = InferenceResult(
@@ -537,7 +519,7 @@ class EdgeVisionRuntime:
                     preprocessing_time_ms=batch_result.preprocessing_time_ms / len(batch),
                     postprocessing_time_ms=batch_result.postprocessing_time_ms / len(batch),
                     total_time_ms=batch_result.total_time_ms / len(batch),
-                    model_type=model_type
+                    model_type=model_type,
                 )
                 results.append(result)
 
@@ -550,10 +532,7 @@ class EdgeVisionRuntime:
         Returns:
             Dictionary with memory usage information (in MB)
         """
-        memory_info = {
-            "total_budget_mb": self.memory_budget_mb,
-            "models": {}
-        }
+        memory_info = {"total_budget_mb": self.memory_budget_mb, "models": {}}
 
         total_used = 0.0
         for model_type, config in self.model_configs.items():
@@ -569,11 +548,7 @@ class EdgeVisionRuntime:
 
         return memory_info
 
-    def warm_up(
-        self,
-        model_type: ModelType,
-        num_iterations: int = 5
-    ) -> None:
+    def warm_up(self, model_type: ModelType, num_iterations: int = 5) -> None:
         """
         Warm up model for consistent performance.
 
@@ -597,7 +572,11 @@ class EdgeVisionRuntime:
         input_shape = config.input_shape
 
         # Create dummy input
-        if input_shape[0] == 'batch_size' or input_shape[0] is None or isinstance(input_shape[0], str):
+        if (
+            input_shape[0] == "batch_size"
+            or input_shape[0] is None
+            or isinstance(input_shape[0], str)
+        ):
             shape = (1,) + tuple(input_shape[1:])
         else:
             shape = tuple(input_shape)
@@ -608,10 +587,7 @@ class EdgeVisionRuntime:
         warmup_times = []
         for i in range(num_iterations):
             result = self.run_inference(
-                dummy_input,
-                model_type,
-                preprocess=False,
-                postprocess=False
+                dummy_input, model_type, preprocess=False, postprocess=False
             )
             warmup_times.append(result.inference_time_ms)
 
@@ -619,14 +595,10 @@ class EdgeVisionRuntime:
 
         avg_time = np.mean(warmup_times)
         logger.info(
-            f"Warmup complete for {model_type.value}. "
-            f"Average inference time: {avg_time:.2f}ms"
+            f"Warmup complete for {model_type.value}. " f"Average inference time: {avg_time:.2f}ms"
         )
 
-    def get_performance_stats(
-        self,
-        model_type: Optional[ModelType] = None
-    ) -> Dict[str, Any]:
+    def get_performance_stats(self, model_type: Optional[ModelType] = None) -> Dict[str, Any]:
         """
         Get performance statistics for models.
 
@@ -652,7 +624,7 @@ class EdgeVisionRuntime:
                         self.total_inference_time[mt] / self.inference_count[mt]
                     ),
                     "warmup_complete": self.warmup_complete.get(mt, False),
-                    "max_allowed_time_ms": self.model_configs[mt].max_inference_time_ms
+                    "max_allowed_time_ms": self.model_configs[mt].max_inference_time_ms,
                 }
 
         return stats

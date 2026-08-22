@@ -17,24 +17,24 @@ from typing import List
 import numpy as np
 import pytest
 
-from src.audio.speech_recognizer import (
-    SpeechRecognizer,
-    SpeechConfig,
-    TranscriptionResult,
-    StreamingTranscriber,
-    LanguageHint,
-    TranscriptionMode,
-)
 from src.audio.child_speech_adapter import (
-    ChildSpeechAdapter,
-    AgeGroup,
-    MultiAgeAdapter,
     ACOUSTIC_PROFILES,
+    AgeGroup,
+    ChildSpeechAdapter,
+    MultiAgeAdapter,
 )
 from src.audio.educational_vocabulary import (
     EducationalVocabulary,
-    VocabularyContextManager,
     Subject,
+    VocabularyContextManager,
+)
+from src.audio.speech_recognizer import (
+    LanguageHint,
+    SpeechConfig,
+    SpeechRecognizer,
+    StreamingTranscriber,
+    TranscriptionMode,
+    TranscriptionResult,
 )
 
 
@@ -85,7 +85,7 @@ class TestSpeechRecognizer:
         audio_int16 = (audio * 32767).astype(np.int16)
 
         # Write WAV file
-        with wave.open(str(file_path), 'w') as wav_file:
+        with wave.open(str(file_path), "w") as wav_file:
             wav_file.setnchannels(1)
             wav_file.setsampwidth(2)
             wav_file.setframerate(sample_rate)
@@ -174,6 +174,7 @@ class TestSpeechRecognizer:
     @pytest.mark.asyncio
     async def test_streaming_transcription(self, recognizer):
         """Test streaming transcription."""
+
         # Create async generator of audio chunks
         async def audio_stream():
             sample_rate = 16000
@@ -435,10 +436,7 @@ class TestEducationalVocabulary:
 
     def test_boost_prompt_creation(self, vocab_manager):
         """Test vocabulary boost prompt creation."""
-        prompt = vocab_manager.create_boost_prompt(
-            subjects=[Subject.MATHEMATICS],
-            max_terms=20
-        )
+        prompt = vocab_manager.create_boost_prompt(subjects=[Subject.MATHEMATICS], max_terms=20)
 
         assert len(prompt) > 0
         assert "Educational terms:" in prompt
@@ -566,11 +564,14 @@ class TestIntegration:
 class TestAccuracy:
     """Accuracy tests for different age groups and conditions."""
 
-    @pytest.mark.parametrize("age_group", [
-        AgeGroup.EARLY_ELEMENTARY,
-        AgeGroup.LATE_ELEMENTARY,
-        AgeGroup.PRE_TEEN,
-    ])
+    @pytest.mark.parametrize(
+        "age_group",
+        [
+            AgeGroup.EARLY_ELEMENTARY,
+            AgeGroup.LATE_ELEMENTARY,
+            AgeGroup.PRE_TEEN,
+        ],
+    )
     def test_age_group_adaptations(self, age_group):
         """Test adaptations for different age groups."""
         adapter = ChildSpeechAdapter(age_group=age_group)

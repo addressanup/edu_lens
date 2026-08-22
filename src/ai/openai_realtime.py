@@ -22,17 +22,17 @@ import base64
 import json
 import logging
 import os
+import struct
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Awaitable
-import struct
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 # Import prompt builder for dynamic child-adaptive prompts
 from src.ai.prompt_builder import (
+    ChildProfile,
     build_voice_system_prompt,
     get_default_edulens_prompt,
-    ChildProfile,
 )
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 class RealtimeEventType(Enum):
     """OpenAI Realtime API event types."""
+
     # Session events
     SESSION_CREATE = "session.create"
     SESSION_UPDATE = "session.update"
@@ -60,7 +61,9 @@ class RealtimeEventType(Enum):
     CONVERSATION_ITEM_CREATED = "conversation.item.created"
     CONVERSATION_ITEM_TRUNCATE = "conversation.item.truncate"
     CONVERSATION_ITEM_DELETE = "conversation.item.delete"
-    CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED = "conversation.item.input_audio_transcription.completed"
+    CONVERSATION_ITEM_INPUT_AUDIO_TRANSCRIPTION_COMPLETED = (
+        "conversation.item.input_audio_transcription.completed"
+    )
 
     # Response events
     RESPONSE_CREATE = "response.create"
@@ -89,6 +92,7 @@ class RealtimeEventType(Enum):
 
 class ConnectionState(Enum):
     """WebSocket connection states."""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -101,6 +105,7 @@ class ConnectionState(Enum):
 @dataclass
 class RealtimeConfig:
     """Configuration for OpenAI Realtime API."""
+
     api_key: Optional[str] = None
     model: str = "gpt-4o-realtime-preview-2024-12-17"
 
@@ -135,6 +140,7 @@ class RealtimeConfig:
 @dataclass
 class AudioChunk:
     """Audio data chunk."""
+
     data: bytes
     sample_rate: int = 24000
     channels: int = 1
@@ -144,6 +150,7 @@ class AudioChunk:
 @dataclass
 class TranscriptEvent:
     """Transcription event."""
+
     text: str
     is_final: bool = False
     role: str = "user"  # user or assistant
@@ -153,6 +160,7 @@ class TranscriptEvent:
 @dataclass
 class ResponseEvent:
     """Response event from the model."""
+
     text: str
     audio_data: Optional[bytes] = None
     is_complete: bool = False
@@ -280,9 +288,7 @@ class OpenAIRealtimeService:
                 "voice": self.config.voice,
                 "input_audio_format": self.config.input_audio_format,
                 "output_audio_format": self.config.output_audio_format,
-                "input_audio_transcription": {
-                    "model": self.config.input_audio_transcription_model
-                },
+                "input_audio_transcription": {"model": self.config.input_audio_transcription_model},
                 "turn_detection": {
                     "type": self.config.turn_detection_type,
                     "threshold": self.config.vad_threshold,
@@ -291,7 +297,7 @@ class OpenAIRealtimeService:
                 },
                 "temperature": self.config.temperature,
                 "max_response_output_tokens": self.config.max_response_tokens,
-            }
+            },
         }
 
         # Add system prompt if configured
@@ -358,11 +364,9 @@ class OpenAIRealtimeService:
             elif event_type == "conversation.item.input_audio_transcription.completed":
                 transcript = event.get("transcript", "")
                 if transcript and self.on_transcript:
-                    await self.on_transcript(TranscriptEvent(
-                        text=transcript,
-                        is_final=True,
-                        role="user"
-                    ))
+                    await self.on_transcript(
+                        TranscriptEvent(text=transcript, is_final=True, role="user")
+                    )
 
             # Response events
             elif event_type == "response.created":
@@ -380,10 +384,9 @@ class OpenAIRealtimeService:
                     self.audio_chunks_received += 1
 
                     if self.on_audio:
-                        await self.on_audio(AudioChunk(
-                            data=audio_data,
-                            sample_rate=self.config.sample_rate
-                        ))
+                        await self.on_audio(
+                            AudioChunk(data=audio_data, sample_rate=self.config.sample_rate)
+                        )
 
             elif event_type == "response.audio_transcript.delta":
                 delta = event.get("delta", "")
@@ -392,11 +395,9 @@ class OpenAIRealtimeService:
             elif event_type == "response.audio_transcript.done":
                 transcript = event.get("transcript", self._response_text)
                 if self.on_transcript:
-                    await self.on_transcript(TranscriptEvent(
-                        text=transcript,
-                        is_final=True,
-                        role="assistant"
-                    ))
+                    await self.on_transcript(
+                        TranscriptEvent(text=transcript, is_final=True, role="assistant")
+                    )
 
             elif event_type == "response.done":
                 self.responses_received += 1
@@ -405,11 +406,11 @@ class OpenAIRealtimeService:
                 full_audio = b"".join(self._response_audio) if self._response_audio else None
 
                 if self.on_response:
-                    await self.on_response(ResponseEvent(
-                        text=self._response_text,
-                        audio_data=full_audio,
-                        is_complete=True
-                    ))
+                    await self.on_response(
+                        ResponseEvent(
+                            text=self._response_text, audio_data=full_audio, is_complete=True
+                        )
+                    )
 
                 await self._set_state(ConnectionState.READY)
                 logger.debug(f"Response complete: {len(self._response_text)} chars")
@@ -422,10 +423,7 @@ class OpenAIRealtimeService:
                 text = event.get("text", self._response_text)
                 if self.on_response and not self._response_audio:
                     # Text-only response
-                    await self.on_response(ResponseEvent(
-                        text=text,
-                        is_complete=True
-                    ))
+                    await self.on_response(ResponseEvent(text=text, is_complete=True))
 
             # Error events
             elif event_type == "error":
@@ -457,24 +455,17 @@ class OpenAIRealtimeService:
         # Encode audio as base64
         audio_b64 = base64.b64encode(audio_data).decode("utf-8")
 
-        await self._send_event({
-            "type": "input_audio_buffer.append",
-            "audio": audio_b64
-        })
+        await self._send_event({"type": "input_audio_buffer.append", "audio": audio_b64})
 
         self.audio_chunks_sent += 1
 
     async def commit_audio(self) -> None:
         """Commit the audio buffer to trigger processing."""
-        await self._send_event({
-            "type": "input_audio_buffer.commit"
-        })
+        await self._send_event({"type": "input_audio_buffer.commit"})
 
     async def clear_audio_buffer(self) -> None:
         """Clear the audio input buffer."""
-        await self._send_event({
-            "type": "input_audio_buffer.clear"
-        })
+        await self._send_event({"type": "input_audio_buffer.clear"})
 
     async def send_text(self, text: str) -> None:
         """
@@ -488,31 +479,24 @@ class OpenAIRealtimeService:
             return
 
         # Create conversation item with user message
-        await self._send_event({
-            "type": "conversation.item.create",
-            "item": {
-                "type": "message",
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": text
-                    }
-                ]
+        await self._send_event(
+            {
+                "type": "conversation.item.create",
+                "item": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": text}],
+                },
             }
-        })
+        )
 
         # Request response
-        await self._send_event({
-            "type": "response.create"
-        })
+        await self._send_event({"type": "response.create"})
 
     async def cancel_response(self) -> None:
         """Cancel the current response generation."""
         if self.state == ConnectionState.RESPONDING:
-            await self._send_event({
-                "type": "response.cancel"
-            })
+            await self._send_event({"type": "response.cancel"})
 
     async def disconnect(self) -> None:
         """Disconnect from the API."""
@@ -624,10 +608,7 @@ class RealtimeVoiceConversation:
     async def get_audio_chunk(self, timeout: float = 0.1) -> Optional[AudioChunk]:
         """Get the next audio chunk to play."""
         try:
-            return await asyncio.wait_for(
-                self._audio_queue.get(),
-                timeout=timeout
-            )
+            return await asyncio.wait_for(self._audio_queue.get(), timeout=timeout)
         except asyncio.TimeoutError:
             return None
 
@@ -646,10 +627,7 @@ class RealtimeVoiceConversation:
     @property
     def is_ready(self) -> bool:
         """Check if ready for conversation."""
-        return (
-            self._service is not None and
-            self._service.state == ConnectionState.READY
-        )
+        return self._service is not None and self._service.state == ConnectionState.READY
 
 
 # Default system prompt for EduLens
@@ -698,7 +676,9 @@ def create_edulens_voice_service(
                 child_profile=ChildProfile.from_dict(child_profile),
                 context=context,
             )
-            logger.info(f"Created personalized voice prompt for {child_profile.get('name', 'child')}, age {child_profile.get('age', 'unknown')}")
+            logger.info(
+                f"Created personalized voice prompt for {child_profile.get('name', 'child')}, age {child_profile.get('age', 'unknown')}"
+            )
         except Exception as e:
             logger.warning(f"Failed to build personalized prompt: {e}, using default")
             system_prompt = get_default_edulens_prompt()

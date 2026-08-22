@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class DataType(Enum):
     """Types of data that can be minimized."""
+
     IMAGE = "image"
     AUDIO = "audio"
     TEXT = "text"
@@ -39,6 +40,7 @@ class DataType(Enum):
 
 class MinimizationLevel(Enum):
     """Levels of data minimization aggressiveness."""
+
     NONE = 0  # No minimization
     BASIC = 1  # Remove obvious PII
     STANDARD = 2  # Extract features, discard raw data
@@ -49,6 +51,7 @@ class MinimizationLevel(Enum):
 @dataclass
 class MinimizedImage:
     """Minimized representation of an image (raw image discarded)."""
+
     feature_digest: str  # Non-reversible hash of features
     detected_objects: List[str]  # e.g., ["book", "desk", "pencil"]
     detected_text: List[str]  # OCR results (text only, no positions)
@@ -73,6 +76,7 @@ class MinimizedImage:
 @dataclass
 class MinimizedAudio:
     """Minimized representation of audio (raw audio discarded)."""
+
     feature_digest: str  # Non-reversible hash of features
     transcription: str  # Text transcription only
     intent: str  # Detected intent (e.g., "question", "request_help")
@@ -99,6 +103,7 @@ class MinimizedAudio:
 @dataclass
 class LearningDataAggregate:
     """Aggregated learning data (anonymized, non-identifiable)."""
+
     session_id: str  # Ephemeral session ID (not linked to user)
     subject_area: str
     interaction_count: int
@@ -155,13 +160,15 @@ class DataMinimizer:
 
         logger.info(f"DataMinimizer initialized with level: {default_minimization_level.name}")
 
-    def minimize_image(self,
-                      image_data: bytes,
-                      detected_objects: Optional[List[str]] = None,
-                      detected_text: Optional[List[str]] = None,
-                      scene_type: Optional[str] = None,
-                      minimization_level: Optional[MinimizationLevel] = None,
-                      metadata: Optional[Dict[str, Any]] = None) -> MinimizedImage:
+    def minimize_image(
+        self,
+        image_data: bytes,
+        detected_objects: Optional[List[str]] = None,
+        detected_text: Optional[List[str]] = None,
+        scene_type: Optional[str] = None,
+        minimization_level: Optional[MinimizationLevel] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> MinimizedImage:
         """
         Extract minimal features from image and discard raw image data.
 
@@ -227,14 +234,16 @@ class DataMinimizer:
 
         return minimized
 
-    def minimize_audio(self,
-                      audio_data: bytes,
-                      transcription: Optional[str] = None,
-                      intent: Optional[str] = None,
-                      duration_seconds: Optional[float] = None,
-                      language: str = "en",
-                      minimization_level: Optional[MinimizationLevel] = None,
-                      metadata: Optional[Dict[str, Any]] = None) -> MinimizedAudio:
+    def minimize_audio(
+        self,
+        audio_data: bytes,
+        transcription: Optional[str] = None,
+        intent: Optional[str] = None,
+        duration_seconds: Optional[float] = None,
+        language: str = "en",
+        minimization_level: Optional[MinimizationLevel] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> MinimizedAudio:
         """
         Extract minimal features from audio and discard raw audio data.
 
@@ -305,10 +314,12 @@ class DataMinimizer:
 
         return minimized
 
-    def aggregate_learning_data(self,
-                               interaction_events: List[Dict[str, Any]],
-                               session_id: Optional[str] = None,
-                               anonymize: bool = True) -> LearningDataAggregate:
+    def aggregate_learning_data(
+        self,
+        interaction_events: List[Dict[str, Any]],
+        session_id: Optional[str] = None,
+        anonymize: bool = True,
+    ) -> LearningDataAggregate:
         """
         Aggregate learning interaction data into anonymized summary.
 
@@ -460,11 +471,7 @@ class DataMinimizer:
         }
 
         # Keep only essential fields
-        minimized = {
-            key: value
-            for key, value in metadata.items()
-            if key in essential_fields
-        }
+        minimized = {key: value for key, value in metadata.items() if key in essential_fields}
 
         # Round timestamps to hour for privacy
         if "timestamp" in minimized:
@@ -519,13 +526,13 @@ class DataMinimizer:
         if isinstance(data, bytes):
             data_bytes = data
         elif isinstance(data, str):
-            data_bytes = data.encode('utf-8')
+            data_bytes = data.encode("utf-8")
         elif isinstance(data, np.ndarray):
             data_bytes = data.tobytes()
         elif isinstance(data, (dict, list)):
-            data_bytes = json.dumps(data, sort_keys=True).encode('utf-8')
+            data_bytes = json.dumps(data, sort_keys=True).encode("utf-8")
         else:
-            data_bytes = str(data).encode('utf-8')
+            data_bytes = str(data).encode("utf-8")
 
         return hashlib.sha256(data_bytes).hexdigest()
 
@@ -583,14 +590,49 @@ class DataMinimizer:
         # Simple keyword extraction (in production: use TF-IDF, KeyBERT, etc.)
         # Remove common stop words
         stop_words = {
-            "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
-            "of", "with", "by", "from", "is", "was", "are", "were", "be", "been",
-            "have", "has", "had", "do", "does", "did", "will", "would", "could",
-            "should", "may", "might", "can", "what", "when", "where", "why", "how",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "is",
+            "was",
+            "are",
+            "were",
+            "be",
+            "been",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "can",
+            "what",
+            "when",
+            "where",
+            "why",
+            "how",
         }
 
         # Extract words (alphanumeric only)
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+        words = re.findall(r"\b[a-zA-Z]{3,}\b", text.lower())
 
         # Filter stop words and get unique words
         keywords = [word for word in words if word not in stop_words]
@@ -638,34 +680,22 @@ class DataMinimizer:
             Dictionary mapping PII type to (pattern, replacement) tuples
         """
         return {
-            "email": (
-                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-                '[EMAIL_REDACTED]'
-            ),
+            "email": (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL_REDACTED]"),
             "phone": (
-                r'\b(?:\+?1[-.]?)?\(?([0-9]{3})\)?[-.]?([0-9]{3})[-.]?([0-9]{4})\b',
-                '[PHONE_REDACTED]'
+                r"\b(?:\+?1[-.]?)?\(?([0-9]{3})\)?[-.]?([0-9]{3})[-.]?([0-9]{4})\b",
+                "[PHONE_REDACTED]",
             ),
-            "ssn": (
-                r'\b\d{3}-\d{2}-\d{4}\b',
-                '[SSN_REDACTED]'
-            ),
-            "credit_card": (
-                r'\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b',
-                '[CARD_REDACTED]'
-            ),
-            "ip_address": (
-                r'\b(?:\d{1,3}\.){3}\d{1,3}\b',
-                '[IP_REDACTED]'
-            ),
+            "ssn": (r"\b\d{3}-\d{2}-\d{4}\b", "[SSN_REDACTED]"),
+            "credit_card": (r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b", "[CARD_REDACTED]"),
+            "ip_address": (r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "[IP_REDACTED]"),
             "url_with_params": (
-                r'https?://[^\s]+(?:\?|&)[^\s]*(?:token|key|password|session)=[^\s&]+',
-                '[URL_REDACTED]'
+                r"https?://[^\s]+(?:\?|&)[^\s]*(?:token|key|password|session)=[^\s&]+",
+                "[URL_REDACTED]",
             ),
             # Common name patterns (simple heuristic)
             "potential_name": (
-                r'\b(?:my name is|i am|i\'m|called)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b',
-                r'\1 [NAME_REDACTED]'
+                r"\b(?:my name is|i am|i\'m|called)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b",
+                r"\1 [NAME_REDACTED]",
             ),
         }
 

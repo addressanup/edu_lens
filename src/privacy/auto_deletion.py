@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class DeletionTrigger(Enum):
     """Triggers that can initiate deletion."""
+
     TIME_BASED = "time_based"  # Delete after time period
     EVENT_BASED = "event_based"  # Delete on specific event
     PROCESS_COMPLETE = "process_complete"  # Delete immediately after processing
@@ -41,6 +42,7 @@ class DeletionTrigger(Enum):
 
 class DeletionStatus(Enum):
     """Status of deletion operation."""
+
     SCHEDULED = "scheduled"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -50,6 +52,7 @@ class DeletionStatus(Enum):
 
 class DeletionMethod(Enum):
     """Methods for data deletion."""
+
     SIMPLE_DELETE = "simple_delete"  # Standard file/data deletion
     SECURE_WIPE = "secure_wipe"  # Overwrite with random data
     CRYPTO_ERASE = "crypto_erase"  # Cryptographic erasure (delete encryption key)
@@ -59,6 +62,7 @@ class DeletionMethod(Enum):
 @dataclass
 class RetentionPolicy:
     """Defines retention policy for data."""
+
     policy_id: str
     data_type: str
     max_age_seconds: int
@@ -79,6 +83,7 @@ class RetentionPolicy:
 @dataclass
 class DeletionTask:
     """Represents a scheduled or active deletion task."""
+
     task_id: str
     target_id: str  # ID of data/container to delete
     target_type: str  # Type of target (file, container, data_item, etc.)
@@ -115,6 +120,7 @@ class DeletionTask:
 @dataclass
 class DeletionLog:
     """Audit log entry for deletion operation."""
+
     log_id: str
     task_id: str
     target_id: str
@@ -158,10 +164,12 @@ class AutoDeletionManager:
     - Responds to consent revocation
     """
 
-    def __init__(self,
-                 retention_policies: Optional[List[RetentionPolicy]] = None,
-                 enable_background_cleanup: bool = True,
-                 cleanup_interval_seconds: int = 60):
+    def __init__(
+        self,
+        retention_policies: Optional[List[RetentionPolicy]] = None,
+        enable_background_cleanup: bool = True,
+        cleanup_interval_seconds: int = 60,
+    ):
         """
         Initialize the auto-deletion manager.
 
@@ -192,13 +200,15 @@ class AutoDeletionManager:
 
         logger.info("AutoDeletionManager initialized")
 
-    def schedule_deletion(self,
-                         target_id: str,
-                         target_type: str,
-                         trigger: DeletionTrigger,
-                         delay_seconds: int = 0,
-                         deletion_method: DeletionMethod = DeletionMethod.SECURE_WIPE,
-                         metadata: Optional[Dict[str, Any]] = None) -> str:
+    def schedule_deletion(
+        self,
+        target_id: str,
+        target_type: str,
+        trigger: DeletionTrigger,
+        delay_seconds: int = 0,
+        deletion_method: DeletionMethod = DeletionMethod.SECURE_WIPE,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """
         Schedule a deletion task.
 
@@ -254,7 +264,7 @@ class AutoDeletionManager:
                     "trigger": trigger.value,
                     "method": deletion_method.value,
                     "delay_seconds": delay_seconds,
-                }
+                },
             )
 
             logger.info(
@@ -264,11 +274,13 @@ class AutoDeletionManager:
 
             return task_id
 
-    def delete_on_process_complete(self,
-                                   target_id: str,
-                                   target_type: str,
-                                   deletion_callback: Optional[Callable[[str], bool]] = None,
-                                   deletion_method: DeletionMethod = DeletionMethod.SECURE_WIPE) -> str:
+    def delete_on_process_complete(
+        self,
+        target_id: str,
+        target_type: str,
+        deletion_callback: Optional[Callable[[str], bool]] = None,
+        deletion_method: DeletionMethod = DeletionMethod.SECURE_WIPE,
+    ) -> str:
         """
         Schedule immediate deletion after processing completes.
 
@@ -301,7 +313,7 @@ class AutoDeletionManager:
             trigger=DeletionTrigger.PROCESS_COMPLETE,
             delay_seconds=0,
             deletion_method=deletion_method,
-            metadata={"has_callback": deletion_callback is not None}
+            metadata={"has_callback": deletion_callback is not None},
         )
 
         # Execute immediately if callback provided
@@ -310,10 +322,7 @@ class AutoDeletionManager:
 
         return task_id
 
-    def secure_wipe(self,
-                   file_path: Path,
-                   passes: int = 3,
-                   verify: bool = True) -> bool:
+    def secure_wipe(self, file_path: Path, passes: int = 3, verify: bool = True) -> bool:
         """
         Securely wipe a file by overwriting with random data.
 
@@ -339,12 +348,12 @@ class AutoDeletionManager:
             # Calculate verification hash before deletion
             verification_hash = None
             if verify:
-                with open(file_path, 'rb') as f:
+                with open(file_path, "rb") as f:
                     verification_hash = hashlib.sha256(f.read()).hexdigest()
 
             # Perform overwrite passes
             for pass_num in range(passes):
-                with open(file_path, 'wb') as f:
+                with open(file_path, "wb") as f:
                     # Write random data
                     f.write(secrets.token_bytes(file_size))
                     f.flush()
@@ -370,9 +379,7 @@ class AutoDeletionManager:
             logger.error(f"Secure wipe failed for {file_path}: {e}")
             return False
 
-    def crypto_erase(self,
-                    target_id: str,
-                    encryption_key_location: str) -> bool:
+    def crypto_erase(self, target_id: str, encryption_key_location: str) -> bool:
         """
         Perform cryptographic erasure by deleting encryption key.
 
@@ -401,7 +408,7 @@ class AutoDeletionManager:
                 target_id=target_id,
                 action="CRYPTO_ERASE",
                 status="completed",
-                details={"key_location": encryption_key_location}
+                details={"key_location": encryption_key_location},
             )
 
             logger.info(f"Crypto erase completed: {target_id}")
@@ -411,9 +418,9 @@ class AutoDeletionManager:
             logger.error(f"Crypto erase failed for {target_id}: {e}")
             return False
 
-    def verify_deletion(self,
-                       task_id: str,
-                       verification_callback: Optional[Callable[[str], bool]] = None) -> bool:
+    def verify_deletion(
+        self, task_id: str, verification_callback: Optional[Callable[[str], bool]] = None
+    ) -> bool:
         """
         Verify that deletion was successful.
 
@@ -464,7 +471,9 @@ class AutoDeletionManager:
                     target_id=task.target_id,
                     action="DELETION_VERIFIED",
                     status="verified",
-                    details={"verification_method": "callback" if verification_callback else "default"}
+                    details={
+                        "verification_method": "callback" if verification_callback else "default"
+                    },
                 )
 
                 logger.info(f"Deletion verified: {task_id}")
@@ -473,9 +482,9 @@ class AutoDeletionManager:
 
             return is_verified
 
-    def get_deletion_log(self,
-                        target_id: Optional[str] = None,
-                        limit: int = 100) -> List[Dict[str, Any]]:
+    def get_deletion_log(
+        self, target_id: Optional[str] = None, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """
         Get deletion audit log entries.
 
@@ -524,9 +533,9 @@ class AutoDeletionManager:
             self.retention_policies[policy.policy_id] = policy
             logger.info(f"Added retention policy: {policy.policy_id} ({policy.data_type})")
 
-    def check_retention_policy(self,
-                              data_type: str,
-                              creation_time: datetime) -> Optional[RetentionPolicy]:
+    def check_retention_policy(
+        self, data_type: str, creation_time: datetime
+    ) -> Optional[RetentionPolicy]:
         """
         Check if data violates retention policy.
 
@@ -585,9 +594,9 @@ class AutoDeletionManager:
 
         logger.info("AutoDeletionManager shutdown complete")
 
-    def _execute_deletion_task(self,
-                               task_id: str,
-                               deletion_callback: Callable[[str], bool]) -> bool:
+    def _execute_deletion_task(
+        self, task_id: str, deletion_callback: Callable[[str], bool]
+    ) -> bool:
         """Execute a deletion task."""
         with self.lock:
             if task_id not in self.deletion_tasks:
@@ -610,7 +619,7 @@ class AutoDeletionManager:
                         target_id=task.target_id,
                         action="DELETION_COMPLETED",
                         status="completed",
-                        details={"method": task.deletion_method.value}
+                        details={"method": task.deletion_method.value},
                     )
                 else:
                     task.status = DeletionStatus.FAILED
@@ -621,7 +630,7 @@ class AutoDeletionManager:
                         target_id=task.target_id,
                         action="DELETION_FAILED",
                         status="failed",
-                        details={"error": task.error_message}
+                        details={"error": task.error_message},
                     )
 
             return success
@@ -636,7 +645,7 @@ class AutoDeletionManager:
                     target_id=task.target_id,
                     action="DELETION_FAILED",
                     status="failed",
-                    details={"error": str(e)}
+                    details={"error": str(e)},
                 )
 
             logger.error(f"Deletion task failed: {task_id}, error: {e}")
@@ -649,7 +658,8 @@ class AutoDeletionManager:
 
         with self.lock:
             due_tasks = [
-                task_id for task_id, task in self.deletion_tasks.items()
+                task_id
+                for task_id, task in self.deletion_tasks.items()
                 if task.status == DeletionStatus.SCHEDULED and task.scheduled_time <= now
             ]
 
@@ -663,51 +673,60 @@ class AutoDeletionManager:
     def _initialize_default_policies(self) -> None:
         """Initialize default retention policies."""
         # Sensitive visual data - immediate deletion
-        self.add_retention_policy(RetentionPolicy(
-            policy_id="sensitive_visual",
-            data_type="image",
-            max_age_seconds=0,
-            deletion_method=DeletionMethod.SECURE_WIPE,
-            auto_delete=True,
-            verify_deletion=True,
-            description="Images must be deleted immediately after processing"
-        ))
+        self.add_retention_policy(
+            RetentionPolicy(
+                policy_id="sensitive_visual",
+                data_type="image",
+                max_age_seconds=0,
+                deletion_method=DeletionMethod.SECURE_WIPE,
+                auto_delete=True,
+                verify_deletion=True,
+                description="Images must be deleted immediately after processing",
+            )
+        )
 
         # Voice data - immediate deletion
-        self.add_retention_policy(RetentionPolicy(
-            policy_id="voice_data",
-            data_type="audio",
-            max_age_seconds=0,
-            deletion_method=DeletionMethod.SECURE_WIPE,
-            auto_delete=True,
-            verify_deletion=True,
-            description="Voice data must be deleted immediately after processing"
-        ))
+        self.add_retention_policy(
+            RetentionPolicy(
+                policy_id="voice_data",
+                data_type="audio",
+                max_age_seconds=0,
+                deletion_method=DeletionMethod.SECURE_WIPE,
+                auto_delete=True,
+                verify_deletion=True,
+                description="Voice data must be deleted immediately after processing",
+            )
+        )
 
         # Session context - 1 hour retention
-        self.add_retention_policy(RetentionPolicy(
-            policy_id="session_context",
-            data_type="session",
-            max_age_seconds=3600,
-            deletion_method=DeletionMethod.SIMPLE_DELETE,
-            auto_delete=True,
-            verify_deletion=False,
-            description="Session context expires after 1 hour"
-        ))
+        self.add_retention_policy(
+            RetentionPolicy(
+                policy_id="session_context",
+                data_type="session",
+                max_age_seconds=3600,
+                deletion_method=DeletionMethod.SIMPLE_DELETE,
+                auto_delete=True,
+                verify_deletion=False,
+                description="Session context expires after 1 hour",
+            )
+        )
 
         # Ephemeral storage - 5 minute default
-        self.add_retention_policy(RetentionPolicy(
-            policy_id="ephemeral_storage",
-            data_type="ephemeral",
-            max_age_seconds=300,
-            deletion_method=DeletionMethod.SECURE_WIPE,
-            auto_delete=True,
-            verify_deletion=True,
-            description="Ephemeral storage auto-deletes after 5 minutes"
-        ))
+        self.add_retention_policy(
+            RetentionPolicy(
+                policy_id="ephemeral_storage",
+                data_type="ephemeral",
+                max_age_seconds=300,
+                deletion_method=DeletionMethod.SECURE_WIPE,
+                auto_delete=True,
+                verify_deletion=True,
+                description="Ephemeral storage auto-deletes after 5 minutes",
+            )
+        )
 
     def _start_background_cleanup(self) -> None:
         """Start background thread for cleanup."""
+
         def cleanup_loop():
             while not self._stop_cleanup.is_set():
                 try:
@@ -719,7 +738,9 @@ class AutoDeletionManager:
 
         self._cleanup_thread = threading.Thread(target=cleanup_loop, daemon=True)
         self._cleanup_thread.start()
-        logger.info(f"Background cleanup thread started (interval: {self.cleanup_interval_seconds}s)")
+        logger.info(
+            f"Background cleanup thread started (interval: {self.cleanup_interval_seconds}s)"
+        )
 
     def _generate_task_id(self) -> str:
         """Generate unique task ID."""
@@ -729,14 +750,13 @@ class AutoDeletionManager:
         hash_value = hashlib.sha256(combined).hexdigest()[:16]
         return f"del_task_{hash_value}"
 
-    def _log_deletion(self,
-                     task_id: str,
-                     target_id: str,
-                     action: str,
-                     status: str,
-                     details: Dict[str, Any]) -> None:
+    def _log_deletion(
+        self, task_id: str, target_id: str, action: str, status: str, details: Dict[str, Any]
+    ) -> None:
         """Add entry to deletion audit log."""
-        log_id = hashlib.sha256(f"{task_id}{datetime.utcnow().isoformat()}".encode()).hexdigest()[:16]
+        log_id = hashlib.sha256(f"{task_id}{datetime.utcnow().isoformat()}".encode()).hexdigest()[
+            :16
+        ]
 
         log_entry = DeletionLog(
             log_id=log_id,

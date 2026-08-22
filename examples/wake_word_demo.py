@@ -11,18 +11,13 @@ import time
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from audio import (
-    WakeWordDetector,
-    AsyncWakeWordDetector,
-    DetectionResult
-)
+from audio import AsyncWakeWordDetector, DetectionResult, WakeWordDetector
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger(__name__)
@@ -38,12 +33,12 @@ def demo_basic_detection():
     print("Press Ctrl+C to stop\n")
 
     # Create detector
-    config_path = Path(__file__).parent.parent / 'configs' / 'audio' / 'wake_word_config.yaml'
+    config_path = Path(__file__).parent.parent / "configs" / "audio" / "wake_word_config.yaml"
 
     detector = WakeWordDetector(
         model_path=None,  # Use heuristic detection for demo
         sensitivity=0.5,  # Balanced sensitivity
-        config_path=str(config_path) if config_path.exists() else None
+        config_path=str(config_path) if config_path.exists() else None,
     )
 
     # Register callback
@@ -88,12 +83,12 @@ async def demo_async_detection():
     print("Press Ctrl+C to stop\n")
 
     # Create async detector
-    config_path = Path(__file__).parent.parent / 'configs' / 'audio' / 'wake_word_config.yaml'
+    config_path = Path(__file__).parent.parent / "configs" / "audio" / "wake_word_config.yaml"
 
     detector = AsyncWakeWordDetector(
         model_path=None,
         sensitivity=0.5,
-        config_path=str(config_path) if config_path.exists() else None
+        config_path=str(config_path) if config_path.exists() else None,
     )
 
     try:

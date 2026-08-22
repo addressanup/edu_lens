@@ -14,18 +14,18 @@ Uses pytest-benchmark for consistent measurements.
 import asyncio
 import time
 from pathlib import Path
-from typing import Dict, Any
-from unittest.mock import Mock, AsyncMock, patch
+from typing import Any, Dict
+from unittest.mock import AsyncMock, Mock, patch
 
 import numpy as np
 import pytest
 from PIL import Image
 
 try:
-    from src.vision.ocr_engine import OCREngine, OCRBackend
-    from src.audio.speech_recognizer import SpeechRecognizer, SpeechConfig
-    from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
     from src.audio.audio_pipeline import AudioPipeline, PipelineConfig
+    from src.audio.speech_recognizer import SpeechConfig, SpeechRecognizer
+    from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
+    from src.vision.ocr_engine import OCRBackend, OCREngine
 except ImportError:
     OCREngine = None
     SpeechRecognizer = None
@@ -70,9 +70,10 @@ class TestOCRLatency:
     @pytest.fixture
     def sample_worksheet_image(self, temp_dir):
         """Create a sample worksheet image."""
-        img = Image.new('RGB', (800, 600), color='white')
+        img = Image.new("RGB", (800, 600), color="white")
         # Add some text-like patterns
         from PIL import ImageDraw, ImageFont
+
         draw = ImageDraw.Draw(img)
 
         # Try to use a default font, fallback to basic font
@@ -81,10 +82,10 @@ class TestOCRLatency:
         except:
             font = ImageFont.load_default()
 
-        draw.text((50, 50), "Math Worksheet - Grade 3", fill='black', font=font)
-        draw.text((50, 100), "1. What is 5 + 7?", fill='black', font=font)
-        draw.text((50, 150), "2. Calculate 12 - 4", fill='black', font=font)
-        draw.text((50, 200), "3. Solve: 3 × 6 = ?", fill='black', font=font)
+        draw.text((50, 50), "Math Worksheet - Grade 3", fill="black", font=font)
+        draw.text((50, 100), "1. What is 5 + 7?", fill="black", font=font)
+        draw.text((50, 150), "2. Calculate 12 - 4", fill="black", font=font)
+        draw.text((50, 200), "3. Solve: 3 × 6 = ?", fill="black", font=font)
 
         path = temp_dir / "worksheet.jpg"
         img.save(path)
@@ -102,8 +103,9 @@ class TestOCRLatency:
         result = benchmark(run_ocr)
 
         # Verify target met
-        assert result.processing_time_ms < LATENCY_TARGETS["ocr"], \
-            f"OCR latency {result.processing_time_ms:.1f}ms exceeds target {LATENCY_TARGETS['ocr']}ms"
+        assert (
+            result.processing_time_ms < LATENCY_TARGETS["ocr"]
+        ), f"OCR latency {result.processing_time_ms:.1f}ms exceeds target {LATENCY_TARGETS['ocr']}ms"
 
     def test_ocr_warm_latency(self, benchmark, ocr_engine, sample_worksheet_image):
         """Benchmark OCR warm latency (after first run)."""
@@ -131,8 +133,9 @@ class TestOCRLatency:
         stats = benchmark(preprocess)
 
         # Preprocessing should be <100ms
-        assert stats.stats.mean < 0.1, \
-            f"Preprocessing took {stats.stats.mean*1000:.1f}ms, should be <100ms"
+        assert (
+            stats.stats.mean < 0.1
+        ), f"Preprocessing took {stats.stats.mean*1000:.1f}ms, should be <100ms"
 
     def test_ocr_text_recognition_only_latency(self, benchmark, ocr_engine, sample_worksheet_image):
         """Benchmark text recognition latency (without preprocessing)."""
@@ -156,9 +159,9 @@ class TestOCRLatency:
         from PIL import ImageDraw, ImageFont
 
         # Create image of specific size
-        img = Image.new('RGB', image_size, color='white')
+        img = Image.new("RGB", image_size, color="white")
         draw = ImageDraw.Draw(img)
-        draw.text((50, 50), "Test text for OCR", fill='black')
+        draw.text((50, 50), "Test text for OCR", fill="black")
 
         path = temp_dir / f"test_{image_size[0]}x{image_size[1]}.jpg"
         img.save(path)
@@ -199,7 +202,9 @@ class TestASRLatency:
         return np.tile(sample_audio_data, 2)
 
     @pytest.mark.asyncio
-    async def test_asr_transcription_latency(self, speech_recognizer, short_audio_sample, benchmark):
+    async def test_asr_transcription_latency(
+        self, speech_recognizer, short_audio_sample, benchmark
+    ):
         """Benchmark ASR transcription latency."""
 
         async def transcribe():
@@ -211,15 +216,16 @@ class TestASRLatency:
         result = await transcribe()
         latency_ms = (time.perf_counter() - start) * 1000
 
-        assert latency_ms < LATENCY_TARGETS["asr"], \
-            f"ASR latency {latency_ms:.1f}ms exceeds target {LATENCY_TARGETS['asr']}ms"
+        assert (
+            latency_ms < LATENCY_TARGETS["asr"]
+        ), f"ASR latency {latency_ms:.1f}ms exceeds target {LATENCY_TARGETS['asr']}ms"
 
     @pytest.mark.asyncio
     async def test_asr_streaming_latency(self, speech_recognizer, short_audio_sample):
         """Benchmark streaming ASR latency (time to first result)."""
         chunk_size = 1600  # 100ms at 16kHz
         chunks = [
-            short_audio_sample[i:i+chunk_size]
+            short_audio_sample[i : i + chunk_size]
             for i in range(0, len(short_audio_sample), chunk_size)
         ]
 
@@ -258,11 +264,15 @@ class TestASRLatency:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("audio_duration", [1.0, 2.0, 5.0])
-    async def test_asr_latency_by_duration(self, speech_recognizer, sample_audio_data, audio_duration):
+    async def test_asr_latency_by_duration(
+        self, speech_recognizer, sample_audio_data, audio_duration
+    ):
         """Benchmark ASR latency for different audio durations."""
         # Create audio of specific duration
         samples_needed = int(16000 * audio_duration)
-        audio = np.tile(sample_audio_data, int(np.ceil(samples_needed / len(sample_audio_data))))[:samples_needed]
+        audio = np.tile(sample_audio_data, int(np.ceil(samples_needed / len(sample_audio_data))))[
+            :samples_needed
+        ]
 
         start = time.perf_counter()
         result = await speech_recognizer.transcribe(audio)
@@ -302,8 +312,9 @@ class TestTTSLatency:
         result = await synthesize()
         latency_ms = (time.perf_counter() - start) * 1000
 
-        assert latency_ms < LATENCY_TARGETS["tts"], \
-            f"TTS latency {latency_ms:.1f}ms exceeds target {LATENCY_TARGETS['tts']}ms"
+        assert (
+            latency_ms < LATENCY_TARGETS["tts"]
+        ), f"TTS latency {latency_ms:.1f}ms exceeds target {LATENCY_TARGETS['tts']}ms"
 
     @pytest.mark.asyncio
     async def test_tts_medium_synthesis_latency(self, tts_engine):
@@ -384,13 +395,14 @@ class TestAIResponseLatency:
         response = await mock_ai_client.messages.create(
             model="claude-opus-4.5",
             messages=[{"role": "user", "content": "What is photosynthesis?"}],
-            max_tokens=100
+            max_tokens=100,
         )
 
         latency_ms = (time.perf_counter() - start) * 1000
 
-        assert latency_ms < LATENCY_TARGETS["ai_response"], \
-            f"AI response latency {latency_ms:.1f}ms exceeds target {LATENCY_TARGETS['ai_response']}ms"
+        assert (
+            latency_ms < LATENCY_TARGETS["ai_response"]
+        ), f"AI response latency {latency_ms:.1f}ms exceeds target {LATENCY_TARGETS['ai_response']}ms"
 
     @pytest.mark.asyncio
     async def test_ai_with_context_latency(self, mock_ai_client):
@@ -398,14 +410,12 @@ class TestAIResponseLatency:
         messages = [
             {"role": "user", "content": "I'm learning about plants."},
             {"role": "assistant", "content": "That's great! What would you like to know?"},
-            {"role": "user", "content": "How do they make food?"}
+            {"role": "user", "content": "How do they make food?"},
         ]
 
         start = time.perf_counter()
         response = await mock_ai_client.messages.create(
-            model="claude-opus-4.5",
-            messages=messages,
-            max_tokens=150
+            model="claude-opus-4.5", messages=messages, max_tokens=150
         )
         latency_ms = (time.perf_counter() - start) * 1000
 
@@ -452,8 +462,9 @@ class TestE2ELatency:
         # Measure time to first audio output (TTFA - Time To First Audio)
         ttfa_ms = (playback_start_time - start) * 1000
 
-        assert ttfa_ms < LATENCY_TARGETS["e2e"], \
-            f"E2E latency {ttfa_ms:.1f}ms exceeds target {LATENCY_TARGETS['e2e']}ms"
+        assert (
+            ttfa_ms < LATENCY_TARGETS["e2e"]
+        ), f"E2E latency {ttfa_ms:.1f}ms exceeds target {LATENCY_TARGETS['e2e']}ms"
 
         # Verify component latencies
         wake_latency = (wake_time - start) * 1000
@@ -479,6 +490,7 @@ class TestE2ELatency:
 
         # 2. OCR processing
         import cv2
+
         ocr_engine = OCREngine()
         image = cv2.imread(str(sample_image_file))
         ocr_result = ocr_engine.extract_structured_content(image)
@@ -531,10 +543,11 @@ class TestLatencyPercentiles:
         import cv2
 
         # Create test image
-        img = Image.new('RGB', (640, 480), color='white')
+        img = Image.new("RGB", (640, 480), color="white")
         from PIL import ImageDraw
+
         draw = ImageDraw.Draw(img)
-        draw.text((50, 50), "Test text", fill='black')
+        draw.text((50, 50), "Test text", fill="black")
         path = temp_dir / "test.jpg"
         img.save(path)
 
@@ -603,13 +616,14 @@ def test_latency_summary_report(tmp_path):
             "tts": {"p50": 250, "p95": 380, "p99": 420, "target": 400},
             "ai_response": {"p50": 600, "p95": 900, "p99": 1100, "target": 1000},
             "e2e": {"p50": 1400, "p95": 1800, "p99": 2100, "target": 2000},
-        }
+        },
     }
 
     # Write report
     import json
+
     report_file = tmp_path / "latency_report.json"
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     assert report_file.exists()

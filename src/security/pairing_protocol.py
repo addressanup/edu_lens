@@ -13,20 +13,20 @@ Security Features:
 - Pairing revocation and management
 """
 
+import json
+import logging
 import secrets
 import time
-import json
-import qrcode
-from io import BytesIO
-from typing import Optional, Dict, List, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-import logging
+from io import BytesIO
+from typing import Dict, List, Optional, Tuple
 
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import hashes, serialization
+import qrcode
 from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 
 from .crypto_utils import CryptoUtils
 
@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 class PairingState(Enum):
     """States of the pairing process."""
+
     IDLE = "idle"
     CODE_GENERATED = "code_generated"
     WAITING_FOR_PEER = "waiting_for_peer"
@@ -48,6 +49,7 @@ class PairingState(Enum):
 @dataclass
 class PairingCode:
     """Pairing code information."""
+
     code: str
     device_id: str
     created_at: datetime
@@ -59,6 +61,7 @@ class PairingCode:
 @dataclass
 class PairedDevice:
     """Information about a paired device."""
+
     device_id: str
     device_name: str
     device_type: str  # "glasses" or "app"
@@ -129,7 +132,7 @@ class PairingProtocol:
             raise RuntimeError("Rate limit exceeded for pairing code generation")
 
         # Generate random 6-digit code
-        code = ''.join([str(secrets.randbelow(10)) for _ in range(self.CODE_LENGTH)])
+        code = "".join([str(secrets.randbelow(10)) for _ in range(self.CODE_LENGTH)])
 
         # Create pairing code entry
         created_at = datetime.utcnow()
@@ -140,7 +143,7 @@ class PairingProtocol:
             device_id=self.device_id,
             created_at=created_at,
             expires_at=expires_at,
-            max_attempts=self.MAX_PAIRING_ATTEMPTS
+            max_attempts=self.MAX_PAIRING_ATTEMPTS,
         )
 
         self.active_codes[code] = pairing_code
@@ -154,11 +157,7 @@ class PairingProtocol:
         return code, expires_at
 
     def verify_pairing_code(
-        self,
-        code: str,
-        peer_device_id: str,
-        peer_device_name: str,
-        peer_device_type: str = "app"
+        self, code: str, peer_device_id: str, peer_device_name: str, peer_device_type: str = "app"
     ) -> bool:
         """
         Verify a pairing code entered by peer device.
@@ -236,7 +235,7 @@ class PairingProtocol:
             "device_type": self.device_type,
             "code": code,
             "expires_at": expires_at.isoformat(),
-            "public_key": public_key_hex
+            "public_key": public_key_hex,
         }
 
         # Convert to JSON
@@ -257,7 +256,7 @@ class PairingProtocol:
 
         # Convert to bytes
         buffer = BytesIO()
-        img.save(buffer, format='PNG')
+        img.save(buffer, format="PNG")
         qr_bytes = buffer.getvalue()
 
         logger.info(f"Generated QR code for pairing (size: {len(qr_bytes)} bytes)")
@@ -306,10 +305,7 @@ class PairingProtocol:
 
     # ==================== Key Exchange ====================
 
-    def exchange_keys(
-        self,
-        peer_public_key_bytes: Optional[bytes] = None
-    ) -> bytes:
+    def exchange_keys(self, peer_public_key_bytes: Optional[bytes] = None) -> bytes:
         """
         Perform ECDH key exchange with peer device.
 
@@ -323,9 +319,7 @@ class PairingProtocol:
 
         # Generate ephemeral key pair if not already generated
         if not self.ephemeral_key_pair:
-            self.ephemeral_key_pair = self.crypto.generate_key_pair(
-                lifetime=timedelta(hours=1)
-            )
+            self.ephemeral_key_pair = self.crypto.generate_key_pair(lifetime=timedelta(hours=1))
 
         # Store peer's public key if provided
         if peer_public_key_bytes:
@@ -361,8 +355,7 @@ class PairingProtocol:
         # Deserialize peer's public key
         try:
             peer_public_key = self.crypto.deserialize_public_key(
-                self.peer_public_key,
-                curve=ec.SECP384R1()
+                self.peer_public_key, curve=ec.SECP384R1()
             )
         except Exception as e:
             logger.error(f"Failed to deserialize peer public key: {e}")
@@ -371,8 +364,7 @@ class PairingProtocol:
         # Perform ECDH
         try:
             raw_shared_secret = self.crypto.perform_ecdh(
-                self.ephemeral_key_pair.private_key,
-                peer_public_key
+                self.ephemeral_key_pair.private_key, peer_public_key
             )
         except Exception as e:
             logger.error(f"ECDH failed: {e}")
@@ -381,10 +373,7 @@ class PairingProtocol:
         # Derive shared secret using HKDF
         salt = self.crypto.generate_salt()
         self.shared_secret = self.crypto.derive_key(
-            raw_shared_secret,
-            salt=salt,
-            info=b"edulens_pairing_v1",
-            length=32
+            raw_shared_secret, salt=salt, info=b"edulens_pairing_v1", length=32
         )
 
         logger.info("ECDH key exchange completed successfully")
@@ -399,7 +388,7 @@ class PairingProtocol:
         peer_device_name: str,
         peer_device_type: str,
         peer_public_key: Optional[bytes] = None,
-        metadata: Optional[Dict] = None
+        metadata: Optional[Dict] = None,
     ) -> PairedDevice:
         """
         Complete the pairing process and store paired device.
@@ -429,7 +418,7 @@ class PairingProtocol:
             last_seen=datetime.utcnow(),
             shared_secret=self.shared_secret,
             public_key=peer_public_key or self.peer_public_key,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Store paired device
@@ -538,7 +527,9 @@ class PairingProtocol:
         # Check limit
         request_count = len(self.pairing_requests)
         if request_count >= self.MAX_REQUESTS_PER_WINDOW:
-            logger.warning(f"Rate limit exceeded: {request_count} requests in {self.RATE_LIMIT_WINDOW}")
+            logger.warning(
+                f"Rate limit exceeded: {request_count} requests in {self.RATE_LIMIT_WINDOW}"
+            )
             return False
 
         # Add current request
@@ -549,10 +540,7 @@ class PairingProtocol:
     def _cleanup_expired_codes(self) -> None:
         """Remove expired pairing codes."""
         now = datetime.utcnow()
-        expired_codes = [
-            code for code, data in self.active_codes.items()
-            if now > data.expires_at
-        ]
+        expired_codes = [code for code, data in self.active_codes.items() if now > data.expires_at]
 
         for code in expired_codes:
             del self.active_codes[code]
@@ -574,18 +562,18 @@ class PairingProtocol:
             for device_id, device in self.paired_devices.items():
                 device_dict = asdict(device)
                 # Convert datetime to ISO format
-                device_dict['paired_at'] = device.paired_at.isoformat()
+                device_dict["paired_at"] = device.paired_at.isoformat()
                 if device.last_seen:
-                    device_dict['last_seen'] = device.last_seen.isoformat()
+                    device_dict["last_seen"] = device.last_seen.isoformat()
                 # Convert bytes to hex
                 if device.shared_secret:
-                    device_dict['shared_secret'] = device.shared_secret.hex()
+                    device_dict["shared_secret"] = device.shared_secret.hex()
                 if device.public_key:
-                    device_dict['public_key'] = device.public_key.hex()
+                    device_dict["public_key"] = device.public_key.hex()
 
                 data[device_id] = device_dict
 
-            with open(file_path, 'w') as f:
+            with open(file_path, "w") as f:
                 json.dump(data, f, indent=2)
 
             logger.info(f"Saved {len(data)} paired devices to {file_path}")
@@ -602,19 +590,19 @@ class PairingProtocol:
             file_path: Path to load file
         """
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 data = json.load(f)
 
             for device_id, device_dict in data.items():
                 # Convert ISO format to datetime
-                device_dict['paired_at'] = datetime.fromisoformat(device_dict['paired_at'])
-                if device_dict.get('last_seen'):
-                    device_dict['last_seen'] = datetime.fromisoformat(device_dict['last_seen'])
+                device_dict["paired_at"] = datetime.fromisoformat(device_dict["paired_at"])
+                if device_dict.get("last_seen"):
+                    device_dict["last_seen"] = datetime.fromisoformat(device_dict["last_seen"])
                 # Convert hex to bytes
-                if device_dict.get('shared_secret'):
-                    device_dict['shared_secret'] = bytes.fromhex(device_dict['shared_secret'])
-                if device_dict.get('public_key'):
-                    device_dict['public_key'] = bytes.fromhex(device_dict['public_key'])
+                if device_dict.get("shared_secret"):
+                    device_dict["shared_secret"] = bytes.fromhex(device_dict["shared_secret"])
+                if device_dict.get("public_key"):
+                    device_dict["public_key"] = bytes.fromhex(device_dict["public_key"])
 
                 self.paired_devices[device_id] = PairedDevice(**device_dict)
 
@@ -628,12 +616,7 @@ class PairingProtocol:
 
     # ==================== Verification ====================
 
-    def verify_paired_device(
-        self,
-        device_id: str,
-        challenge: bytes,
-        signature: bytes
-    ) -> bool:
+    def verify_paired_device(self, device_id: str, challenge: bytes, signature: bytes) -> bool:
         """
         Verify a paired device using challenge-response.
 
@@ -703,6 +686,7 @@ class PairingProtocol:
 
 
 # ==================== Helper Functions ====================
+
 
 def format_pairing_code(code: str) -> str:
     """

@@ -15,14 +15,14 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
-from .student_model import StudentModel, MasteryLevel, LearningStyle
-
+from .student_model import LearningStyle, MasteryLevel, StudentModel
 
 logger = logging.getLogger(__name__)
 
 
 class HintDirectness(Enum):
     """Levels of hint directness."""
+
     SOCRATIC = 1  # Ask guiding questions
     SUBTLE = 2  # Point to relevant concepts
     MODERATE = 3  # Show partial solution
@@ -31,6 +31,7 @@ class HintDirectness(Enum):
 
 class EmotionalState(Enum):
     """Detected emotional states during learning."""
+
     ENGAGED = "engaged"
     STRUGGLING = "struggling"
     FRUSTRATED = "frustrated"
@@ -40,6 +41,7 @@ class EmotionalState(Enum):
 
 class ExplanationType(Enum):
     """Types of explanations."""
+
     CONCEPTUAL = "conceptual"  # High-level understanding
     PROCEDURAL = "procedural"  # Step-by-step process
     VISUAL = "visual"  # Diagrams and analogies
@@ -50,6 +52,7 @@ class ExplanationType(Enum):
 @dataclass
 class AdaptationContext:
     """Context for making adaptation decisions."""
+
     concept_id: str
     problem_statement: str
     student_attempts: List[str]
@@ -63,6 +66,7 @@ class AdaptationContext:
 @dataclass
 class HintResponse:
     """Response containing a hint."""
+
     hint_text: str
     directness: HintDirectness
     follow_up_question: Optional[str]
@@ -73,6 +77,7 @@ class HintResponse:
 @dataclass
 class ExplanationResponse:
     """Response containing an explanation."""
+
     explanation_text: str
     explanation_type: ExplanationType
     examples: List[str]
@@ -89,11 +94,7 @@ class AdaptiveTutor:
     student model and current performance.
     """
 
-    def __init__(
-        self,
-        student_model: StudentModel,
-        config: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, student_model: StudentModel, config: Optional[Dict[str, Any]] = None):
         """
         Initialize AdaptiveTutor.
 
@@ -112,30 +113,27 @@ class AdaptiveTutor:
         self.session_start_time = time.time()
 
         # Adaptation parameters
-        self.hint_progression_threshold = self.config.get('hint_progression_threshold', 2)
-        self.frustration_threshold = self.config.get('frustration_threshold', 3)
-        self.encouragement_frequency = self.config.get('encouragement_frequency', 120)  # seconds
+        self.hint_progression_threshold = self.config.get("hint_progression_threshold", 2)
+        self.frustration_threshold = self.config.get("frustration_threshold", 3)
+        self.encouragement_frequency = self.config.get("encouragement_frequency", 120)  # seconds
 
         logger.info(f"AdaptiveTutor initialized for student {student_model.student_id}")
 
     def _get_default_config(self) -> Dict[str, Any]:
         """Get default configuration."""
         return {
-            'hint_progression_threshold': 2,
-            'frustration_threshold': 3,
-            'encouragement_frequency': 120,
-            'max_hint_directness': 4,
-            'celebration_triggers': {
-                'mastery_achieved': True,
-                'consecutive_correct': 3,
-                'difficult_problem_solved': True
-            }
+            "hint_progression_threshold": 2,
+            "frustration_threshold": 3,
+            "encouragement_frequency": 120,
+            "max_hint_directness": 4,
+            "celebration_triggers": {
+                "mastery_achieved": True,
+                "consecutive_correct": 3,
+                "difficult_problem_solved": True,
+            },
         }
 
-    def select_hint_level(
-        self,
-        context: AdaptationContext
-    ) -> HintDirectness:
+    def select_hint_level(self, context: AdaptationContext) -> HintDirectness:
         """
         Select appropriate hint directness level.
 
@@ -160,8 +158,7 @@ class AdaptiveTutor:
         if len(context.student_attempts) >= self.hint_progression_threshold:
             # Student is struggling - be more direct
             adjusted_level = min(
-                HintDirectness.DIRECT.value,
-                base_level.value + len(context.student_attempts) - 1
+                HintDirectness.DIRECT.value, base_level.value + len(context.student_attempts) - 1
             )
             return HintDirectness(adjusted_level)
 
@@ -174,10 +171,7 @@ class AdaptiveTutor:
 
         return base_level
 
-    def generate_hint(
-        self,
-        context: AdaptationContext
-    ) -> HintResponse:
+    def generate_hint(self, context: AdaptationContext) -> HintResponse:
         """
         Generate adaptive hint based on student state.
 
@@ -213,17 +207,14 @@ class AdaptiveTutor:
             follow_up_question=follow_up,
             encouragement=encouragement,
             metadata={
-                'hint_number': context.hints_used + 1,
-                'learning_style': learning_style.name,
-                'mastery_level': self.student_model.get_mastery_level(context.concept_id).name
-            }
+                "hint_number": context.hints_used + 1,
+                "learning_style": learning_style.name,
+                "mastery_level": self.student_model.get_mastery_level(context.concept_id).name,
+            },
         )
 
     def adjust_explanation(
-        self,
-        concept_id: str,
-        base_explanation: str,
-        context: Optional[AdaptationContext] = None
+        self, concept_id: str, base_explanation: str, context: Optional[AdaptationContext] = None
     ) -> ExplanationResponse:
         """
         Modify explanation based on student learning style and level.
@@ -278,17 +269,13 @@ class AdaptiveTutor:
             visual_suggestions=visual_suggestions,
             check_understanding_question=check_question,
             metadata={
-                'learning_style': learning_style.name,
-                'mastery_level': mastery.name,
-                'age': self.student_model.age
-            }
+                "learning_style": learning_style.name,
+                "mastery_level": mastery.name,
+                "age": self.student_model.age,
+            },
         )
 
-    def select_examples(
-        self,
-        concept_id: str,
-        count: int = 3
-    ) -> List[Dict[str, Any]]:
+    def select_examples(self, concept_id: str, count: int = 3) -> List[Dict[str, Any]]:
         """
         Select relevant examples for the student.
 
@@ -311,11 +298,11 @@ class AdaptiveTutor:
             example_difficulty = min(5, difficulty + i)
 
             example = {
-                'problem': self._generate_example_problem(concept_id, example_difficulty),
-                'difficulty': example_difficulty,
-                'style': learning_style.name,
-                'hints_available': mastery.value < 3,  # Provide hints for lower mastery
-                'solution_shown': False
+                "problem": self._generate_example_problem(concept_id, example_difficulty),
+                "difficulty": example_difficulty,
+                "style": learning_style.name,
+                "hints_available": mastery.value < 3,  # Provide hints for lower mastery
+                "solution_shown": False,
             }
 
             examples.append(example)
@@ -324,10 +311,7 @@ class AdaptiveTutor:
 
         return examples
 
-    def detect_frustration(
-        self,
-        context: AdaptationContext
-    ) -> Tuple[EmotionalState, float]:
+    def detect_frustration(self, context: AdaptationContext) -> Tuple[EmotionalState, float]:
         """
         Detect student emotional state and frustration level.
 
@@ -375,16 +359,20 @@ class AdaptiveTutor:
             state = EmotionalState.FRUSTRATED
 
         # Check for boredom (opposite pattern)
-        if (context.time_on_problem < expected_time * 0.5 and
-            context.hints_used == 0 and
-            self.consecutive_successes >= 5):
+        if (
+            context.time_on_problem < expected_time * 0.5
+            and context.hints_used == 0
+            and self.consecutive_successes >= 5
+        ):
             state = EmotionalState.BORED
             confidence = 0.7
 
         # Check for confidence
-        if (self.consecutive_successes >= 3 and
-            context.hints_used == 0 and
-            len(context.student_attempts) == 1):
+        if (
+            self.consecutive_successes >= 3
+            and context.hints_used == 0
+            and len(context.student_attempts) == 1
+        ):
             state = EmotionalState.CONFIDENT
             confidence = 0.8
 
@@ -392,11 +380,7 @@ class AdaptiveTutor:
 
         return state, confidence
 
-    def celebrate_progress(
-        self,
-        achievement_type: str,
-        context: Dict[str, Any]
-    ) -> str:
+    def celebrate_progress(self, achievement_type: str, context: Dict[str, Any]) -> str:
         """
         Generate celebratory message for achievements.
 
@@ -408,31 +392,31 @@ class AdaptiveTutor:
             Celebration message string
         """
         celebrations = {
-            'mastery': [
+            "mastery": [
                 "Amazing! You've mastered {concept}! 🌟",
                 "Fantastic work! You really understand {concept} now!",
-                "You did it! {concept} is one of your strengths now!"
+                "You did it! {concept} is one of your strengths now!",
             ],
-            'streak': [
+            "streak": [
                 "Wow! {count} correct in a row! You're on fire!",
                 "Incredible streak! Keep up the great work!",
-                "You're really getting good at this!"
+                "You're really getting good at this!",
             ],
-            'difficult': [
+            "difficult": [
                 "That was a tough problem, and you solved it! Excellent!",
                 "Great job tackling a challenging problem!",
-                "You showed real perseverance on that hard problem!"
+                "You showed real perseverance on that hard problem!",
             ],
-            'improvement': [
+            "improvement": [
                 "Look at your progress! You're improving so much!",
                 "You're getting better and better at this!",
-                "What great improvement! Your hard work is paying off!"
+                "What great improvement! Your hard work is paying off!",
             ],
-            'first_try': [
+            "first_try": [
                 "Perfect! You got it on the first try!",
                 "Excellent! You knew exactly what to do!",
-                "Wow! First try! You really understand this!"
-            ]
+                "Wow! First try! You really understand this!",
+            ],
         }
 
         messages = celebrations.get(achievement_type, ["Great job!"])
@@ -442,9 +426,7 @@ class AdaptiveTutor:
         return message.format(**context)
 
     def adapt_to_emotional_state(
-        self,
-        state: EmotionalState,
-        context: AdaptationContext
+        self, state: EmotionalState, context: AdaptationContext
     ) -> Dict[str, Any]:
         """
         Provide adaptation recommendations based on emotional state.
@@ -458,52 +440,52 @@ class AdaptiveTutor:
         """
         if state == EmotionalState.FRUSTRATED:
             return {
-                'action': 'provide_break',
-                'message': "Let's take a short break. You're working really hard!",
-                'hint_level': 'direct',
-                'difficulty_adjustment': -1,
-                'show_encouragement': True,
-                'suggest_different_concept': True
+                "action": "provide_break",
+                "message": "Let's take a short break. You're working really hard!",
+                "hint_level": "direct",
+                "difficulty_adjustment": -1,
+                "show_encouragement": True,
+                "suggest_different_concept": True,
             }
 
         elif state == EmotionalState.STRUGGLING:
             return {
-                'action': 'increase_support',
-                'message': "This is challenging! Let me help you a bit more.",
-                'hint_level': 'moderate',
-                'difficulty_adjustment': 0,
-                'show_encouragement': True,
-                'suggest_different_concept': False
+                "action": "increase_support",
+                "message": "This is challenging! Let me help you a bit more.",
+                "hint_level": "moderate",
+                "difficulty_adjustment": 0,
+                "show_encouragement": True,
+                "suggest_different_concept": False,
             }
 
         elif state == EmotionalState.BORED:
             return {
-                'action': 'increase_challenge',
-                'message': "You're doing great! Ready for something more challenging?",
-                'hint_level': 'socratic',
-                'difficulty_adjustment': +1,
-                'show_encouragement': True,
-                'suggest_different_concept': False
+                "action": "increase_challenge",
+                "message": "You're doing great! Ready for something more challenging?",
+                "hint_level": "socratic",
+                "difficulty_adjustment": +1,
+                "show_encouragement": True,
+                "suggest_different_concept": False,
             }
 
         elif state == EmotionalState.CONFIDENT:
             return {
-                'action': 'maintain_challenge',
-                'message': "You're really getting this! Keep going!",
-                'hint_level': 'subtle',
-                'difficulty_adjustment': +1,
-                'show_encouragement': False,
-                'suggest_different_concept': False
+                "action": "maintain_challenge",
+                "message": "You're really getting this! Keep going!",
+                "hint_level": "subtle",
+                "difficulty_adjustment": +1,
+                "show_encouragement": False,
+                "suggest_different_concept": False,
             }
 
         else:  # ENGAGED
             return {
-                'action': 'continue',
-                'message': "You're doing well! Keep it up!",
-                'hint_level': 'subtle',
-                'difficulty_adjustment': 0,
-                'show_encouragement': False,
-                'suggest_different_concept': False
+                "action": "continue",
+                "message": "You're doing well! Keep it up!",
+                "hint_level": "subtle",
+                "difficulty_adjustment": 0,
+                "show_encouragement": False,
+                "suggest_different_concept": False,
             }
 
     def should_encourage(self) -> bool:
@@ -525,11 +507,7 @@ class AdaptiveTutor:
 
         return False
 
-    def update_session_state(
-        self,
-        success: bool,
-        context: AdaptationContext
-    ):
+    def update_session_state(self, success: bool, context: AdaptationContext):
         """
         Update session state based on student performance.
 
@@ -571,7 +549,7 @@ class AdaptiveTutor:
             "What do you already know about this problem?",
             "What's the first step you could try?",
             "What similar problems have you solved before?",
-            "What information do you have, and what do you need to find?"
+            "What information do you have, and what do you need to find?",
         ]
         return random.choice(hints)
 
@@ -581,7 +559,7 @@ class AdaptiveTutor:
             "Think about the concept we just learned.",
             "Remember the pattern we saw in the examples.",
             "Look closely at the numbers in the problem.",
-            "Try breaking the problem into smaller parts."
+            "Try breaking the problem into smaller parts.",
         ]
         return random.choice(hints)
 
@@ -600,7 +578,7 @@ class AdaptiveTutor:
             "I can see you're working hard on this!",
             "Don't give up - you're making progress!",
             "You're on the right track!",
-            "Great effort! Keep going!"
+            "Great effort! Keep going!",
         ]
 
         if self.consecutive_struggles >= 2:
@@ -608,7 +586,7 @@ class AdaptiveTutor:
                 "This is challenging, but I know you can do it!",
                 "You're learning even when it's hard - that's amazing!",
                 "Every mistake helps you learn. Keep trying!",
-                "You're showing great perseverance!"
+                "You're showing great perseverance!",
             ]
 
         return random.choice(encouragements)
@@ -636,7 +614,11 @@ class AdaptiveTutor:
     def _simplify_language(self, text: str) -> str:
         """Simplify language for younger students."""
         # In production, use NLP to actually simplify
-        return text.replace("utilize", "use").replace("demonstrate", "show").replace("comprehend", "understand")
+        return (
+            text.replace("utilize", "use")
+            .replace("demonstrate", "show")
+            .replace("comprehend", "understand")
+        )
 
     def _generate_examples(self, concept_id: str, style: LearningStyle, count: int) -> List[str]:
         """Generate examples appropriate for learning style."""
@@ -662,8 +644,7 @@ class AdaptiveTutor:
 
 
 def create_adaptive_tutor(
-    student_model: StudentModel,
-    config: Optional[Dict[str, Any]] = None
+    student_model: StudentModel, config: Optional[Dict[str, Any]] = None
 ) -> AdaptiveTutor:
     """
     Create an AdaptiveTutor instance.
@@ -696,7 +677,7 @@ if __name__ == "__main__":
         time_spent=45.0,
         hint_level_used=1,
         student_response="I'm not sure",
-        difficulty_level=2
+        difficulty_level=2,
     )
 
     # Create adaptive tutor
@@ -711,7 +692,7 @@ if __name__ == "__main__":
         hints_used=0,
         difficulty_level=2,
         session_duration=300.0,
-        problems_solved_today=2
+        problems_solved_today=2,
     )
 
     hint = tutor.generate_hint(context)

@@ -490,10 +490,12 @@ class TestBatteryAndResourceReporting:
         device.connect()
 
         # Request device status
-        device.receive_data = Mock(return_value={
-            "battery_level": 75,
-            "charging": False,
-        })
+        device.receive_data = Mock(
+            return_value={
+                "battery_level": 75,
+                "charging": False,
+            }
+        )
 
         status = device.receive_data()
 
@@ -528,11 +530,13 @@ class TestBatteryAndResourceReporting:
 
         device.connect()
 
-        device.receive_data = Mock(return_value={
-            "storage_used_mb": 250,
-            "storage_total_mb": 512,
-            "storage_percent": 49,
-        })
+        device.receive_data = Mock(
+            return_value={
+                "storage_used_mb": 250,
+                "storage_total_mb": 512,
+                "storage_percent": 49,
+            }
+        )
 
         status = device.receive_data()
 

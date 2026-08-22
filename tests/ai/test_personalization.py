@@ -15,38 +15,38 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.ai.personalization.student_model import (
-    StudentModel,
-    MasteryLevel,
-    LearningStyle,
-    LearningPace,
-    ConceptKnowledgeState,
-    create_student_model
-)
 from src.ai.personalization.adaptive_tutor import (
+    AdaptationContext,
     AdaptiveTutor,
-    HintDirectness,
     EmotionalState,
     ExplanationType,
-    AdaptationContext,
-    create_adaptive_tutor
-)
-from src.ai.personalization.progress_tracker import (
-    ProgressTracker,
-    AttemptOutcome,
-    ConceptProgress,
-    create_progress_tracker
+    HintDirectness,
+    create_adaptive_tutor,
 )
 from src.ai.personalization.learning_analytics import (
     LearningAnalytics,
     LearningPattern,
-    create_learning_analytics
+    create_learning_analytics,
 )
-
+from src.ai.personalization.progress_tracker import (
+    AttemptOutcome,
+    ConceptProgress,
+    ProgressTracker,
+    create_progress_tracker,
+)
+from src.ai.personalization.student_model import (
+    ConceptKnowledgeState,
+    LearningPace,
+    LearningStyle,
+    MasteryLevel,
+    StudentModel,
+    create_student_model,
+)
 
 # ============================================================================
 # Student Model Tests
 # ============================================================================
+
 
 class TestStudentModel:
     """Test suite for StudentModel."""
@@ -54,11 +54,7 @@ class TestStudentModel:
     @pytest.fixture
     def student_model(self):
         """Create a student model for testing."""
-        return create_student_model(
-            student_id="test_student_123",
-            age=9,
-            grade=4
-        )
+        return create_student_model(student_id="test_student_123", age=9, grade=4)
 
     def test_initialization(self, student_model):
         """Test student model initialization."""
@@ -78,11 +74,11 @@ class TestStudentModel:
             time_spent=30.0,
             hint_level_used=0,
             student_response="The answer is 12",
-            difficulty_level=2
+            difficulty_level=2,
         )
 
         assert "math_001" in student_model.concept_states
-        assert result['mastery_level'] == MasteryLevel.BEGINNER.name
+        assert result["mastery_level"] == MasteryLevel.BEGINNER.name
         assert student_model.total_problems_attempted == 1
 
     def test_bayesian_knowledge_tracking(self, student_model):
@@ -101,7 +97,7 @@ class TestStudentModel:
             time_spent=20.0,
             hint_level_used=0,
             student_response="correct",
-            difficulty_level=2
+            difficulty_level=2,
         )
 
         # Probability should increase
@@ -119,7 +115,7 @@ class TestStudentModel:
                 time_spent=20.0,
                 hint_level_used=0,
                 student_response="correct",
-                difficulty_level=2
+                difficulty_level=2,
             )
 
         # Should reach higher mastery
@@ -139,7 +135,7 @@ class TestStudentModel:
                 time_spent=15.0,  # Quick responses
                 hint_level_used=1,  # Uses hints
                 student_response="short",
-                difficulty_level=2
+                difficulty_level=2,
             )
 
         style = student_model.get_learning_style()
@@ -162,7 +158,7 @@ class TestStudentModel:
                 time_spent=10.0,
                 hint_level_used=0,
                 student_response="fast",
-                difficulty_level=2
+                difficulty_level=2,
             )
 
         pace = student_model.get_pace()
@@ -186,7 +182,7 @@ class TestStudentModel:
                 time_spent=20.0,
                 hint_level_used=0,
                 student_response="correct",
-                difficulty_level=2
+                difficulty_level=2,
             )
 
         # Should predict higher difficulty
@@ -213,7 +209,7 @@ class TestStudentModel:
                     time_spent=20.0,
                     hint_level_used=0,
                     student_response="response",
-                    difficulty_level=2
+                    difficulty_level=2,
                 )
 
         strengths = student_model.get_strengths(2)
@@ -235,7 +231,7 @@ class TestStudentModel:
             time_spent=20.0,
             hint_level_used=0,
             student_response="test",
-            difficulty_level=2
+            difficulty_level=2,
         )
 
         # Save
@@ -255,6 +251,7 @@ class TestStudentModel:
 # ============================================================================
 # Adaptive Tutor Tests
 # ============================================================================
+
 
 class TestAdaptiveTutor:
     """Test suite for AdaptiveTutor."""
@@ -276,7 +273,7 @@ class TestAdaptiveTutor:
             hints_used=0,
             difficulty_level=2,
             session_duration=300.0,
-            problems_solved_today=3
+            problems_solved_today=3,
         )
 
     def test_initialization(self, adaptive_tutor):
@@ -311,9 +308,7 @@ class TestAdaptiveTutor:
         base_explanation = "Multiplication is repeated addition."
 
         explanation = adaptive_tutor.adjust_explanation(
-            concept_id="math_001",
-            base_explanation=base_explanation,
-            context=None
+            concept_id="math_001", base_explanation=base_explanation, context=None
         )
 
         assert isinstance(explanation.explanation_text, str)
@@ -326,11 +321,11 @@ class TestAdaptiveTutor:
         examples = adaptive_tutor.select_examples("math_001", count=3)
 
         assert len(examples) == 3
-        assert all('problem' in ex for ex in examples)
-        assert all('difficulty' in ex for ex in examples)
+        assert all("problem" in ex for ex in examples)
+        assert all("difficulty" in ex for ex in examples)
 
         # Difficulty should increase across examples
-        difficulties = [ex['difficulty'] for ex in examples]
+        difficulties = [ex["difficulty"] for ex in examples]
         assert difficulties[0] <= difficulties[-1]
 
     def test_frustration_detection(self, adaptive_tutor, sample_context):
@@ -353,27 +348,24 @@ class TestAdaptiveTutor:
         """Test adaptation based on emotional state."""
         # Test frustrated adaptation
         adaptation = adaptive_tutor.adapt_to_emotional_state(
-            EmotionalState.FRUSTRATED,
-            sample_context
+            EmotionalState.FRUSTRATED, sample_context
         )
 
-        assert adaptation['action'] == 'provide_break'
-        assert adaptation['difficulty_adjustment'] == -1
-        assert adaptation['show_encouragement'] is True
+        assert adaptation["action"] == "provide_break"
+        assert adaptation["difficulty_adjustment"] == -1
+        assert adaptation["show_encouragement"] is True
 
         # Test confident adaptation
         adaptation_confident = adaptive_tutor.adapt_to_emotional_state(
-            EmotionalState.CONFIDENT,
-            sample_context
+            EmotionalState.CONFIDENT, sample_context
         )
 
-        assert adaptation_confident['difficulty_adjustment'] >= 0
+        assert adaptation_confident["difficulty_adjustment"] >= 0
 
     def test_celebration(self, adaptive_tutor):
         """Test progress celebration."""
         celebration = adaptive_tutor.celebrate_progress(
-            'mastery',
-            {'concept': 'Multiplication', 'count': 5}
+            "mastery", {"concept": "Multiplication", "count": 5}
         )
 
         assert isinstance(celebration, str)
@@ -395,6 +387,7 @@ class TestAdaptiveTutor:
 # ============================================================================
 # Progress Tracker Tests
 # ============================================================================
+
 
 class TestProgressTracker:
     """Test suite for ProgressTracker."""
@@ -420,12 +413,12 @@ class TestProgressTracker:
             time_spent=30.0,
             hints_used=0,
             difficulty=2,
-            attempts_on_problem=1
+            attempts_on_problem=1,
         )
 
         assert "math_001" in progress_tracker.concept_progress
-        assert result['total_attempts'] == 1
-        assert result['mastery_score'] > 0.0
+        assert result["total_attempts"] == 1
+        assert result["mastery_score"] > 0.0
         assert len(progress_tracker.attempt_history) == 1
 
     def test_mastery_calculation(self, progress_tracker):
@@ -441,7 +434,7 @@ class TestProgressTracker:
                 time_spent=25.0,
                 hints_used=0,
                 difficulty=2 + (i % 3),
-                attempts_on_problem=1
+                attempts_on_problem=1,
             )
 
         mastery = progress_tracker.calculate_mastery(concept_id)
@@ -460,7 +453,7 @@ class TestProgressTracker:
             time_spent=20.0,
             hints_used=0,
             difficulty=2,
-            attempts_on_problem=1
+            attempts_on_problem=1,
         )
 
         progress = progress_tracker.concept_progress[concept_id]
@@ -481,14 +474,14 @@ class TestProgressTracker:
                 time_spent=60.0,
                 hints_used=2,
                 difficulty=2,
-                attempts_on_problem=2
+                attempts_on_problem=2,
             )
 
         gaps = progress_tracker.identify_gaps()
 
         assert len(gaps) > 0
-        assert gaps[0]['concept_id'] == "weak_concept"
-        assert gaps[0]['severity'] > 0.0
+        assert gaps[0]["concept_id"] == "weak_concept"
+        assert gaps[0]["severity"] > 0.0
 
     def test_review_suggestions(self, progress_tracker):
         """Test review suggestions."""
@@ -501,7 +494,7 @@ class TestProgressTracker:
             time_spent=20.0,
             hints_used=0,
             difficulty=2,
-            attempts_on_problem=1
+            attempts_on_problem=1,
         )
 
         # Manually set to be due for review
@@ -510,7 +503,7 @@ class TestProgressTracker:
         suggestions = progress_tracker.suggest_review(max_suggestions=5)
 
         assert len(suggestions) > 0
-        assert suggestions[0]['concept_id'] == concept_id
+        assert suggestions[0]["concept_id"] == concept_id
 
     def test_progress_report_generation(self, progress_tracker):
         """Test progress report generation."""
@@ -523,7 +516,7 @@ class TestProgressTracker:
                 time_spent=30.0,
                 hints_used=i % 2,
                 difficulty=2,
-                attempts_on_problem=1
+                attempts_on_problem=1,
             )
 
         report = progress_tracker.generate_report()
@@ -544,7 +537,7 @@ class TestProgressTracker:
             time_spent=30.0,
             hints_used=0,
             difficulty=2,
-            attempts_on_problem=1
+            attempts_on_problem=1,
         )
 
         # Save
@@ -554,10 +547,7 @@ class TestProgressTracker:
         assert save_path.exists()
 
         # Load
-        loaded_tracker = ProgressTracker.load(
-            progress_tracker.student_model,
-            str(save_path)
-        )
+        loaded_tracker = ProgressTracker.load(progress_tracker.student_model, str(save_path))
         assert loaded_tracker is not None
         assert len(loaded_tracker.concept_progress) == len(progress_tracker.concept_progress)
 
@@ -565,6 +555,7 @@ class TestProgressTracker:
 # ============================================================================
 # Learning Analytics Tests
 # ============================================================================
+
 
 class TestLearningAnalytics:
     """Test suite for LearningAnalytics."""
@@ -583,19 +574,19 @@ class TestLearningAnalytics:
     def test_session_update(self, learning_analytics):
         """Test updating from session data."""
         session_data = {
-            'session_id': 'session_001',
-            'start_time': time.time(),
-            'end_time': time.time() + 1200,
-            'problems_attempted': 10,
-            'problems_correct': 8,
-            'concepts_practiced': ['concept_1', 'concept_2'],
-            'mastery_scores': {'concept_1': 0.6, 'concept_2': 0.7}
+            "session_id": "session_001",
+            "start_time": time.time(),
+            "end_time": time.time() + 1200,
+            "problems_attempted": 10,
+            "problems_correct": 8,
+            "concepts_practiced": ["concept_1", "concept_2"],
+            "mastery_scores": {"concept_1": 0.6, "concept_2": 0.7},
         }
 
         result = learning_analytics.update_from_session(session_data)
 
-        assert 'daily_accuracy' in result
-        assert 'weekly_pattern' in result
+        assert "daily_accuracy" in result
+        assert "weekly_pattern" in result
         assert len(learning_analytics.daily_metrics) > 0
 
     def test_pattern_detection(self, learning_analytics):
@@ -604,13 +595,13 @@ class TestLearningAnalytics:
         # Need enough data for pattern detection (at least 2 weeks)
         for i in range(10):
             session_data = {
-                'session_id': f'session_{i}',
-                'start_time': time.time() - (10-i) * 86400,
-                'end_time': time.time() - (10-i) * 86400 + 1200,
-                'problems_attempted': 10,
-                'problems_correct': 5 + i,  # Improving
-                'concepts_practiced': ['concept_1'],
-                'mastery_scores': {'concept_1': 0.5 + i*0.05}
+                "session_id": f"session_{i}",
+                "start_time": time.time() - (10 - i) * 86400,
+                "end_time": time.time() - (10 - i) * 86400 + 1200,
+                "problems_attempted": 10,
+                "problems_correct": 5 + i,  # Improving
+                "concepts_practiced": ["concept_1"],
+                "mastery_scores": {"concept_1": 0.5 + i * 0.05},
             }
             learning_analytics.update_from_session(session_data)
 
@@ -625,20 +616,20 @@ class TestLearningAnalytics:
         # Add data over multiple days
         for i in range(7):
             session_data = {
-                'session_id': f'session_{i}',
-                'start_time': time.time() - (7-i) * 86400,
-                'end_time': time.time() - (7-i) * 86400 + 1200,
-                'problems_attempted': 10,
-                'problems_correct': 7,
-                'concepts_practiced': ['concept_1'],
-                'mastery_scores': {}
+                "session_id": f"session_{i}",
+                "start_time": time.time() - (7 - i) * 86400,
+                "end_time": time.time() - (7 - i) * 86400 + 1200,
+                "problems_attempted": 10,
+                "problems_correct": 7,
+                "concepts_practiced": ["concept_1"],
+                "mastery_scores": {},
             }
             learning_analytics.update_from_session(session_data)
 
-        trend = learning_analytics.analyze_trends('accuracy', days=7)
+        trend = learning_analytics.analyze_trends("accuracy", days=7)
 
-        assert trend.metric_name == 'accuracy'
-        assert trend.trend_direction in ['increasing', 'decreasing', 'stable', 'insufficient_data']
+        assert trend.metric_name == "accuracy"
+        assert trend.trend_direction in ["increasing", "decreasing", "stable", "insufficient_data"]
         assert isinstance(trend.insights, list)
 
     def test_engagement_score(self, learning_analytics):
@@ -646,13 +637,13 @@ class TestLearningAnalytics:
         # Add sessions
         for i in range(5):
             session_data = {
-                'session_id': f'session_{i}',
-                'start_time': time.time() - i * 86400,
-                'end_time': time.time() - i * 86400 + 1200,
-                'problems_attempted': 8,
-                'problems_correct': 6,
-                'concepts_practiced': ['concept_1'],
-                'mastery_scores': {}
+                "session_id": f"session_{i}",
+                "start_time": time.time() - i * 86400,
+                "end_time": time.time() - i * 86400 + 1200,
+                "problems_attempted": 8,
+                "problems_correct": 6,
+                "concepts_practiced": ["concept_1"],
+                "mastery_scores": {},
             }
             learning_analytics.update_from_session(session_data)
 
@@ -671,13 +662,13 @@ class TestLearningAnalytics:
         # Add some session data
         for i in range(3):
             session_data = {
-                'session_id': f'session_{i}',
-                'start_time': time.time() - i * 86400,
-                'end_time': time.time() - i * 86400 + 1200,
-                'problems_attempted': 10,
-                'problems_correct': 7,
-                'concepts_practiced': ['concept_1'],
-                'mastery_scores': {}
+                "session_id": f"session_{i}",
+                "start_time": time.time() - i * 86400,
+                "end_time": time.time() - i * 86400 + 1200,
+                "problems_attempted": 10,
+                "problems_correct": 7,
+                "concepts_practiced": ["concept_1"],
+                "mastery_scores": {},
             }
             learning_analytics.update_from_session(session_data)
 
@@ -689,22 +680,22 @@ class TestLearningAnalytics:
         """Test anonymized data export."""
         # Add data
         session_data = {
-            'session_id': 'session_001',
-            'start_time': time.time(),
-            'end_time': time.time() + 1200,
-            'problems_attempted': 10,
-            'problems_correct': 8,
-            'concepts_practiced': ['concept_1'],
-            'mastery_scores': {}
+            "session_id": "session_001",
+            "start_time": time.time(),
+            "end_time": time.time() + 1200,
+            "problems_attempted": 10,
+            "problems_correct": 8,
+            "concepts_practiced": ["concept_1"],
+            "mastery_scores": {},
         }
         learning_analytics.update_from_session(session_data)
 
         exported = learning_analytics.export_anonymized_data()
 
-        assert exported['student_id_hash'] == learning_analytics.student_id_hash
-        assert 'weekly_statistics' in exported
-        assert 'engagement_score' in exported
-        assert 'insights' in exported
+        assert exported["student_id_hash"] == learning_analytics.student_id_hash
+        assert "weekly_statistics" in exported
+        assert "engagement_score" in exported
+        assert "insights" in exported
 
         # Should not contain raw student ID
         export_str = json.dumps(exported)
@@ -714,6 +705,7 @@ class TestLearningAnalytics:
 # ============================================================================
 # Integration Tests
 # ============================================================================
+
 
 class TestPersonalizationIntegration:
     """Integration tests for the complete personalization system."""
@@ -750,7 +742,7 @@ class TestPersonalizationIntegration:
                 time_spent=problem["time"],
                 hint_level_used=1 if problem["attempts"] > 1 else 0,
                 student_response="response",
-                difficulty_level=2
+                difficulty_level=2,
             )
 
             # Record in progress tracker
@@ -761,7 +753,7 @@ class TestPersonalizationIntegration:
                 time_spent=problem["time"],
                 hints_used=1 if problem["attempts"] > 1 else 0,
                 difficulty=2,
-                attempts_on_problem=problem["attempts"]
+                attempts_on_problem=problem["attempts"],
             )
 
             if problem["correct"]:
@@ -777,20 +769,20 @@ class TestPersonalizationIntegration:
                     hints_used=1 if problem["attempts"] > 1 else 0,
                     difficulty_level=2,
                     session_duration=time.time() - session_start,
-                    problems_solved_today=i
+                    problems_solved_today=i,
                 )
                 hint = tutor.generate_hint(context)
                 assert hint.hint_text is not None
 
         # Update analytics
         session_data = {
-            'session_id': 'integration_session',
-            'start_time': session_start,
-            'end_time': time.time(),
-            'problems_attempted': len(problems),
-            'problems_correct': correct_count,
-            'concepts_practiced': [concept_id],
-            'mastery_scores': {concept_id: tracker.calculate_mastery(concept_id)}
+            "session_id": "integration_session",
+            "start_time": session_start,
+            "end_time": time.time(),
+            "problems_attempted": len(problems),
+            "problems_correct": correct_count,
+            "concepts_practiced": [concept_id],
+            "mastery_scores": {concept_id: tracker.calculate_mastery(concept_id)},
         }
         analytics.update_from_session(session_data)
 
@@ -822,7 +814,7 @@ class TestPersonalizationIntegration:
                 time_spent=15.0,
                 hint_level_used=0,
                 student_response="correct",
-                difficulty_level=initial_difficulty
+                difficulty_level=initial_difficulty,
             )
 
         final_difficulty = student.predict_difficulty("math_001")
@@ -833,7 +825,9 @@ class TestPersonalizationIntegration:
     def test_privacy_preservation(self, tmp_path):
         """Test that privacy is maintained throughout the system."""
         student_id = "privacy_test_student"
-        student = create_student_model(student_id, age=9, grade=4, storage_path=str(tmp_path / "model.json"))
+        student = create_student_model(
+            student_id, age=9, grade=4, storage_path=str(tmp_path / "model.json")
+        )
         tracker = create_progress_tracker(student, storage_path=str(tmp_path / "progress.json"))
         analytics = create_learning_analytics(student_id, anonymize=True)
 
@@ -846,7 +840,7 @@ class TestPersonalizationIntegration:
             time_spent=20.0,
             hint_level_used=0,
             student_response="response",
-            difficulty_level=2
+            difficulty_level=2,
         )
 
         # Save everything
@@ -857,14 +851,14 @@ class TestPersonalizationIntegration:
         model_file = tmp_path / "model.json"
         assert model_file.exists()
 
-        with open(model_file, 'r') as f:
+        with open(model_file, "r") as f:
             model_data = json.load(f)
 
         # Check analytics export
         exported = analytics.export_anonymized_data()
 
         # Student ID should be hashed in analytics
-        assert exported['student_id_hash'] != student_id
+        assert exported["student_id_hash"] != student_id
 
         # No raw responses should be in model file
         # (Only aggregated statistics)
@@ -873,6 +867,7 @@ class TestPersonalizationIntegration:
 # ============================================================================
 # Performance Tests
 # ============================================================================
+
 
 @pytest.mark.performance
 class TestPerformance:
@@ -893,7 +888,7 @@ class TestPerformance:
                 time_spent=20.0,
                 hint_level_used=0,
                 student_response="test",
-                difficulty_level=2
+                difficulty_level=2,
             )
         elapsed = time.time() - start
 
@@ -915,7 +910,7 @@ class TestPerformance:
                 time_spent=20.0,
                 hints_used=i % 2,
                 difficulty=2,
-                attempts_on_problem=1
+                attempts_on_problem=1,
             )
 
         elapsed = time.time() - start

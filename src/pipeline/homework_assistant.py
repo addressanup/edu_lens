@@ -300,7 +300,11 @@ class HomeworkAssistant:
             self.session_manager.record_interaction(
                 session_id=self._current_session_id,
                 interaction_type=interaction_type,
-                visual_context=tutoring_context.visual_context[:200] if tutoring_context.visual_context else None,
+                visual_context=(
+                    tutoring_context.visual_context[:200]
+                    if tutoring_context.visual_context
+                    else None
+                ),
                 student_query=transcription,
                 tutor_response=ai_response[:200],
                 subject=tutoring_context.subject,
@@ -414,10 +418,7 @@ class HomeworkAssistant:
                 "Can you walk me through how you got that answer?"
             )
         else:
-            return (
-                "I'd be happy to check your answer! "
-                "Can you tell me or show me what you got?"
-            )
+            return "I'd be happy to check your answer! " "Can you tell me or show me what you got?"
 
     def _generate_explanation_response(self, context: TutoringContext) -> str:
         """Generate concept explanation."""
@@ -563,9 +564,7 @@ class HomeworkAssistant:
         if len(self._latency_history) > 100:
             self._latency_history = self._latency_history[-100:]
 
-        self._metrics.average_latency_ms = (
-            sum(self._latency_history) / len(self._latency_history)
-        )
+        self._metrics.average_latency_ms = sum(self._latency_history) / len(self._latency_history)
 
     def get_metrics(self) -> PipelineMetrics:
         """Get current pipeline metrics."""

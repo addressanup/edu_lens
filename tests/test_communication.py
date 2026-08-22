@@ -7,34 +7,36 @@ error recovery, and context budget management.
 
 import asyncio
 import json
-import pytest
 from datetime import datetime, timezone
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
 
-# Import modules under test
-from core.message_broker import MessageBroker, Message, MessagePriority
+import pytest
+
 from core.communication_protocol import (
-    create_message,
-    validate_message,
-    sign_message,
     MessageType,
+    create_message,
+    sign_message,
+    validate_message,
 )
-from core.validation_gates import (
-    ValidationGateManager,
-    GateType,
-    ValidationResult,
+from core.context_budget import (
+    BudgetAllocation,
+    BudgetCategory,
+    ContextBudgetManager,
 )
 from core.error_recovery import (
     ErrorRecoveryManager,
-    RecoveryLevel,
     ErrorSeverity,
+    RecoveryLevel,
     RecoveryResult,
 )
-from core.context_budget import (
-    ContextBudgetManager,
-    BudgetAllocation,
-    BudgetCategory,
+
+# Import modules under test
+from core.message_broker import Message, MessageBroker, MessagePriority
+from core.validation_gates import (
+    GateType,
+    ValidationGateManager,
+    ValidationResult,
 )
 
 

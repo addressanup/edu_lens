@@ -26,10 +26,9 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
-
 
 # ============================================================================
 # Benchmark Configuration
@@ -81,7 +80,7 @@ class BenchmarkReport:
         """Generate JSON report."""
         output_file = self.output_dir / "benchmark_report.json"
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
 
         print(f"Generated JSON report: {output_file}")
@@ -104,39 +103,45 @@ class BenchmarkReport:
         # Summary statistics
         summary = self.results.get("summary", {})
 
-        md_lines.extend([
-            f"- **Total Tests:** {summary.get('total_tests', 0)}",
-            f"- **Passed:** {summary.get('passed', 0)}",
-            f"- **Failed:** {summary.get('failed', 0)}",
-            f"- **Skipped:** {summary.get('skipped', 0)}",
-            "",
-        ])
+        md_lines.extend(
+            [
+                f"- **Total Tests:** {summary.get('total_tests', 0)}",
+                f"- **Passed:** {summary.get('passed', 0)}",
+                f"- **Failed:** {summary.get('failed', 0)}",
+                f"- **Skipped:** {summary.get('skipped', 0)}",
+                "",
+            ]
+        )
 
         # Suite results
         md_lines.append("## Test Suites")
         md_lines.append("")
 
         for suite_name, suite_data in self.results.get("suites", {}).items():
-            md_lines.extend([
-                f"### {suite_name.title()}",
-                "",
-                f"**Description:** {BENCHMARK_SUITES.get(suite_name, {}).get('description', 'N/A')}",
-                "",
-                f"- Duration: {suite_data.get('duration_seconds', 0):.1f}s",
-                f"- Tests Passed: {suite_data.get('passed', 0)}",
-                f"- Tests Failed: {suite_data.get('failed', 0)}",
-                "",
-            ])
+            md_lines.extend(
+                [
+                    f"### {suite_name.title()}",
+                    "",
+                    f"**Description:** {BENCHMARK_SUITES.get(suite_name, {}).get('description', 'N/A')}",
+                    "",
+                    f"- Duration: {suite_data.get('duration_seconds', 0):.1f}s",
+                    f"- Tests Passed: {suite_data.get('passed', 0)}",
+                    f"- Tests Failed: {suite_data.get('failed', 0)}",
+                    "",
+                ]
+            )
 
         # Key metrics
-        md_lines.extend([
-            "## Key Metrics",
-            "",
-            "### Latency Targets",
-            "",
-            "| Operation | Target (ms) | Actual P50 (ms) | Status |",
-            "|-----------|-------------|-----------------|--------|",
-        ])
+        md_lines.extend(
+            [
+                "## Key Metrics",
+                "",
+                "### Latency Targets",
+                "",
+                "| Operation | Target (ms) | Actual P50 (ms) | Status |",
+                "|-----------|-------------|-----------------|--------|",
+            ]
+        )
 
         latency_metrics = {
             "OCR": 500,
@@ -151,37 +156,41 @@ class BenchmarkReport:
             status = "✓ Pass"
             md_lines.append(f"| {op} | {target} | {actual} | {status} |")
 
-        md_lines.extend([
-            "",
-            "### Memory Usage",
-            "",
-            "| Component | Baseline (MB) | Peak (MB) | Leak Rate (MB/1000 ops) |",
-            "|-----------|---------------|-----------|------------------------|",
-            "| OCR | 25 | 120 | 2.5 |",
-            "| ASR | 85 | 180 | 3.1 |",
-            "| TTS | 15 | 75 | 1.8 |",
-            "",
-            "### Throughput",
-            "",
-            "| Metric | Target | Actual | Status |",
-            "|--------|--------|--------|--------|",
-            "| OCR FPS | 2.0 | 2.5 | ✓ Pass |",
-            "| ASR RTF | <0.3 | 0.25 | ✓ Pass |",
-            "| TTS Words/s | 10 | 12.5 | ✓ Pass |",
-            "",
-        ])
+        md_lines.extend(
+            [
+                "",
+                "### Memory Usage",
+                "",
+                "| Component | Baseline (MB) | Peak (MB) | Leak Rate (MB/1000 ops) |",
+                "|-----------|---------------|-----------|------------------------|",
+                "| OCR | 25 | 120 | 2.5 |",
+                "| ASR | 85 | 180 | 3.1 |",
+                "| TTS | 15 | 75 | 1.8 |",
+                "",
+                "### Throughput",
+                "",
+                "| Metric | Target | Actual | Status |",
+                "|--------|--------|--------|--------|",
+                "| OCR FPS | 2.0 | 2.5 | ✓ Pass |",
+                "| ASR RTF | <0.3 | 0.25 | ✓ Pass |",
+                "| TTS Words/s | 10 | 12.5 | ✓ Pass |",
+                "",
+            ]
+        )
 
         # Recommendations
-        md_lines.extend([
-            "## Recommendations",
-            "",
-            self._generate_recommendations(),
-            "",
-        ])
+        md_lines.extend(
+            [
+                "## Recommendations",
+                "",
+                self._generate_recommendations(),
+                "",
+            ]
+        )
 
         # Write file
-        with open(output_file, 'w') as f:
-            f.write('\n'.join(md_lines))
+        with open(output_file, "w") as f:
+            f.write("\n".join(md_lines))
 
         print(f"Generated Markdown report: {output_file}")
         return output_file
@@ -442,7 +451,7 @@ class BenchmarkReport:
 </html>
 """
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             f.write(html_content)
 
         print(f"Generated HTML report: {output_file}")
@@ -458,7 +467,7 @@ class BenchmarkReport:
             "5. Monitor long-running sessions for memory growth in production",
             "6. GPU acceleration could further improve performance",
         ]
-        return '\n'.join([f"- {rec}" for rec in recommendations])
+        return "\n".join([f"- {rec}" for rec in recommendations])
 
     def _generate_html_recommendations(self) -> str:
         """Generate HTML formatted recommendations."""
@@ -470,7 +479,7 @@ class BenchmarkReport:
             "Monitor long-running sessions for memory growth in production",
             "GPU acceleration could further improve performance",
         ]
-        return '<ul>' + ''.join([f"<li>{rec}</li>" for rec in recommendations]) + '</ul>'
+        return "<ul>" + "".join([f"<li>{rec}</li>" for rec in recommendations]) + "</ul>"
 
 
 # ============================================================================
@@ -496,7 +505,7 @@ class BenchmarkRunner:
                 "passed": 0,
                 "failed": 0,
                 "skipped": 0,
-            }
+            },
         }
 
     def run_suite(self, suite_name: str, suite_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -517,7 +526,9 @@ class BenchmarkRunner:
 
         # Run pytest
         cmd = [
-            sys.executable, "-m", "pytest",
+            sys.executable,
+            "-m",
+            "pytest",
             str(test_file),
             "--performance",
             "-v" if self.verbose else "-q",
@@ -528,16 +539,13 @@ class BenchmarkRunner:
 
         try:
             result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=3600  # 1 hour timeout
+                cmd, capture_output=True, text=True, timeout=3600  # 1 hour timeout
             )
 
             duration = time.time() - start_time
 
             # Parse pytest output
-            output_lines = result.stdout.split('\n')
+            output_lines = result.stdout.split("\n")
 
             # Extract test counts from pytest summary
             passed = failed = skipped = 0
@@ -596,7 +604,9 @@ class BenchmarkRunner:
 
             # Update summary
             if not suite_result.get("skipped") and not suite_result.get("error"):
-                self.results["summary"]["total_tests"] += suite_result.get("passed", 0) + suite_result.get("failed", 0)
+                self.results["summary"]["total_tests"] += suite_result.get(
+                    "passed", 0
+                ) + suite_result.get("failed", 0)
                 self.results["summary"]["passed"] += suite_result.get("passed", 0)
                 self.results["summary"]["failed"] += suite_result.get("failed", 0)
                 self.results["summary"]["skipped"] += suite_result.get("skipped", 0)
@@ -636,46 +646,32 @@ def main():
     parser = argparse.ArgumentParser(
         description="Run EduLens performance benchmarks",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog=__doc__
+        epilog=__doc__,
     )
 
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=Path("./benchmark_results"),
-        help="Output directory for reports (default: ./benchmark_results)"
+        help="Output directory for reports (default: ./benchmark_results)",
     )
 
     parser.add_argument(
         "--format",
         choices=["json", "html", "markdown", "all"],
         default="all",
-        help="Report format (default: all)"
+        help="Report format (default: all)",
     )
 
-    parser.add_argument(
-        "--compare",
-        type=Path,
-        help="Compare against baseline file"
-    )
+    parser.add_argument("--compare", type=Path, help="Compare against baseline file")
+
+    parser.add_argument("--save-baseline", action="store_true", help="Save results as new baseline")
 
     parser.add_argument(
-        "--save-baseline",
-        action="store_true",
-        help="Save results as new baseline"
+        "--quick", action="store_true", help="Run quick benchmarks only (skip slow tests)"
     )
 
-    parser.add_argument(
-        "--quick",
-        action="store_true",
-        help="Run quick benchmarks only (skip slow tests)"
-    )
-
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
 
     args = parser.parse_args()
 
@@ -693,14 +689,14 @@ def main():
     # Save baseline if requested
     if args.save_baseline:
         baseline_file = args.output_dir / "baseline.json"
-        with open(baseline_file, 'w') as f:
+        with open(baseline_file, "w") as f:
             json.dump(results, f, indent=2)
         print(f"\nSaved baseline: {baseline_file}")
 
     # Print summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("BENCHMARK SUMMARY")
-    print("="*60)
+    print("=" * 60)
     print(f"Total tests: {results['summary']['total_tests']}")
     print(f"Passed: {results['summary']['passed']}")
     print(f"Failed: {results['summary']['failed']}")
@@ -711,7 +707,7 @@ def main():
         print(f"  - {file_path}")
 
     # Exit with appropriate code
-    sys.exit(0 if results['summary']['failed'] == 0 else 1)
+    sys.exit(0 if results["summary"]["failed"] == 0 else 1)
 
 
 if __name__ == "__main__":

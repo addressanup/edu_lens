@@ -14,17 +14,17 @@ import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import List, Dict, Any
-from unittest.mock import Mock, AsyncMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock, Mock
 
 import numpy as np
 import pytest
 from PIL import Image
 
 try:
-    from src.vision.ocr_engine import OCREngine, OCRBackend
-    from src.audio.speech_recognizer import SpeechRecognizer, SpeechConfig
-    from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
+    from src.audio.speech_recognizer import SpeechConfig, SpeechRecognizer
+    from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
+    from src.vision.ocr_engine import OCRBackend, OCREngine
 except ImportError:
     OCREngine = None
     SpeechRecognizer = None
@@ -66,9 +66,9 @@ class TestOCRThroughput:
         from PIL import ImageDraw
 
         for i in range(30):  # 30 frames
-            img = Image.new('RGB', (640, 480), color='white')
+            img = Image.new("RGB", (640, 480), color="white")
             draw = ImageDraw.Draw(img)
-            draw.text((50, 50), f"Frame {i}", fill='black')
+            draw.text((50, 50), f"Frame {i}", fill="black")
 
             path = temp_dir / f"frame_{i:03d}.jpg"
             img.save(path)
@@ -91,8 +91,9 @@ class TestOCRThroughput:
         elapsed_time = time.perf_counter() - start_time
         fps = processed_count / elapsed_time
 
-        assert fps >= THROUGHPUT_TARGETS["ocr_fps"], \
-            f"OCR FPS {fps:.2f} below target {THROUGHPUT_TARGETS['ocr_fps']}"
+        assert (
+            fps >= THROUGHPUT_TARGETS["ocr_fps"]
+        ), f"OCR FPS {fps:.2f} below target {THROUGHPUT_TARGETS['ocr_fps']}"
 
     def test_ocr_batch_processing(self, ocr_engine, video_frames):
         """Test OCR batch processing throughput."""
@@ -198,8 +199,9 @@ class TestASRThroughput:
 
         realtime_factor = processing_time / audio_duration
 
-        assert realtime_factor < THROUGHPUT_TARGETS["asr_realtime_factor"], \
-            f"ASR RTF {realtime_factor:.2f} exceeds target {THROUGHPUT_TARGETS['asr_realtime_factor']}"
+        assert (
+            realtime_factor < THROUGHPUT_TARGETS["asr_realtime_factor"]
+        ), f"ASR RTF {realtime_factor:.2f} exceeds target {THROUGHPUT_TARGETS['asr_realtime_factor']}"
 
     @pytest.mark.asyncio
     async def test_asr_batch_throughput(self, speech_recognizer, audio_segments):
@@ -220,6 +222,7 @@ class TestASRThroughput:
     @pytest.mark.asyncio
     async def test_asr_concurrent_processing(self, speech_recognizer, audio_segments):
         """Test ASR concurrent processing."""
+
         async def process_segment(segment):
             return await speech_recognizer.transcribe(segment)
 
@@ -338,8 +341,7 @@ class TestConcurrentRequests:
             # Simulate async OCR processing
             loop = asyncio.get_event_loop()
             result = await loop.run_in_executor(
-                None,
-                lambda: ocr_engine.extract_structured_content(image)
+                None, lambda: ocr_engine.extract_structured_content(image)
             )
             return request_id, result
 
@@ -534,9 +536,9 @@ class TestBatchProcessing:
         batch_size = 20
         images = []
         for i in range(batch_size):
-            img = Image.new('RGB', (640, 480), color='white')
+            img = Image.new("RGB", (640, 480), color="white")
             draw = ImageDraw.Draw(img)
-            draw.text((50, 50), f"Image {i}", fill='black')
+            draw.text((50, 50), f"Image {i}", fill="black")
 
             path = temp_dir / f"batch_{i}.jpg"
             img.save(path)
@@ -623,13 +625,14 @@ def test_throughput_summary_report(tmp_path):
             "queue": {
                 "max_queue_depth": 100,
                 "overflow_handling": "passed",
-            }
-        }
+            },
+        },
     }
 
     import json
+
     report_file = tmp_path / "throughput_report.json"
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     assert report_file.exists()

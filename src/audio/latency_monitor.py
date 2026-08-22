@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class PipelineStage(Enum):
     """Pipeline stages for latency tracking."""
+
     WAKE_WORD_DETECTION = "wake_word_detection"
     SPEECH_START = "speech_start"
     SPEECH_END = "speech_end"
@@ -37,6 +38,7 @@ class PipelineStage(Enum):
 @dataclass
 class Checkpoint:
     """Single timing checkpoint."""
+
     stage: PipelineStage
     timestamp: float
     metadata: Dict = field(default_factory=dict)
@@ -50,6 +52,7 @@ class Checkpoint:
 @dataclass
 class LatencyMetrics:
     """Latency metrics for a complete pipeline execution."""
+
     session_id: str
     total_latency: float  # Total end-to-end (ms)
     stage_latencies: Dict[str, float]  # Per-stage latencies (ms)
@@ -61,7 +64,7 @@ class LatencyMetrics:
     @property
     def duration(self) -> float:
         """Total duration in seconds."""
-        return (self.end_time - self.start_time)
+        return self.end_time - self.start_time
 
     def get_stage_latency(self, stage: PipelineStage) -> Optional[float]:
         """Get latency for specific stage (ms)."""
@@ -81,9 +84,10 @@ class LatencyMetrics:
 @dataclass
 class LatencyStats:
     """Aggregate latency statistics."""
+
     total_sessions: int = 0
     avg_latency: float = 0.0
-    min_latency: float = float('inf')
+    min_latency: float = float("inf")
     max_latency: float = 0.0
     p50_latency: float = 0.0
     p95_latency: float = 0.0
@@ -110,7 +114,7 @@ class LatencyMonitor:
         self,
         threshold_ms: float = 2000.0,
         alert_callback: Optional[Callable[[LatencyMetrics], None]] = None,
-        history_size: int = 100
+        history_size: int = 100,
     ):
         """
         Initialize latency monitor.
@@ -152,10 +156,7 @@ class LatencyMonitor:
         logger.debug(f"Started timing session: {session_id}")
 
     def record_checkpoint(
-        self,
-        session_id: str,
-        stage: PipelineStage,
-        metadata: Optional[Dict] = None
+        self, session_id: str, stage: PipelineStage, metadata: Optional[Dict] = None
     ) -> None:
         """
         Record a pipeline stage checkpoint.
@@ -169,11 +170,7 @@ class LatencyMonitor:
             logger.warning(f"Unknown session: {session_id}")
             return
 
-        checkpoint = Checkpoint(
-            stage=stage,
-            timestamp=time.time(),
-            metadata=metadata or {}
-        )
+        checkpoint = Checkpoint(stage=stage, timestamp=time.time(), metadata=metadata or {})
 
         self._active_sessions[session_id].append(checkpoint)
 
@@ -268,7 +265,7 @@ class LatencyMonitor:
             checkpoints=checkpoints,
             start_time=start_time,
             end_time=end_time,
-            exceeded_threshold=exceeded_threshold
+            exceeded_threshold=exceeded_threshold,
         )
 
         # Update statistics
@@ -294,9 +291,7 @@ class LatencyMonitor:
                 except Exception as e:
                     logger.error(f"Error in alert callback: {e}")
 
-        logger.info(
-            f"Session {session_id} completed: {total_latency:.1f}ms total latency"
-        )
+        logger.info(f"Session {session_id} completed: {total_latency:.1f}ms total latency")
 
         return metrics
 
@@ -355,10 +350,7 @@ class LatencyMonitor:
         self._stage_times.clear()
         logger.info("Reset latency statistics")
 
-    def _calculate_stage_latencies(
-        self,
-        checkpoints: List[Checkpoint]
-    ) -> Dict[str, float]:
+    def _calculate_stage_latencies(self, checkpoints: List[Checkpoint]) -> Dict[str, float]:
         """
         Calculate latencies between stages.
 
@@ -399,9 +391,7 @@ class LatencyMonitor:
         total = metrics.total_latency
         n = self._stats.total_sessions
 
-        self._stats.avg_latency = (
-            (self._stats.avg_latency * (n - 1) + total) / n
-        )
+        self._stats.avg_latency = (self._stats.avg_latency * (n - 1) + total) / n
         self._stats.min_latency = min(self._stats.min_latency, total)
         self._stats.max_latency = max(self._stats.max_latency, total)
 
@@ -409,9 +399,7 @@ class LatencyMonitor:
         if metrics.exceeded_threshold:
             self._stats.threshold_violations += 1
 
-        self._stats.violation_rate = (
-            self._stats.threshold_violations / self._stats.total_sessions
-        )
+        self._stats.violation_rate = self._stats.threshold_violations / self._stats.total_sessions
 
         # Update percentiles (if we have enough samples)
         if len(self._latency_buffer) >= 10:
@@ -424,18 +412,14 @@ class LatencyMonitor:
             self._stage_times[stage_name].append(latency)
 
             if stage_name not in self._stats.stage_stats:
-                self._stats.stage_stats[stage_name] = {
-                    'avg': 0.0,
-                    'min': float('inf'),
-                    'max': 0.0
-                }
+                self._stats.stage_stats[stage_name] = {"avg": 0.0, "min": float("inf"), "max": 0.0}
 
             stage_times = self._stage_times[stage_name]
             self._stats.stage_stats[stage_name] = {
-                'avg': float(np.mean(stage_times)),
-                'min': float(np.min(stage_times)),
-                'max': float(np.max(stage_times)),
-                'p95': float(np.percentile(stage_times, 95)) if len(stage_times) >= 10 else 0.0
+                "avg": float(np.mean(stage_times)),
+                "min": float(np.min(stage_times)),
+                "max": float(np.max(stage_times)),
+                "p95": float(np.percentile(stage_times, 95)) if len(stage_times) >= 10 else 0.0,
             }
 
     def _create_empty_metrics(self, session_id: str) -> LatencyMetrics:
@@ -455,7 +439,7 @@ class LatencyMonitor:
             stage_latencies={},
             checkpoints=[],
             start_time=current_time,
-            end_time=current_time
+            end_time=current_time,
         )
 
     def __repr__(self) -> str:
@@ -477,11 +461,7 @@ class AsyncLatencyMonitor:
     Provides async event notifications for latency alerts.
     """
 
-    def __init__(
-        self,
-        threshold_ms: float = 2000.0,
-        history_size: int = 100
-    ):
+    def __init__(self, threshold_ms: float = 2000.0, history_size: int = 100):
         """
         Initialize async latency monitor.
 
@@ -490,9 +470,7 @@ class AsyncLatencyMonitor:
             history_size: Number of sessions to keep in history
         """
         self._monitor = LatencyMonitor(
-            threshold_ms=threshold_ms,
-            alert_callback=self._on_alert,
-            history_size=history_size
+            threshold_ms=threshold_ms, alert_callback=self._on_alert, history_size=history_size
         )
         self._alert_queue: asyncio.Queue = asyncio.Queue()
         self._callbacks: List[Callable] = []
@@ -502,10 +480,7 @@ class AsyncLatencyMonitor:
         self._monitor.start_timer(session_id)
 
     def record_checkpoint(
-        self,
-        session_id: str,
-        stage: PipelineStage,
-        metadata: Optional[Dict] = None
+        self, session_id: str, stage: PipelineStage, metadata: Optional[Dict] = None
     ) -> None:
         """Record a checkpoint."""
         self._monitor.record_checkpoint(session_id, stage, metadata)
@@ -542,10 +517,7 @@ class AsyncLatencyMonitor:
         """
         try:
             if timeout:
-                metrics = await asyncio.wait_for(
-                    self._alert_queue.get(),
-                    timeout=timeout
-                )
+                metrics = await asyncio.wait_for(self._alert_queue.get(), timeout=timeout)
             else:
                 metrics = await self._alert_queue.get()
 

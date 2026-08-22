@@ -12,21 +12,21 @@ Version: 1.0.0
 import json
 import logging
 import re
-from typing import Dict, List, Optional, Tuple, Any
-from pathlib import Path
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from .curriculum_manager import CurriculumManager, create_curriculum_manager
-from .prompt_templates import PromptTemplateManager, HintLevel
+from .llm_service import LLMConfig, LLMMessage, LLMProvider, LLMService
+from .prompt_templates import HintLevel, PromptTemplateManager
 from .response_validator import ResponseValidator
-from .llm_service import LLMService, LLMConfig, LLMProvider, LLMMessage
-
 
 logger = logging.getLogger(__name__)
 
 
 class DifficultyLevel(Enum):
     """Difficulty levels for adaptive explanation complexity."""
+
     VERY_EASY = 1
     EASY = 2
     MODERATE = 3
@@ -36,6 +36,7 @@ class DifficultyLevel(Enum):
 
 class ResponseType(Enum):
     """Types of tutoring responses."""
+
     SOCRATIC_QUESTION = "socratic_question"
     HINT = "hint"
     EXPLANATION = "explanation"
@@ -58,7 +59,7 @@ class TutorEngine:
         config_path: Optional[str] = None,
         curriculum_manager: Optional[CurriculumManager] = None,
         llm_provider: str = "anthropic",
-        llm_api_key: Optional[str] = None
+        llm_api_key: Optional[str] = None,
     ):
         """
         Initialize the TutorEngine.
@@ -85,7 +86,7 @@ class TutorEngine:
             api_key=llm_api_key,
             temperature=0.7,
             max_tokens=1024,
-            safety_filter=True  # Always enable for child content
+            safety_filter=True,  # Always enable for child content
         )
 
         # Load configuration
@@ -109,7 +110,7 @@ class TutorEngine:
         import yaml
 
         try:
-            with open(self.config_path, 'r') as f:
+            with open(self.config_path, "r") as f:
                 config = yaml.safe_load(f)
             logger.info(f"Loaded config from {self.config_path}")
             return config
@@ -120,30 +121,30 @@ class TutorEngine:
     def _get_default_config(self) -> Dict:
         """Get default configuration if file not found."""
         return {
-            'model': {
-                'name': self.model_name,
-                'max_tokens': 200,
-                'temperature': 0.7,
-                'top_p': 0.9,
-                'top_k': 50
+            "model": {
+                "name": self.model_name,
+                "max_tokens": 200,
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "top_k": 50,
             },
-            'safety': {
-                'max_response_length': 500,
-                'min_response_length': 20,
-                'enable_content_filter': True
+            "safety": {
+                "max_response_length": 500,
+                "min_response_length": 20,
+                "enable_content_filter": True,
             },
-            'educational': {
-                'enable_socratic_method': True,
-                'max_hint_progression': 3,
-                'encouragement_frequency': 0.3
-            }
+            "educational": {
+                "enable_socratic_method": True,
+                "max_hint_progression": 3,
+                "encouragement_frequency": 0.3,
+            },
         }
 
     def generate_response(
         self,
         student_query: str,
         context: Dict[str, Any],
-        response_type: Optional[ResponseType] = None
+        response_type: Optional[ResponseType] = None,
     ) -> Dict[str, Any]:
         """
         Generate an educational response to student query.
@@ -175,15 +176,15 @@ class TutorEngine:
 
         # Get concept information if available
         concept_data = None
-        if 'concept_id' in context:
-            concept_data = self.curriculum_manager.get_concept_by_id(context['concept_id'])
+        if "concept_id" in context:
+            concept_data = self.curriculum_manager.get_concept_by_id(context["concept_id"])
 
         # Build the prompt
         prompt = self.create_socratic_prompt(
             student_query=student_query,
             context=context,
             response_type=response_type,
-            concept_data=concept_data
+            concept_data=concept_data,
         )
 
         # Generate response using LLM (placeholder for actual model inference)
@@ -192,36 +193,31 @@ class TutorEngine:
         # Validate response
         validation_result = self.validator.validate_response(
             response=generated_text,
-            age=context.get('age', 8),
-            subject=context.get('subject', 'general')
+            age=context.get("age", 8),
+            subject=context.get("subject", "general"),
         )
 
-        if not validation_result['is_valid']:
+        if not validation_result["is_valid"]:
             # Regenerate with stricter constraints
             logger.warning(f"Invalid response: {validation_result['issues']}")
             generated_text = self._regenerate_safe_response(prompt, context)
 
         # Update conversation history
-        self.conversation_history.append({
-            'role': 'student',
-            'content': student_query
-        })
-        self.conversation_history.append({
-            'role': 'tutor',
-            'content': generated_text,
-            'type': response_type.value
-        })
+        self.conversation_history.append({"role": "student", "content": student_query})
+        self.conversation_history.append(
+            {"role": "tutor", "content": generated_text, "type": response_type.value}
+        )
 
         return {
-            'response': generated_text,
-            'response_type': response_type.value,
-            'metadata': {
-                'hint_level': self.hint_level.value if response_type == ResponseType.HINT else None,
-                'difficulty': self.current_difficulty.value,
-                'concept_id': context.get('concept_id'),
-                'validation': validation_result,
-                'turn_count': len(self.conversation_history) // 2
-            }
+            "response": generated_text,
+            "response_type": response_type.value,
+            "metadata": {
+                "hint_level": self.hint_level.value if response_type == ResponseType.HINT else None,
+                "difficulty": self.current_difficulty.value,
+                "concept_id": context.get("concept_id"),
+                "validation": validation_result,
+                "turn_count": len(self.conversation_history) // 2,
+            },
         }
 
     def create_socratic_prompt(
@@ -229,7 +225,7 @@ class TutorEngine:
         student_query: str,
         context: Dict[str, Any],
         response_type: ResponseType,
-        concept_data: Optional[Dict] = None
+        concept_data: Optional[Dict] = None,
     ) -> str:
         """
         Build a Socratic-style prompt for the LLM.
@@ -243,14 +239,13 @@ class TutorEngine:
         Returns:
             Formatted prompt string for LLM
         """
-        age = context.get('age', 8)
-        grade = context.get('grade', '3')
-        subject = context.get('subject', 'general')
+        age = context.get("age", 8)
+        grade = context.get("grade", "3")
+        subject = context.get("subject", "general")
 
         # Get base template
         template = self.template_manager.get_template(
-            subject=subject,
-            template_type=response_type.value
+            subject=subject, template_type=response_type.value
         )
 
         # Build context section
@@ -271,16 +266,13 @@ class TutorEngine:
             conversation_history=history_section,
             student_query=student_query,
             language_guidelines=language_guidelines,
-            hint_level=self.hint_level.value
+            hint_level=self.hint_level.value,
         )
 
         return prompt
 
     def guide_to_answer(
-        self,
-        problem_statement: str,
-        student_attempts: List[str],
-        context: Dict[str, Any]
+        self, problem_statement: str, student_attempts: List[str], context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Provide multi-turn guidance without directly giving the answer.
@@ -294,10 +286,7 @@ class TutorEngine:
             Dictionary with guidance response and metadata
         """
         # Analyze student attempts to identify misconceptions
-        misconceptions = self._identify_misconceptions(
-            student_attempts,
-            context.get('concept_id')
-        )
+        misconceptions = self._identify_misconceptions(student_attempts, context.get("concept_id"))
 
         # Determine if hint level should progress
         if len(student_attempts) > 0:
@@ -306,23 +295,20 @@ class TutorEngine:
         # Build context with problem and attempts
         guidance_context = {
             **context,
-            'problem_statement': problem_statement,
-            'previous_attempts': student_attempts,
-            'misconceptions': misconceptions
+            "problem_statement": problem_statement,
+            "previous_attempts": student_attempts,
+            "misconceptions": misconceptions,
         }
 
         # Generate guidance using hint template
         return self.generate_response(
             student_query=f"Student is working on: {problem_statement}",
             context=guidance_context,
-            response_type=ResponseType.HINT
+            response_type=ResponseType.HINT,
         )
 
     def explain_concept(
-        self,
-        concept_id: str,
-        student_age: int,
-        current_understanding: Optional[str] = None
+        self, concept_id: str, student_age: int, current_understanding: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Explain a concept at an age-appropriate level.
@@ -345,26 +331,23 @@ class TutorEngine:
 
         # Build context
         context = {
-            'age': student_age,
-            'grade': concept['grade'],
-            'subject': concept['subject'],
-            'concept_id': concept_id,
-            'current_understanding': current_understanding,
-            'prerequisites': [p['name'] for p in prerequisites]
+            "age": student_age,
+            "grade": concept["grade"],
+            "subject": concept["subject"],
+            "concept_id": concept_id,
+            "current_understanding": current_understanding,
+            "prerequisites": [p["name"] for p in prerequisites],
         }
 
         # Generate explanation
         return self.generate_response(
             student_query=f"Explain {concept['name']}",
             context=context,
-            response_type=ResponseType.EXPLANATION
+            response_type=ResponseType.EXPLANATION,
         )
 
     def check_understanding(
-        self,
-        concept_id: str,
-        student_response: str,
-        context: Dict[str, Any]
+        self, concept_id: str, student_response: str, context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Verify student comprehension through Socratic questioning.
@@ -378,30 +361,24 @@ class TutorEngine:
             Dictionary with comprehension check result and follow-up
         """
         # Analyze student response for understanding indicators
-        understanding_level = self._assess_understanding(
-            student_response,
-            concept_id
-        )
+        understanding_level = self._assess_understanding(student_response, concept_id)
 
         # Update context with understanding assessment
         check_context = {
             **context,
-            'concept_id': concept_id,
-            'student_response': student_response,
-            'understanding_level': understanding_level
+            "concept_id": concept_id,
+            "student_response": student_response,
+            "understanding_level": understanding_level,
         }
 
         # Generate comprehension check question or feedback
         return self.generate_response(
             student_query=student_response,
             context=check_context,
-            response_type=ResponseType.COMPREHENSION_CHECK
+            response_type=ResponseType.COMPREHENSION_CHECK,
         )
 
-    def adjust_difficulty(
-        self,
-        student_performance: Dict[str, Any]
-    ) -> DifficultyLevel:
+    def adjust_difficulty(self, student_performance: Dict[str, Any]) -> DifficultyLevel:
         """
         Adapt explanation complexity based on student performance.
 
@@ -416,24 +393,17 @@ class TutorEngine:
             New difficulty level
         """
         # Calculate success rate
-        success_rate = (
-            student_performance.get('correct_attempts', 0) /
-            max(student_performance.get('total_attempts', 1), 1)
+        success_rate = student_performance.get("correct_attempts", 0) / max(
+            student_performance.get("total_attempts", 1), 1
         )
 
         # Adjust based on success rate
         if success_rate >= 0.8:
             # Student is doing well, can increase difficulty
-            new_difficulty = min(
-                DifficultyLevel.ADVANCED.value,
-                self.current_difficulty.value + 1
-            )
+            new_difficulty = min(DifficultyLevel.ADVANCED.value, self.current_difficulty.value + 1)
         elif success_rate < 0.4:
             # Student is struggling, decrease difficulty
-            new_difficulty = max(
-                DifficultyLevel.VERY_EASY.value,
-                self.current_difficulty.value - 1
-            )
+            new_difficulty = max(DifficultyLevel.VERY_EASY.value, self.current_difficulty.value - 1)
         else:
             # Maintain current difficulty
             new_difficulty = self.current_difficulty.value
@@ -454,37 +424,29 @@ class TutorEngine:
 
     def _validate_context(self, context: Dict[str, Any]) -> bool:
         """Validate that context contains required fields."""
-        required_fields = ['age', 'grade', 'subject']
+        required_fields = ["age", "grade", "subject"]
         return all(field in context for field in required_fields)
 
-    def _detect_response_type(
-        self,
-        student_query: str,
-        context: Dict[str, Any]
-    ) -> ResponseType:
+    def _detect_response_type(self, student_query: str, context: Dict[str, Any]) -> ResponseType:
         """Auto-detect the appropriate response type."""
         query_lower = student_query.lower()
 
         # Check for help requests
-        if any(word in query_lower for word in ['help', 'stuck', 'don\'t understand']):
+        if any(word in query_lower for word in ["help", "stuck", "don't understand"]):
             return ResponseType.HINT
 
         # Check for explanation requests
-        if any(word in query_lower for word in ['what is', 'explain', 'how does', 'why']):
+        if any(word in query_lower for word in ["what is", "explain", "how does", "why"]):
             return ResponseType.EXPLANATION
 
         # Check if this is likely an answer to check
-        if 'problem_statement' in context and len(student_query.split()) < 20:
+        if "problem_statement" in context and len(student_query.split()) < 20:
             return ResponseType.COMPREHENSION_CHECK
 
         # Default to Socratic questioning
         return ResponseType.SOCRATIC_QUESTION
 
-    def _build_context_section(
-        self,
-        context: Dict[str, Any],
-        concept_data: Optional[Dict]
-    ) -> str:
+    def _build_context_section(self, context: Dict[str, Any], concept_data: Optional[Dict]) -> str:
         """Build the context section of the prompt."""
         sections = []
 
@@ -493,25 +455,25 @@ class TutorEngine:
             sections.append(f"Current Concept: {concept_data['name']}")
             sections.append(f"Definition: {concept_data['definition']}")
 
-            if concept_data.get('common_misconceptions'):
-                misconceptions = '\n'.join(
-                    f"- {m}" for m in concept_data['common_misconceptions'][:3]
+            if concept_data.get("common_misconceptions"):
+                misconceptions = "\n".join(
+                    f"- {m}" for m in concept_data["common_misconceptions"][:3]
                 )
                 sections.append(f"Common Misconceptions:\n{misconceptions}")
 
         # Add problem statement if available
-        if 'problem_statement' in context:
+        if "problem_statement" in context:
             sections.append(f"Problem: {context['problem_statement']}")
 
         # Add previous attempts if available
-        if 'previous_attempts' in context and context['previous_attempts']:
-            attempts = '\n'.join(
+        if "previous_attempts" in context and context["previous_attempts"]:
+            attempts = "\n".join(
                 f"Attempt {i+1}: {attempt}"
-                for i, attempt in enumerate(context['previous_attempts'][-3:])
+                for i, attempt in enumerate(context["previous_attempts"][-3:])
             )
             sections.append(f"Previous Attempts:\n{attempts}")
 
-        return '\n\n'.join(sections) if sections else "No additional context."
+        return "\n\n".join(sections) if sections else "No additional context."
 
     def _build_history_section(self, max_turns: int = 5) -> str:
         """Build conversation history section."""
@@ -519,14 +481,14 @@ class TutorEngine:
             return "No previous conversation."
 
         # Get last N turns
-        recent_history = self.conversation_history[-max_turns * 2:]
+        recent_history = self.conversation_history[-max_turns * 2 :]
 
         formatted = []
         for entry in recent_history:
-            role = "Student" if entry['role'] == 'student' else "Tutor"
+            role = "Student" if entry["role"] == "student" else "Tutor"
             formatted.append(f"{role}: {entry['content']}")
 
-        return '\n'.join(formatted)
+        return "\n".join(formatted)
 
     def _adjust_hint_level(self, attempt_count: int):
         """Adjust hint level based on number of attempts."""
@@ -540,9 +502,7 @@ class TutorEngine:
         logger.info(f"Adjusted hint level to {self.hint_level.name}")
 
     def _identify_misconceptions(
-        self,
-        student_attempts: List[str],
-        concept_id: Optional[str]
+        self, student_attempts: List[str], concept_id: Optional[str]
     ) -> List[str]:
         """Identify potential misconceptions from student attempts."""
         misconceptions = []
@@ -551,24 +511,20 @@ class TutorEngine:
             return misconceptions
 
         # Get known misconceptions for this concept
-        known_misconceptions = self.curriculum_manager.get_common_misconceptions(
-            concept_id
-        )
+        known_misconceptions = self.curriculum_manager.get_common_misconceptions(concept_id)
 
         # Simple pattern matching (in production, use more sophisticated NLP)
         for misconception in known_misconceptions:
             # Check if misconception patterns appear in attempts
-            if any(self._check_misconception_pattern(attempt, misconception)
-                   for attempt in student_attempts):
+            if any(
+                self._check_misconception_pattern(attempt, misconception)
+                for attempt in student_attempts
+            ):
                 misconceptions.append(misconception)
 
         return misconceptions
 
-    def _check_misconception_pattern(
-        self,
-        attempt: str,
-        misconception: str
-    ) -> bool:
+    def _check_misconception_pattern(self, attempt: str, misconception: str) -> bool:
         """Check if attempt shows signs of a specific misconception."""
         # Simple keyword matching (placeholder for more sophisticated analysis)
         misconception_keywords = misconception.lower().split()[:3]
@@ -576,11 +532,7 @@ class TutorEngine:
 
         return any(keyword in attempt_lower for keyword in misconception_keywords)
 
-    def _assess_understanding(
-        self,
-        student_response: str,
-        concept_id: str
-    ) -> str:
+    def _assess_understanding(self, student_response: str, concept_id: str) -> str:
         """Assess level of student understanding from response."""
         # Length-based initial assessment
         response_length = len(student_response.split())
@@ -610,18 +562,18 @@ class TutorEngine:
             # Build messages for LLM
             messages = [
                 LLMMessage(role="system", content=self._get_system_prompt()),
-                LLMMessage(role="user", content=prompt)
+                LLMMessage(role="user", content=prompt),
             ]
 
             # Add conversation history for context
             for turn in self.conversation_history[-6:]:  # Last 3 turns
                 # Map internal roles to LLM API roles
-                role = turn['role']
-                if role == 'tutor':
-                    role = 'assistant'
-                elif role == 'student':
-                    role = 'user'
-                messages.insert(-1, LLMMessage(role=role, content=turn['content']))
+                role = turn["role"]
+                if role == "tutor":
+                    role = "assistant"
+                elif role == "student":
+                    role = "user"
+                messages.insert(-1, LLMMessage(role=role, content=turn["content"]))
 
             # Generate response synchronously
             response = self.llm_service.generate_sync(messages)
@@ -656,11 +608,7 @@ EXAMPLES OF GOOD RESPONSES:
 
 SAFETY: Keep all content child-appropriate."""
 
-    def _regenerate_safe_response(
-        self,
-        prompt: str,
-        context: Dict[str, Any]
-    ) -> str:
+    def _regenerate_safe_response(self, prompt: str, context: Dict[str, Any]) -> str:
         """Regenerate response with stricter safety constraints."""
         # Add safety instructions to prompt
         safe_prompt = (
@@ -677,7 +625,7 @@ def create_tutor_engine(
     model_name: Optional[str] = None,
     config_path: Optional[str] = None,
     llm_provider: str = "anthropic",
-    llm_api_key: Optional[str] = None
+    llm_api_key: Optional[str] = None,
 ) -> TutorEngine:
     """
     Convenience function to create a TutorEngine instance.
@@ -720,7 +668,7 @@ def create_tutor_engine(
         model_name=model_name,
         config_path=config_path,
         llm_provider=llm_provider,
-        llm_api_key=llm_api_key
+        llm_api_key=llm_api_key,
     )
 
 
@@ -733,17 +681,9 @@ if __name__ == "__main__":
 
     # Example 1: Generate response to student question
     print("--- Example 1: Socratic Response ---")
-    context = {
-        'age': 8,
-        'grade': '3',
-        'subject': 'math',
-        'concept_id': 'math_3_oa_001'
-    }
+    context = {"age": 8, "grade": "3", "subject": "math", "concept_id": "math_3_oa_001"}
 
-    result = engine.generate_response(
-        student_query="What is 5 times 3?",
-        context=context
-    )
+    result = engine.generate_response(student_query="What is 5 times 3?", context=context)
 
     print(f"Response: {result['response']}")
     print(f"Type: {result['response_type']}")
@@ -751,17 +691,12 @@ if __name__ == "__main__":
 
     # Example 2: Multi-turn guidance
     print("--- Example 2: Multi-turn Guidance ---")
-    guidance_context = {
-        'age': 9,
-        'grade': '4',
-        'subject': 'math',
-        'concept_id': 'math_4_nbt_001'
-    }
+    guidance_context = {"age": 9, "grade": "4", "subject": "math", "concept_id": "math_4_nbt_001"}
 
     guidance = engine.guide_to_answer(
         problem_statement="What is 234 + 567?",
         student_attempts=["700", "790"],
-        context=guidance_context
+        context=guidance_context,
     )
 
     print(f"Guidance: {guidance['response']}")
@@ -771,9 +706,9 @@ if __name__ == "__main__":
     # Example 3: Explain concept
     print("--- Example 3: Concept Explanation ---")
     explanation = engine.explain_concept(
-        concept_id='math_3_oa_001',
+        concept_id="math_3_oa_001",
         student_age=8,
-        current_understanding="I know that multiplication is like adding"
+        current_understanding="I know that multiplication is like adding",
     )
 
     print(f"Explanation: {explanation['response']}")
@@ -782,9 +717,9 @@ if __name__ == "__main__":
     # Example 4: Check understanding
     print("--- Example 4: Comprehension Check ---")
     check = engine.check_understanding(
-        concept_id='math_3_oa_001',
+        concept_id="math_3_oa_001",
         student_response="Multiplication is repeated addition",
-        context=context
+        context=context,
     )
 
     print(f"Check: {check['response']}")

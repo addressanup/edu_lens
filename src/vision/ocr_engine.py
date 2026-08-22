@@ -9,13 +9,14 @@ Author: Vision Processing Agent (VIS-001)
 Target Accuracy: 95% on printed text
 """
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Tuple, Optional, Any
-import numpy as np
 from pathlib import Path
-import logging
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 
 try:
     import cv2
@@ -29,7 +30,6 @@ except ImportError:
 
 from src.vision.preprocessing import ImagePreprocessor
 
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 class DocumentType(Enum):
     """Types of educational documents supported."""
+
     WORKSHEET = "worksheet"
     TEXTBOOK = "textbook"
     HANDOUT = "handout"
@@ -46,6 +47,7 @@ class DocumentType(Enum):
 
 class OCRBackend(Enum):
     """Supported OCR backend engines."""
+
     TESSERACT = "tesseract"
     EASYOCR = "easyocr"
     PADDLEOCR = "paddleocr"
@@ -54,6 +56,7 @@ class OCRBackend(Enum):
 @dataclass
 class BoundingBox:
     """Represents a bounding box for detected text region."""
+
     x: int
     y: int
     width: int
@@ -61,12 +64,7 @@ class BoundingBox:
 
     def to_dict(self) -> Dict[str, int]:
         """Convert to dictionary representation."""
-        return {
-            "x": self.x,
-            "y": self.y,
-            "width": self.width,
-            "height": self.height
-        }
+        return {"x": self.x, "y": self.y, "width": self.width, "height": self.height}
 
     def to_coordinates(self) -> Tuple[int, int, int, int]:
         """Convert to (x1, y1, x2, y2) coordinates."""
@@ -76,6 +74,7 @@ class BoundingBox:
 @dataclass
 class TextRegion:
     """Represents a detected text region with recognition results."""
+
     text: str
     confidence: float
     bounding_box: BoundingBox
@@ -89,13 +88,14 @@ class TextRegion:
             "confidence": self.confidence,
             "bounding_box": self.bounding_box.to_dict(),
             "language": self.language,
-            "font_size": self.font_size
+            "font_size": self.font_size,
         }
 
 
 @dataclass
 class OCRResult:
     """Complete OCR result for a document."""
+
     regions: List[TextRegion] = field(default_factory=list)
     full_text: str = ""
     average_confidence: float = 0.0
@@ -111,7 +111,7 @@ class OCRResult:
             "average_confidence": self.average_confidence,
             "document_type": self.document_type.value if self.document_type else None,
             "processing_time_ms": self.processing_time_ms,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
@@ -158,9 +158,7 @@ class OCREngine(BaseOCREngine):
     """
 
     def __init__(
-        self,
-        backend: OCRBackend = OCRBackend.TESSERACT,
-        config: Optional[Dict[str, Any]] = None
+        self, backend: OCRBackend = OCRBackend.TESSERACT, config: Optional[Dict[str, Any]] = None
     ):
         """
         Initialize the OCR engine.
@@ -206,7 +204,9 @@ class OCREngine(BaseOCREngine):
         # Add character whitelist for educational content if enabled
         if self.education_mode:
             # Include alphanumeric, common punctuation, and math symbols
-            whitelist = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?;:'\"-+=×÷<>()[]"
+            whitelist = (
+                "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,!?;:'\"-+=×÷<>()[]"
+            )
             config += f" -c tessedit_char_whitelist={whitelist}"
 
         return config
@@ -215,7 +215,7 @@ class OCREngine(BaseOCREngine):
         self,
         document_type: DocumentType = DocumentType.TEXTBOOK,
         enable_math_symbols: bool = True,
-        enable_layout_analysis: bool = True
+        enable_layout_analysis: bool = True,
     ) -> None:
         """
         Configure OCR engine for educational materials.
@@ -241,7 +241,7 @@ class OCREngine(BaseOCREngine):
             "enhance_contrast": True,
             "binarization_method": "adaptive",  # Better for varied lighting
             "adaptive_block_size": 11,  # Optimized for typical educational fonts
-            "adaptive_c": 2
+            "adaptive_c": 2,
         }
 
         # Document-specific optimizations
@@ -263,9 +263,7 @@ class OCREngine(BaseOCREngine):
         logger.info(f"Configured for educational mode: {document_type.value}")
 
     def preprocess_image(
-        self,
-        image: np.ndarray,
-        custom_pipeline: Optional[List[str]] = None
+        self, image: np.ndarray, custom_pipeline: Optional[List[str]] = None
     ) -> np.ndarray:
         """
         Preprocess image for optimal OCR performance.
@@ -311,9 +309,7 @@ class OCREngine(BaseOCREngine):
         return processed
 
     def detect_text_regions(
-        self,
-        image: np.ndarray,
-        min_confidence: float = 0.5
+        self, image: np.ndarray, min_confidence: float = 0.5
     ) -> List[BoundingBox]:
         """
         Detect text regions in the image.
@@ -334,35 +330,31 @@ class OCREngine(BaseOCREngine):
             raise NotImplementedError(f"Text detection not implemented for {self.backend.value}")
 
     def _detect_text_regions_tesseract(
-        self,
-        image: np.ndarray,
-        min_confidence: float
+        self, image: np.ndarray, min_confidence: float
     ) -> List[BoundingBox]:
         """Detect text regions using Tesseract."""
         try:
             # Get detailed detection data
             data = pytesseract.image_to_data(
-                image,
-                config=self._tesseract_config,
-                output_type=pytesseract.Output.DICT
+                image, config=self._tesseract_config, output_type=pytesseract.Output.DICT
             )
 
             regions = []
-            n_boxes = len(data['text'])
+            n_boxes = len(data["text"])
 
             for i in range(n_boxes):
                 # Filter by confidence
-                conf = float(data['conf'][i])
+                conf = float(data["conf"][i])
                 if conf < min_confidence * 100:  # Tesseract uses 0-100 scale
                     continue
 
                 # Filter empty text
-                text = data['text'][i].strip()
+                text = data["text"][i].strip()
                 if not text:
                     continue
 
                 # Create bounding box
-                x, y, w, h = data['left'][i], data['top'][i], data['width'][i], data['height'][i]
+                x, y, w, h = data["left"][i], data["top"][i], data["width"][i], data["height"][i]
                 bbox = BoundingBox(x=x, y=y, width=w, height=h)
                 regions.append(bbox)
 
@@ -373,11 +365,7 @@ class OCREngine(BaseOCREngine):
             logger.error(f"Error detecting text regions: {e}")
             return []
 
-    def recognize_text(
-        self,
-        image: np.ndarray,
-        region: Optional[BoundingBox] = None
-    ) -> TextRegion:
+    def recognize_text(self, image: np.ndarray, region: Optional[BoundingBox] = None) -> TextRegion:
         """
         Perform OCR on image or specific region.
 
@@ -394,9 +382,7 @@ class OCREngine(BaseOCREngine):
             raise NotImplementedError(f"Text recognition not implemented for {self.backend.value}")
 
     def _recognize_text_tesseract(
-        self,
-        image: np.ndarray,
-        region: Optional[BoundingBox]
+        self, image: np.ndarray, region: Optional[BoundingBox]
     ) -> TextRegion:
         """Recognize text using Tesseract."""
         try:
@@ -413,20 +399,15 @@ class OCREngine(BaseOCREngine):
 
             # Get confidence
             data = pytesseract.image_to_data(
-                roi,
-                config=self._tesseract_config,
-                output_type=pytesseract.Output.DICT
+                roi, config=self._tesseract_config, output_type=pytesseract.Output.DICT
             )
 
             # Calculate average confidence
-            confidences = [float(c) for c in data['conf'] if c != '-1']
+            confidences = [float(c) for c in data["conf"] if c != "-1"]
             avg_confidence = np.mean(confidences) / 100.0 if confidences else 0.0
 
             return TextRegion(
-                text=text,
-                confidence=avg_confidence,
-                bounding_box=region,
-                language="en"
+                text=text, confidence=avg_confidence, bounding_box=region, language="en"
             )
 
         except Exception as e:
@@ -435,14 +416,11 @@ class OCREngine(BaseOCREngine):
                 text="",
                 confidence=0.0,
                 bounding_box=region or BoundingBox(0, 0, 0, 0),
-                language="en"
+                language="en",
             )
 
     def extract_structured_content(
-        self,
-        image: np.ndarray,
-        preprocess: bool = True,
-        min_confidence: float = 0.6
+        self, image: np.ndarray, preprocess: bool = True, min_confidence: float = 0.6
     ) -> OCRResult:
         """
         Extract structured content with bounding boxes and confidence scores.
@@ -465,6 +443,7 @@ class OCREngine(BaseOCREngine):
             ValueError: If image is invalid
         """
         import time
+
         start_time = time.time()
 
         if image is None or image.size == 0:
@@ -480,10 +459,7 @@ class OCREngine(BaseOCREngine):
 
         # Perform OCR with detailed data
         if self.backend == OCRBackend.TESSERACT:
-            result = self._extract_structured_tesseract(
-                processed_image,
-                min_confidence
-            )
+            result = self._extract_structured_tesseract(processed_image, min_confidence)
         else:
             raise NotImplementedError(
                 f"Structured extraction not implemented for {self.backend.value}"
@@ -502,7 +478,7 @@ class OCREngine(BaseOCREngine):
             "image_shape": image.shape,
             "backend": self.backend.value,
             "education_mode": self.education_mode,
-            "num_regions": len(result.regions)
+            "num_regions": len(result.regions),
         }
 
         logger.info(
@@ -513,29 +489,23 @@ class OCREngine(BaseOCREngine):
 
         return result
 
-    def _extract_structured_tesseract(
-        self,
-        image: np.ndarray,
-        min_confidence: float
-    ) -> OCRResult:
+    def _extract_structured_tesseract(self, image: np.ndarray, min_confidence: float) -> OCRResult:
         """Extract structured content using Tesseract."""
         try:
             # Get detailed OCR data
             data = pytesseract.image_to_data(
-                image,
-                config=self._tesseract_config,
-                output_type=pytesseract.Output.DICT
+                image, config=self._tesseract_config, output_type=pytesseract.Output.DICT
             )
 
             regions = []
             full_text_parts = []
             confidences = []
 
-            n_boxes = len(data['text'])
+            n_boxes = len(data["text"])
 
             for i in range(n_boxes):
                 # Get confidence
-                conf = float(data['conf'][i])
+                conf = float(data["conf"][i])
                 if conf < 0:  # Invalid confidence
                     continue
 
@@ -547,23 +517,20 @@ class OCREngine(BaseOCREngine):
                     continue
 
                 # Get text
-                text = data['text'][i].strip()
+                text = data["text"][i].strip()
                 if not text:
                     continue
 
                 # Create bounding box
-                x = data['left'][i]
-                y = data['top'][i]
-                w = data['width'][i]
-                h = data['height'][i]
+                x = data["left"][i]
+                y = data["top"][i]
+                w = data["width"][i]
+                h = data["height"][i]
                 bbox = BoundingBox(x=x, y=y, width=w, height=h)
 
                 # Create text region
                 region = TextRegion(
-                    text=text,
-                    confidence=normalized_conf,
-                    bounding_box=bbox,
-                    language="en"
+                    text=text, confidence=normalized_conf, bounding_box=bbox, language="en"
                 )
 
                 regions.append(region)
@@ -577,24 +544,14 @@ class OCREngine(BaseOCREngine):
             avg_confidence = np.mean(confidences) if confidences else 0.0
 
             return OCRResult(
-                regions=regions,
-                full_text=full_text,
-                average_confidence=float(avg_confidence)
+                regions=regions, full_text=full_text, average_confidence=float(avg_confidence)
             )
 
         except Exception as e:
             logger.error(f"Error extracting structured content: {e}")
-            return OCRResult(
-                regions=[],
-                full_text="",
-                average_confidence=0.0
-            )
+            return OCRResult(regions=[], full_text="", average_confidence=0.0)
 
-    def process_document(
-        self,
-        image_path: str,
-        output_format: str = "dict"
-    ) -> Dict[str, Any]:
+    def process_document(self, image_path: str, output_format: str = "dict") -> Dict[str, Any]:
         """
         Process a complete document from file path.
 

@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class AgeGroup(Enum):
     """Age group categories for speech adaptation."""
+
     EARLY_ELEMENTARY = "6-8"  # Ages 6-8
     LATE_ELEMENTARY = "9-10"  # Ages 9-10
     PRE_TEEN = "11-12"  # Ages 11-12
@@ -36,6 +37,7 @@ class AgeGroup(Enum):
 @dataclass
 class ChildAcousticProfile:
     """Acoustic profile characteristics for different age groups."""
+
     age_group: AgeGroup
 
     # Fundamental frequency (pitch) characteristics
@@ -191,7 +193,9 @@ class ChildSpeechAdapter:
             hop_length = 256
             n_fft = 1024
 
-            D = signal.stft(audio, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length)[2]
+            D = signal.stft(audio, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length)[
+                2
+            ]
 
             # Warp frequency bins
             n_bins = D.shape[0]
@@ -210,11 +214,13 @@ class ChildSpeechAdapter:
                     warped_D[i] = (1 - frac) * D[idx_low] + frac * D[idx_high]
 
             # Inverse STFT
-            _, warped_audio = signal.istft(warped_D, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length)
+            _, warped_audio = signal.istft(
+                warped_D, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length
+            )
 
             # Ensure same length as input
             if len(warped_audio) > len(audio):
-                warped_audio = warped_audio[:len(audio)]
+                warped_audio = warped_audio[: len(audio)]
             elif len(warped_audio) < len(audio):
                 warped_audio = np.pad(warped_audio, (0, len(audio) - len(warped_audio)))
 
@@ -271,7 +277,9 @@ class ChildSpeechAdapter:
         n_fft = 1024
 
         # Compute STFT
-        _, _, D = signal.stft(audio, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length)
+        _, _, D = signal.stft(
+            audio, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length
+        )
 
         # Time-stretch by interpolating phase
         n_frames = D.shape[1]
@@ -288,7 +296,7 @@ class ChildSpeechAdapter:
         # Interpolate magnitude
         stretched_mag = np.zeros((D.shape[0], stretched_frames), dtype=complex)
         for i in range(D.shape[0]):
-            interp_func = interp1d(old_time, magnitude[i], kind='linear', fill_value='extrapolate')
+            interp_func = interp1d(old_time, magnitude[i], kind="linear", fill_value="extrapolate")
             stretched_mag[i] = interp_func(new_time)
 
         # Phase vocoder for phase interpolation
@@ -308,7 +316,9 @@ class ChildSpeechAdapter:
         stretched_D = stretched_mag * np.exp(1j * stretched_phase)
 
         # Inverse STFT
-        _, stretched_audio = signal.istft(stretched_D, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length)
+        _, stretched_audio = signal.istft(
+            stretched_D, fs=self.sample_rate, nperseg=n_fft, noverlap=n_fft - hop_length
+        )
 
         return stretched_audio
 
@@ -329,8 +339,18 @@ class ChildSpeechAdapter:
 
         # Common fillers in children's speech
         fillers = [
-            "um", "uh", "uhm", "er", "ah", "like", "you know",
-            "i mean", "well", "so", "okay", "right",
+            "um",
+            "uh",
+            "uhm",
+            "er",
+            "ah",
+            "like",
+            "you know",
+            "i mean",
+            "well",
+            "so",
+            "okay",
+            "right",
         ]
 
         words = text.lower().split()
@@ -339,7 +359,7 @@ class ChildSpeechAdapter:
 
         for word in words:
             # Remove punctuation for comparison
-            word_clean = word.strip('.,!?;:')
+            word_clean = word.strip(".,!?;:")
 
             # Skip fillers
             if word_clean in fillers:
@@ -450,7 +470,7 @@ class ChildSpeechAdapter:
             f0_distance = abs(f0 - profile.f0_mean) / profile.f0_std
 
             # Convert distance to similarity score
-            similarity = np.exp(-f0_distance ** 2 / 2)
+            similarity = np.exp(-(f0_distance**2) / 2)
             age_scores[age_group] = similarity
 
         # Get best match
@@ -480,8 +500,8 @@ class ChildSpeechAdapter:
             windowed = audio * np.hanning(len(audio))
 
             # Autocorrelation
-            autocorr = np.correlate(windowed, windowed, mode='full')
-            autocorr = autocorr[len(autocorr) // 2:]
+            autocorr = np.correlate(windowed, windowed, mode="full")
+            autocorr = autocorr[len(autocorr) // 2 :]
 
             # Find peak in expected F0 range
             min_lag = int(self.sample_rate / 400)  # Max F0 = 400 Hz

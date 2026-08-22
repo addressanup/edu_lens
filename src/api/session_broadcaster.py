@@ -7,12 +7,12 @@ back to the glasses.
 """
 
 import asyncio
+import io
 import logging
 import time
-import io
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Callable, Awaitable
 from enum import Enum
+from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 try:
     from PIL import Image
@@ -20,10 +20,10 @@ except ImportError:
     Image = None
 
 from .websocket_handler import (
-    GlassesWebSocketHandler,
     FrameMessage,
-    ObservationEvent,
+    GlassesWebSocketHandler,
     MessageType,
+    ObservationEvent,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 class StreamQuality(Enum):
     """Stream quality presets."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -39,6 +40,7 @@ class StreamQuality(Enum):
 @dataclass
 class QualitySettings:
     """Quality settings for a stream level."""
+
     fps: int
     jpeg_quality: int
     max_width: int
@@ -63,9 +65,9 @@ class AdaptiveQualityManager:
 
     # Bandwidth thresholds (in Kbps)
     BANDWIDTH_THRESHOLDS = {
-        StreamQuality.HIGH: 1000,    # >= 1 Mbps
-        StreamQuality.MEDIUM: 300,   # >= 300 Kbps
-        StreamQuality.LOW: 0,        # < 300 Kbps
+        StreamQuality.HIGH: 1000,  # >= 1 Mbps
+        StreamQuality.MEDIUM: 300,  # >= 300 Kbps
+        StreamQuality.LOW: 0,  # < 300 Kbps
     }
 
     def __init__(self):
@@ -113,7 +115,9 @@ class AdaptiveQualityManager:
         if new_quality != self.current_quality:
             self.current_quality = new_quality
             self.last_adjustment = time.time()
-            logger.info(f"Quality adjusted to {new_quality.value} (bandwidth: {avg_bandwidth:.0f} Kbps)")
+            logger.info(
+                f"Quality adjusted to {new_quality.value} (bandwidth: {avg_bandwidth:.0f} Kbps)"
+            )
             return new_quality
 
         return None
@@ -134,6 +138,7 @@ class AdaptiveQualityManager:
 @dataclass
 class ParentMessage:
     """Message from parent to child via glasses."""
+
     message_type: str  # "voice" | "text" | "encouragement" | "control"
     content: str  # Text or base64 audio
     language: str = "en"
@@ -141,7 +146,7 @@ class ParentMessage:
     sender_id: Optional[str] = None
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ParentMessage':
+    def from_dict(cls, data: Dict[str, Any]) -> "ParentMessage":
         """Create from dictionary."""
         return cls(
             message_type=data.get("type", "text"),
@@ -212,12 +217,14 @@ class ParentWebSocketHandler:
             logger.info(f"Parent {self.parent_id} connected to session {self.session_id}")
 
             # Send welcome message
-            await self.send_event({
-                "type": "connected",
-                "session_id": self.session_id,
-                "quality": self.quality_manager.current_quality.value,
-                "notify_child": self.notify_child,
-            })
+            await self.send_event(
+                {
+                    "type": "connected",
+                    "session_id": self.session_id,
+                    "quality": self.quality_manager.current_quality.value,
+                    "notify_child": self.notify_child,
+                }
+            )
 
             # Start receiving messages
             self._receive_task = asyncio.create_task(self._receive_loop())
@@ -239,6 +246,7 @@ class ParentWebSocketHandler:
                     if "text" in message:
                         # JSON message
                         import json
+
                         data = json.loads(message["text"])
                         await self._handle_message(data)
 
@@ -360,7 +368,7 @@ class ParentWebSocketHandler:
 
             # Re-encode with quality setting
             output = io.BytesIO()
-            img.save(output, format='JPEG', quality=settings.jpeg_quality)
+            img.save(output, format="JPEG", quality=settings.jpeg_quality)
             return output.getvalue()
 
         except Exception as e:
@@ -379,6 +387,7 @@ class ParentWebSocketHandler:
 
         try:
             import json
+
             await self.websocket.send_text(json.dumps(event))
             self.event_count += 1
 
@@ -415,7 +424,9 @@ class ParentWebSocketHandler:
             "event_count": self.event_count,
             "message_count": self.message_count,
             "quality": self.quality_manager.current_quality.value,
-            "uptime_seconds": time.time() - (self.connected_at or time.time()) if self._connected else 0,
+            "uptime_seconds": (
+                time.time() - (self.connected_at or time.time()) if self._connected else 0
+            ),
         }
 
 
@@ -515,14 +526,12 @@ class SessionBroadcaster:
                 payload={
                     "message": "Mom or Dad is here to help!",
                     "parent_id": parent.parent_id,
-                }
+                },
             )
             await self.glasses_handler.send_event(event)
 
             # Optionally speak notification
-            audio = await self._synthesize_notification(
-                "Mom or Dad is here to help you!"
-            )
+            audio = await self._synthesize_notification("Mom or Dad is here to help you!")
             if audio:
                 await self.glasses_handler.send_audio(audio)
 
@@ -534,6 +543,7 @@ class SessionBroadcaster:
         if self.tts_engine is None:
             try:
                 from src.audio.tts_engine import TTSEngine
+
                 self.tts_engine = TTSEngine()
                 self.tts_engine.set_language(self.child_language)
             except Exception as e:
@@ -541,10 +551,7 @@ class SessionBroadcaster:
                 return None
 
         try:
-            return await asyncio.to_thread(
-                self.tts_engine.synthesize,
-                text
-            )
+            return await asyncio.to_thread(self.tts_engine.synthesize, text)
         except Exception as e:
             logger.warning(f"TTS synthesis failed: {e}")
             return None
@@ -566,10 +573,11 @@ class SessionBroadcaster:
 
         # Notify glasses
         if self.glasses_handler and handler.notify_child:
-            await self.glasses_handler.send_event(ObservationEvent(
-                event_type="parent_disconnected",
-                payload={"parent_id": handler.parent_id}
-            ))
+            await self.glasses_handler.send_event(
+                ObservationEvent(
+                    event_type="parent_disconnected", payload={"parent_id": handler.parent_id}
+                )
+            )
 
     async def broadcast_frame(self, jpeg_data: bytes) -> None:
         """
@@ -582,10 +590,7 @@ class SessionBroadcaster:
             return
 
         # Send to all parents concurrently
-        tasks = [
-            parent.send_frame(jpeg_data)
-            for parent in self.parent_handlers
-        ]
+        tasks = [parent.send_frame(jpeg_data) for parent in self.parent_handlers]
 
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
@@ -608,10 +613,7 @@ class SessionBroadcaster:
             "timestamp": event.timestamp,
         }
 
-        tasks = [
-            parent.send_event(event_dict)
-            for parent in self.parent_handlers
-        ]
+        tasks = [parent.send_event(event_dict) for parent in self.parent_handlers]
 
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
@@ -633,37 +635,43 @@ class SessionBroadcaster:
             # Convert text to TTS and send to glasses
             audio = await self._synthesize_notification(message.content)
             if audio:
-                await self.glasses_handler.send_event(ObservationEvent(
-                    event_type="parent_message",
-                    payload={
-                        "sender": "parent",
-                        "text": message.content,
-                        "has_audio": True,
-                    }
-                ))
+                await self.glasses_handler.send_event(
+                    ObservationEvent(
+                        event_type="parent_message",
+                        payload={
+                            "sender": "parent",
+                            "text": message.content,
+                            "has_audio": True,
+                        },
+                    )
+                )
                 await self.glasses_handler.send_audio(audio)
             else:
                 # Send text-only event
-                await self.glasses_handler.send_event(ObservationEvent(
-                    event_type="parent_message",
-                    payload={
-                        "sender": "parent",
-                        "text": message.content,
-                        "has_audio": False,
-                    }
-                ))
+                await self.glasses_handler.send_event(
+                    ObservationEvent(
+                        event_type="parent_message",
+                        payload={
+                            "sender": "parent",
+                            "text": message.content,
+                            "has_audio": False,
+                        },
+                    )
+                )
 
         elif message.message_type == "voice_message":
             # Forward voice audio directly
-            audio_data = getattr(message, '_audio_data', None)
+            audio_data = getattr(message, "_audio_data", None)
             if audio_data:
-                await self.glasses_handler.send_event(ObservationEvent(
-                    event_type="parent_message",
-                    payload={
-                        "sender": "parent",
-                        "has_audio": True,
-                    }
-                ))
+                await self.glasses_handler.send_event(
+                    ObservationEvent(
+                        event_type="parent_message",
+                        payload={
+                            "sender": "parent",
+                            "has_audio": True,
+                        },
+                    )
+                )
                 await self.glasses_handler.send_audio(audio_data)
 
         elif message.message_type == "encouragement":
@@ -677,15 +685,17 @@ class SessionBroadcaster:
             text = encouragements.get(message.content, message.content)
             audio = await self._synthesize_notification(text)
 
-            await self.glasses_handler.send_event(ObservationEvent(
-                event_type="encouragement",
-                payload={
-                    "sender": "parent",
-                    "type": message.content,
-                    "text": text,
-                    "has_audio": audio is not None,
-                }
-            ))
+            await self.glasses_handler.send_event(
+                ObservationEvent(
+                    event_type="encouragement",
+                    payload={
+                        "sender": "parent",
+                        "type": message.content,
+                        "text": text,
+                        "has_audio": audio is not None,
+                    },
+                )
+            )
 
             if audio:
                 await self.glasses_handler.send_audio(audio)
@@ -739,10 +749,10 @@ class SessionBroadcaster:
 
 # Export classes
 __all__ = [
-    'SessionBroadcaster',
-    'ParentWebSocketHandler',
-    'ParentMessage',
-    'AdaptiveQualityManager',
-    'StreamQuality',
-    'QualitySettings',
+    "SessionBroadcaster",
+    "ParentWebSocketHandler",
+    "ParentMessage",
+    "AdaptiveQualityManager",
+    "StreamQuality",
+    "QualitySettings",
 ]

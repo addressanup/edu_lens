@@ -17,18 +17,23 @@ from PIL import Image
 
 # Import EduLens components
 try:
-    from src.integration.vision_to_ai_bridge import VisionToAIBridge, ContentType, SubjectArea
-    from src.integration.voice_to_ai_bridge import VoiceToAIBridge, QueryIntent
+    from src.audio.speech_recognizer import (
+        SpeechConfig,
+        SpeechRecognizer,
+        TranscriptionResult,
+        WordTimestamp,
+    )
+    from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
+    from src.audio.wake_word_engine import DetectionResult, WakeWordDetector
     from src.integration.context_builder import ContextBuilder
-    from src.pipeline.session_manager import SessionManager, SessionState, InteractionType
-    from src.privacy.data_minimizer import DataMinimizer, MinimizationLevel
+    from src.integration.vision_to_ai_bridge import ContentType, SubjectArea, VisionToAIBridge
+    from src.integration.voice_to_ai_bridge import QueryIntent, VoiceToAIBridge
+    from src.pipeline.session_manager import InteractionType, SessionManager, SessionState
     from src.privacy.auto_deletion import AutoDeletionPolicy
-    from src.audio.wake_word_engine import WakeWordDetector, DetectionResult
-    from src.audio.speech_recognizer import SpeechRecognizer, SpeechConfig, TranscriptionResult, WordTimestamp
-    from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
-    from src.vision.ocr_engine import OCREngine
+    from src.privacy.data_minimizer import DataMinimizer, MinimizationLevel
     from src.vision.handwriting_engine import HandwritingRecognizer
     from src.vision.layout_analyzer import LayoutAnalyzer
+    from src.vision.ocr_engine import OCREngine
 except ImportError:
     # Allow tests to run even if imports fail
     pass
@@ -71,9 +76,7 @@ def mock_handwriting_engine():
             "text": "5",
             "confidence": 0.88,
             "is_handwritten": True,
-            "answer_regions": [
-                {"text": "5", "bbox": [250, 60, 280, 90], "confidence": 0.88}
-            ],
+            "answer_regions": [{"text": "5", "bbox": [250, 60, 280, 90], "confidence": 0.88}],
         }
 
     engine.recognize = Mock(side_effect=mock_recognize)
@@ -324,9 +327,7 @@ def sample_ocr_result():
     return {
         "full_text": "What is 2 + 3?",
         "average_confidence": 0.92,
-        "regions": [
-            {"text": "What is 2 + 3?", "bbox": [10, 10, 200, 50], "confidence": 0.92}
-        ],
+        "regions": [{"text": "What is 2 + 3?", "bbox": [10, 10, 200, 50], "confidence": 0.92}],
         "language": "en",
     }
 
@@ -354,9 +355,7 @@ def sample_handwriting_result():
         "text": "5",
         "confidence": 0.88,
         "is_handwritten": True,
-        "answer_regions": [
-            {"text": "5", "bbox": [250, 60, 280, 90], "confidence": 0.88}
-        ],
+        "answer_regions": [{"text": "5", "bbox": [250, 60, 280, 90], "confidence": 0.88}],
     }
 
 
@@ -430,10 +429,10 @@ def integration_test_timer():
 @pytest.fixture
 def assert_latency():
     """Helper to assert operation latency requirements."""
+
     def _assert_latency(elapsed_seconds: float, max_seconds: float, operation: str):
         assert elapsed_seconds <= max_seconds, (
-            f"{operation} took {elapsed_seconds:.2f}s, "
-            f"exceeds maximum of {max_seconds}s"
+            f"{operation} took {elapsed_seconds:.2f}s, " f"exceeds maximum of {max_seconds}s"
         )
 
     return _assert_latency
@@ -469,10 +468,12 @@ def mock_app_sync_manager():
     manager = Mock()
     manager.sync_settings = Mock(return_value=True)
     manager.sync_progress = Mock(return_value=True)
-    manager.get_activities = Mock(return_value=[
-        {"type": "math_problem", "timestamp": "2025-12-10T10:00:00Z", "correct": True},
-        {"type": "reading", "timestamp": "2025-12-10T10:15:00Z", "duration": 300},
-    ])
+    manager.get_activities = Mock(
+        return_value=[
+            {"type": "math_problem", "timestamp": "2025-12-10T10:00:00Z", "correct": True},
+            {"type": "reading", "timestamp": "2025-12-10T10:15:00Z", "duration": 300},
+        ]
+    )
     return manager
 
 
@@ -512,11 +513,11 @@ def performance_thresholds():
     """Performance thresholds for integration tests."""
     return {
         "vision_to_ai_processing": 1.0,  # seconds
-        "audio_to_ai_processing": 0.5,   # seconds
-        "end_to_end_response": 2.0,      # seconds
-        "session_state_transition": 0.1, # seconds
-        "data_minimization": 0.2,        # seconds
-        "bluetooth_sync": 1.0,           # seconds
+        "audio_to_ai_processing": 0.5,  # seconds
+        "end_to_end_response": 2.0,  # seconds
+        "session_state_transition": 0.1,  # seconds
+        "data_minimization": 0.2,  # seconds
+        "bluetooth_sync": 1.0,  # seconds
     }
 
 

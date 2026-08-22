@@ -13,21 +13,21 @@ Security Standards:
 - Secure random generation using secrets module
 """
 
-import os
-import secrets
 import hashlib
 import hmac
-from typing import Tuple, Optional, Dict, Any
+import logging
+import os
+import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
+from typing import Any, Dict, Optional, Tuple
 
+from cryptography.exceptions import InvalidSignature, InvalidTag
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.backends import default_backend
-from cryptography.exceptions import InvalidSignature, InvalidTag
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class KeyPair:
     """Represents an asymmetric key pair."""
+
     private_key: ec.EllipticCurvePrivateKey
     public_key: ec.EllipticCurvePublicKey
     created_at: datetime
@@ -50,7 +51,7 @@ class KeyPair:
         """Serialize public key to bytes."""
         return self.public_key.public_bytes(
             encoding=serialization.Encoding.X962,
-            format=serialization.PublicFormat.UncompressedPoint
+            format=serialization.PublicFormat.UncompressedPoint,
         )
 
     def serialize_private_key(self, password: Optional[bytes] = None) -> bytes:
@@ -63,13 +64,14 @@ class KeyPair:
         return self.private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=encryption
+            encryption_algorithm=encryption,
         )
 
 
 @dataclass
 class SymmetricKey:
     """Represents a symmetric encryption key."""
+
     key: bytes
     created_at: datetime
     expires_at: Optional[datetime] = None
@@ -116,7 +118,7 @@ class CryptoUtils:
         self,
         key_size: int = AES_KEY_SIZE,
         lifetime: Optional[timedelta] = None,
-        key_id: Optional[str] = None
+        key_id: Optional[str] = None,
     ) -> SymmetricKey:
         """
         Generate a cryptographically secure symmetric key.
@@ -135,17 +137,10 @@ class CryptoUtils:
 
         logger.debug(f"Generated symmetric key (size: {key_size} bytes, id: {key_id})")
 
-        return SymmetricKey(
-            key=key,
-            created_at=created_at,
-            expires_at=expires_at,
-            key_id=key_id
-        )
+        return SymmetricKey(key=key, created_at=created_at, expires_at=expires_at, key_id=key_id)
 
     def generate_key_pair(
-        self,
-        curve: ec.EllipticCurve = ec.SECP384R1(),
-        lifetime: Optional[timedelta] = None
+        self, curve: ec.EllipticCurve = ec.SECP384R1(), lifetime: Optional[timedelta] = None
     ) -> KeyPair:
         """
         Generate an elliptic curve key pair for ECDH.
@@ -168,13 +163,11 @@ class CryptoUtils:
             private_key=private_key,
             public_key=public_key,
             created_at=created_at,
-            expires_at=expires_at
+            expires_at=expires_at,
         )
 
     def perform_ecdh(
-        self,
-        private_key: ec.EllipticCurvePrivateKey,
-        peer_public_key: ec.EllipticCurvePublicKey
+        self, private_key: ec.EllipticCurvePrivateKey, peer_public_key: ec.EllipticCurvePublicKey
     ) -> bytes:
         """
         Perform Elliptic Curve Diffie-Hellman key exchange.
@@ -201,7 +194,7 @@ class CryptoUtils:
         input_key_material: bytes,
         salt: Optional[bytes] = None,
         info: Optional[bytes] = None,
-        length: int = AES_KEY_SIZE
+        length: int = AES_KEY_SIZE,
     ) -> bytes:
         """
         Derive a key using HKDF (HMAC-based Key Derivation Function).
@@ -219,11 +212,7 @@ class CryptoUtils:
             salt = secrets.token_bytes(self.SALT_SIZE)
 
         kdf = HKDF(
-            algorithm=hashes.SHA256(),
-            length=length,
-            salt=salt,
-            info=info,
-            backend=self.backend
+            algorithm=hashes.SHA256(), length=length, salt=salt, info=info, backend=self.backend
         )
 
         derived_key = kdf.derive(input_key_material)
@@ -232,10 +221,7 @@ class CryptoUtils:
         return derived_key
 
     def derive_session_keys(
-        self,
-        shared_secret: bytes,
-        salt: bytes,
-        context: str = "session"
+        self, shared_secret: bytes, salt: bytes, context: str = "session"
     ) -> Dict[str, bytes]:
         """
         Derive multiple session keys from a shared secret.
@@ -253,40 +239,27 @@ class CryptoUtils:
             shared_secret,
             salt=salt,
             info=f"{context}:encryption".encode(),
-            length=self.AES_KEY_SIZE
+            length=self.AES_KEY_SIZE,
         )
 
         # Derive MAC key
         mac_key = self.derive_key(
-            shared_secret,
-            salt=salt,
-            info=f"{context}:mac".encode(),
-            length=self.HMAC_KEY_SIZE
+            shared_secret, salt=salt, info=f"{context}:mac".encode(), length=self.HMAC_KEY_SIZE
         )
 
         # Derive IV/nonce generation key
         nonce_key = self.derive_key(
-            shared_secret,
-            salt=salt,
-            info=f"{context}:nonce".encode(),
-            length=self.AES_KEY_SIZE
+            shared_secret, salt=salt, info=f"{context}:nonce".encode(), length=self.AES_KEY_SIZE
         )
 
         logger.debug(f"Derived session keys for context: {context}")
 
-        return {
-            "encryption_key": encryption_key,
-            "mac_key": mac_key,
-            "nonce_key": nonce_key
-        }
+        return {"encryption_key": encryption_key, "mac_key": mac_key, "nonce_key": nonce_key}
 
     # ==================== Encryption/Decryption ====================
 
     def encrypt_aes_gcm(
-        self,
-        plaintext: bytes,
-        key: bytes,
-        associated_data: Optional[bytes] = None
+        self, plaintext: bytes, key: bytes, associated_data: Optional[bytes] = None
     ) -> Tuple[bytes, bytes]:
         """
         Encrypt data using AES-256-GCM.
@@ -314,11 +287,7 @@ class CryptoUtils:
         return ciphertext, nonce
 
     def decrypt_aes_gcm(
-        self,
-        ciphertext: bytes,
-        key: bytes,
-        nonce: bytes,
-        associated_data: Optional[bytes] = None
+        self, ciphertext: bytes, key: bytes, nonce: bytes, associated_data: Optional[bytes] = None
     ) -> bytes:
         """
         Decrypt data using AES-256-GCM.
@@ -355,12 +324,7 @@ class CryptoUtils:
 
     # ==================== Message Authentication ====================
 
-    def compute_hmac(
-        self,
-        message: bytes,
-        key: bytes,
-        algorithm: str = "sha256"
-    ) -> bytes:
+    def compute_hmac(self, message: bytes, key: bytes, algorithm: str = "sha256") -> bytes:
         """
         Compute HMAC for message authentication.
 
@@ -387,11 +351,7 @@ class CryptoUtils:
         return mac
 
     def verify_hmac(
-        self,
-        message: bytes,
-        key: bytes,
-        expected_mac: bytes,
-        algorithm: str = "sha256"
+        self, message: bytes, key: bytes, expected_mac: bytes, algorithm: str = "sha256"
     ) -> bool:
         """
         Verify HMAC for message authentication.
@@ -467,11 +427,7 @@ class CryptoUtils:
 
     # ==================== Hash Functions ====================
 
-    def hash_data(
-        self,
-        data: bytes,
-        algorithm: str = "sha256"
-    ) -> bytes:
+    def hash_data(self, data: bytes, algorithm: str = "sha256") -> bytes:
         """
         Compute cryptographic hash of data.
 
@@ -512,13 +468,11 @@ class CryptoUtils:
         """
         return public_key.public_bytes(
             encoding=serialization.Encoding.X962,
-            format=serialization.PublicFormat.UncompressedPoint
+            format=serialization.PublicFormat.UncompressedPoint,
         )
 
     def deserialize_public_key(
-        self,
-        public_key_bytes: bytes,
-        curve: ec.EllipticCurve = ec.SECP384R1()
+        self, public_key_bytes: bytes, curve: ec.EllipticCurve = ec.SECP384R1()
     ) -> ec.EllipticCurvePublicKey:
         """
         Deserialize an elliptic curve public key from bytes.
@@ -578,8 +532,7 @@ def generate_session_key() -> SymmetricKey:
     """Generate a new session key with 24-hour lifetime."""
     crypto = CryptoUtils()
     return crypto.generate_symmetric_key(
-        lifetime=CryptoUtils.SESSION_KEY_LIFETIME,
-        key_id=secrets.token_hex(8)
+        lifetime=CryptoUtils.SESSION_KEY_LIFETIME, key_id=secrets.token_hex(8)
     )
 
 

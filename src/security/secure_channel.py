@@ -15,29 +15,30 @@ Security Features:
 - Certificate pinning
 """
 
+import logging
 import socket
 import ssl
 import struct
-import time
 import threading
-from typing import Optional, Dict, Callable, Any, Tuple
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-import logging
+from typing import Any, Callable, Dict, Optional, Tuple
 
-from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography import x509
+from cryptography.hazmat.primitives.asymmetric import ec
 
-from .crypto_utils import CryptoUtils, SymmetricKey
 from .certificate_manager import CertificateManager
-from .pairing_protocol import PairingProtocol, PairedDevice
+from .crypto_utils import CryptoUtils, SymmetricKey
+from .pairing_protocol import PairedDevice, PairingProtocol
 
 logger = logging.getLogger(__name__)
 
 
 class ChannelState(Enum):
     """States of the secure channel."""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     HANDSHAKE = "handshake"
@@ -49,6 +50,7 @@ class ChannelState(Enum):
 
 class MessageType(Enum):
     """Types of messages in the protocol."""
+
     HANDSHAKE_INIT = 0x01
     HANDSHAKE_RESPONSE = 0x02
     HANDSHAKE_COMPLETE = 0x03
@@ -61,6 +63,7 @@ class MessageType(Enum):
 @dataclass
 class ChannelConfig:
     """Configuration for secure channel."""
+
     use_tls: bool = True
     tls_version: int = ssl.TLSVersion.TLSv1_3
     verify_certificates: bool = True
@@ -76,6 +79,7 @@ class ChannelConfig:
 @dataclass
 class Message:
     """Secure channel message."""
+
     message_type: MessageType
     sequence_number: int
     timestamp: float
@@ -86,6 +90,7 @@ class Message:
 @dataclass
 class ChannelStats:
     """Statistics for the secure channel."""
+
     messages_sent: int = 0
     messages_received: int = 0
     bytes_sent: int = 0
@@ -119,7 +124,7 @@ class SecureChannel:
         device_name: str,
         config: Optional[ChannelConfig] = None,
         cert_manager: Optional[CertificateManager] = None,
-        pairing_protocol: Optional[PairingProtocol] = None
+        pairing_protocol: Optional[PairingProtocol] = None,
     ):
         """
         Initialize secure channel.
@@ -172,10 +177,7 @@ class SecureChannel:
     # ==================== Connection Establishment ====================
 
     def establish_connection(
-        self,
-        host: str,
-        port: int,
-        peer_device_id: Optional[str] = None
+        self, host: str, port: int, peer_device_id: Optional[str] = None
     ) -> bool:
         """
         Establish secure connection with peer device.
@@ -239,17 +241,16 @@ class SecureChannel:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         context.minimum_version = self.config.tls_version
         context.check_hostname = self.config.verify_certificates
-        context.verify_mode = ssl.CERT_REQUIRED if self.config.verify_certificates else ssl.CERT_NONE
+        context.verify_mode = (
+            ssl.CERT_REQUIRED if self.config.verify_certificates else ssl.CERT_NONE
+        )
 
         # Load certificates
         if self.config.verify_certificates:
             context.load_default_certs()
 
         # Wrap socket
-        self.ssl_socket = context.wrap_socket(
-            self.socket,
-            server_hostname=hostname
-        )
+        self.ssl_socket = context.wrap_socket(self.socket, server_hostname=hostname)
 
         # Verify certificate pinning
         if self.config.use_certificate_pinning:
@@ -284,10 +285,12 @@ class SecureChannel:
             peer_data = self._parse_handshake_response(response)
 
             # Verify peer identity
-            if self.peer_device_id and peer_data['device_id'] != self.peer_device_id:
-                raise RuntimeError(f"Peer identity mismatch: expected {self.peer_device_id}, got {peer_data['device_id']}")
+            if self.peer_device_id and peer_data["device_id"] != self.peer_device_id:
+                raise RuntimeError(
+                    f"Peer identity mismatch: expected {self.peer_device_id}, got {peer_data['device_id']}"
+                )
 
-            self.peer_device_id = peer_data['device_id']
+            self.peer_device_id = peer_data["device_id"]
 
             # Check if peer is paired
             if self.pairing_protocol:
@@ -297,24 +300,18 @@ class SecureChannel:
 
             # Perform ECDH key exchange
             peer_public_key = self.crypto.deserialize_public_key(
-                peer_data['public_key'],
-                curve=ec.SECP384R1()
+                peer_data["public_key"], curve=ec.SECP384R1()
             )
-            shared_secret = self.crypto.perform_ecdh(
-                ephemeral_keypair.private_key,
-                peer_public_key
-            )
+            shared_secret = self.crypto.perform_ecdh(ephemeral_keypair.private_key, peer_public_key)
 
             # Derive session keys
             salt = self.crypto.generate_salt()
             self.session_keys = self.crypto.derive_session_keys(
-                shared_secret,
-                salt,
-                context=f"{self.device_id}:{self.peer_device_id}"
+                shared_secret, salt, context=f"{self.device_id}:{self.peer_device_id}"
             )
 
-            self.send_key = self.session_keys['encryption_key']
-            self.receive_key = self.session_keys['encryption_key']  # Symmetric for now
+            self.send_key = self.session_keys["encryption_key"]
+            self.receive_key = self.session_keys["encryption_key"]  # Symmetric for now
 
             # Send handshake complete
             handshake_complete = self._create_handshake_complete()
@@ -341,14 +338,14 @@ class SecureChannel:
 
         # Build handshake message
         message = struct.pack(
-            '!BIdd',
+            "!BIdd",
             MessageType.HANDSHAKE_INIT.value,
             self.PROTOCOL_VERSION,
             time.time(),
-            len(self.device_id)
+            len(self.device_id),
         )
         message += self.device_id.encode()
-        message += struct.pack('!I', len(public_key_bytes))
+        message += struct.pack("!I", len(public_key_bytes))
         message += public_key_bytes
 
         return message
@@ -358,37 +355,34 @@ class SecureChannel:
         offset = 0
 
         # Parse header
-        msg_type, version, timestamp = struct.unpack_from('!BId', data, offset)
-        offset += struct.calcsize('!BId')
+        msg_type, version, timestamp = struct.unpack_from("!BId", data, offset)
+        offset += struct.calcsize("!BId")
 
         if msg_type != MessageType.HANDSHAKE_RESPONSE.value:
             raise RuntimeError(f"Unexpected message type: {msg_type}")
 
         # Parse device ID
-        device_id_len = struct.unpack_from('!I', data, offset)[0]
+        device_id_len = struct.unpack_from("!I", data, offset)[0]
         offset += 4
-        device_id = data[offset:offset + device_id_len].decode()
+        device_id = data[offset : offset + device_id_len].decode()
         offset += device_id_len
 
         # Parse public key
-        pubkey_len = struct.unpack_from('!I', data, offset)[0]
+        pubkey_len = struct.unpack_from("!I", data, offset)[0]
         offset += 4
-        public_key = data[offset:offset + pubkey_len]
+        public_key = data[offset : offset + pubkey_len]
 
         return {
-            'version': version,
-            'timestamp': timestamp,
-            'device_id': device_id,
-            'public_key': public_key
+            "version": version,
+            "timestamp": timestamp,
+            "device_id": device_id,
+            "public_key": public_key,
         }
 
     def _create_handshake_complete(self) -> bytes:
         """Create handshake complete message."""
         message = struct.pack(
-            '!BId',
-            MessageType.HANDSHAKE_COMPLETE.value,
-            self.PROTOCOL_VERSION,
-            time.time()
+            "!BId", MessageType.HANDSHAKE_COMPLETE.value, self.PROTOCOL_VERSION, time.time()
         )
         return message
 
@@ -423,7 +417,7 @@ class SecureChannel:
                 message_type=MessageType.DATA,
                 sequence_number=self.send_sequence,
                 timestamp=time.time(),
-                payload=data
+                payload=data,
             )
 
             # Serialize message
@@ -431,13 +425,11 @@ class SecureChannel:
 
             # Encrypt
             ciphertext, nonce = self.crypto.encrypt_aes_gcm(
-                plaintext,
-                self.send_key,
-                associated_data=struct.pack('!Q', self.send_sequence)
+                plaintext, self.send_key, associated_data=struct.pack("!Q", self.send_sequence)
             )
 
             # Create packet: [nonce][ciphertext_length][ciphertext]
-            packet = nonce + struct.pack('!I', len(ciphertext)) + ciphertext
+            packet = nonce + struct.pack("!I", len(ciphertext)) + ciphertext
 
             # Send
             self._send_raw(packet)
@@ -481,16 +473,16 @@ class SecureChannel:
                 return None
 
             # Parse packet: [nonce][ciphertext_length][ciphertext]
-            nonce = packet[:self.NONCE_SIZE]
-            ciphertext_len = struct.unpack('!I', packet[self.NONCE_SIZE:self.NONCE_SIZE + 4])[0]
-            ciphertext = packet[self.NONCE_SIZE + 4:self.NONCE_SIZE + 4 + ciphertext_len]
+            nonce = packet[: self.NONCE_SIZE]
+            ciphertext_len = struct.unpack("!I", packet[self.NONCE_SIZE : self.NONCE_SIZE + 4])[0]
+            ciphertext = packet[self.NONCE_SIZE + 4 : self.NONCE_SIZE + 4 + ciphertext_len]
 
             # Decrypt
             plaintext = self.crypto.decrypt_aes_gcm(
                 ciphertext,
                 self.receive_key,
                 nonce,
-                associated_data=struct.pack('!Q', self.receive_sequence)
+                associated_data=struct.pack("!Q", self.receive_sequence),
             )
 
             # Parse message
@@ -498,7 +490,9 @@ class SecureChannel:
 
             # Verify sequence number (replay protection)
             if message.sequence_number != self.receive_sequence:
-                logger.warning(f"Sequence number mismatch: expected {self.receive_sequence}, got {message.sequence_number}")
+                logger.warning(
+                    f"Sequence number mismatch: expected {self.receive_sequence}, got {message.sequence_number}"
+                )
                 raise RuntimeError("Replay attack detected")
 
             # Update state
@@ -599,12 +593,10 @@ class SecureChannel:
 
                 # Perform ECDH with new keys
                 peer_public_key = self.crypto.deserialize_public_key(
-                    peer_new_public_key,
-                    curve=ec.SECP384R1()
+                    peer_new_public_key, curve=ec.SECP384R1()
                 )
                 new_shared_secret = self.crypto.perform_ecdh(
-                    new_keypair.private_key,
-                    peer_public_key
+                    new_keypair.private_key, peer_public_key
                 )
 
                 # Derive new session keys
@@ -612,12 +604,12 @@ class SecureChannel:
                 new_session_keys = self.crypto.derive_session_keys(
                     new_shared_secret,
                     salt,
-                    context=f"{self.device_id}:{self.peer_device_id}:rotation"
+                    context=f"{self.device_id}:{self.peer_device_id}:rotation",
                 )
 
                 # Update keys
-                self.send_key = new_session_keys['encryption_key']
-                self.receive_key = new_session_keys['encryption_key']
+                self.send_key = new_session_keys["encryption_key"]
+                self.receive_key = new_session_keys["encryption_key"]
 
                 # Reset sequence numbers
                 self.send_sequence = 0
@@ -645,21 +637,18 @@ class SecureChannel:
     def _create_key_rotation_message(self, new_public_key: bytes) -> bytes:
         """Create key rotation message."""
         message = struct.pack(
-            '!BId',
-            MessageType.KEY_ROTATION.value,
-            self.PROTOCOL_VERSION,
-            time.time()
+            "!BId", MessageType.KEY_ROTATION.value, self.PROTOCOL_VERSION, time.time()
         )
-        message += struct.pack('!I', len(new_public_key))
+        message += struct.pack("!I", len(new_public_key))
         message += new_public_key
         return message
 
     def _parse_key_rotation_response(self, data: bytes) -> bytes:
         """Parse key rotation response."""
-        offset = struct.calcsize('!BId')
-        pubkey_len = struct.unpack_from('!I', data, offset)[0]
+        offset = struct.calcsize("!BId")
+        pubkey_len = struct.unpack_from("!I", data, offset)[0]
         offset += 4
-        return data[offset:offset + pubkey_len]
+        return data[offset : offset + pubkey_len]
 
     def _handle_key_rotation_message(self, message: Message) -> None:
         """Handle received key rotation message."""
@@ -672,30 +661,27 @@ class SecureChannel:
     def _serialize_message(self, message: Message) -> bytes:
         """Serialize message to bytes."""
         data = struct.pack(
-            '!BQd',
-            message.message_type.value,
-            message.sequence_number,
-            message.timestamp
+            "!BQd", message.message_type.value, message.sequence_number, message.timestamp
         )
-        data += struct.pack('!I', len(message.payload))
+        data += struct.pack("!I", len(message.payload))
         data += message.payload
         return data
 
     def _deserialize_message(self, data: bytes) -> Message:
         """Deserialize message from bytes."""
         offset = 0
-        msg_type, seq_num, timestamp = struct.unpack_from('!BQd', data, offset)
-        offset += struct.calcsize('!BQd')
+        msg_type, seq_num, timestamp = struct.unpack_from("!BQd", data, offset)
+        offset += struct.calcsize("!BQd")
 
-        payload_len = struct.unpack_from('!I', data, offset)[0]
+        payload_len = struct.unpack_from("!I", data, offset)[0]
         offset += 4
-        payload = data[offset:offset + payload_len]
+        payload = data[offset : offset + payload_len]
 
         return Message(
             message_type=MessageType(msg_type),
             sequence_number=seq_num,
             timestamp=timestamp,
-            payload=payload
+            payload=payload,
         )
 
     # ==================== Low-level Socket Operations ====================
@@ -707,7 +693,7 @@ class SecureChannel:
             raise RuntimeError("Socket not connected")
 
         # Send length prefix
-        sock.sendall(struct.pack('!I', len(data)))
+        sock.sendall(struct.pack("!I", len(data)))
         # Send data
         sock.sendall(data)
 
@@ -725,7 +711,7 @@ class SecureChannel:
         if not length_data:
             return None
 
-        length = struct.unpack('!I', length_data)[0]
+        length = struct.unpack("!I", length_data)[0]
 
         # Receive data
         data = self._recv_exact(sock, length)
@@ -733,7 +719,7 @@ class SecureChannel:
 
     def _recv_exact(self, sock: socket.socket, length: int) -> Optional[bytes]:
         """Receive exact number of bytes from socket."""
-        data = b''
+        data = b""
         while len(data) < length:
             chunk = sock.recv(length - len(data))
             if not chunk:
@@ -745,6 +731,7 @@ class SecureChannel:
 
     def _start_heartbeat(self) -> None:
         """Start heartbeat thread."""
+
         def heartbeat_loop():
             while self.state == ChannelState.CONNECTED:
                 time.sleep(self.config.heartbeat_interval.total_seconds())
@@ -760,10 +747,7 @@ class SecureChannel:
     def _send_heartbeat(self) -> None:
         """Send heartbeat message."""
         heartbeat = struct.pack(
-            '!BId',
-            MessageType.HEARTBEAT.value,
-            self.PROTOCOL_VERSION,
-            time.time()
+            "!BId", MessageType.HEARTBEAT.value, self.PROTOCOL_VERSION, time.time()
         )
         self.send_encrypted(heartbeat)
 

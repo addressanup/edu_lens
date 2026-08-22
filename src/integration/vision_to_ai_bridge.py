@@ -92,7 +92,9 @@ class VisualContext:
             parts.append(f"Problem: {self.problem_text}")
 
         if self.answer_choices:
-            choices_str = "\n".join(f"  {chr(65+i)}. {c}" for i, c in enumerate(self.answer_choices))
+            choices_str = "\n".join(
+                f"  {chr(65+i)}. {c}" for i, c in enumerate(self.answer_choices)
+            )
             parts.append(f"Answer Choices:\n{choices_str}")
 
         if self.student_answer:
@@ -123,28 +125,98 @@ class VisionToAIBridge:
         """Build keyword sets for subject classification."""
         return {
             SubjectArea.MATH: {
-                "add", "subtract", "multiply", "divide", "sum", "difference",
-                "product", "quotient", "equation", "solve", "calculate",
-                "fraction", "decimal", "percent", "area", "perimeter",
-                "volume", "angle", "triangle", "rectangle", "circle",
-                "+", "-", "×", "÷", "=", "<", ">", "≤", "≥",
+                "add",
+                "subtract",
+                "multiply",
+                "divide",
+                "sum",
+                "difference",
+                "product",
+                "quotient",
+                "equation",
+                "solve",
+                "calculate",
+                "fraction",
+                "decimal",
+                "percent",
+                "area",
+                "perimeter",
+                "volume",
+                "angle",
+                "triangle",
+                "rectangle",
+                "circle",
+                "+",
+                "-",
+                "×",
+                "÷",
+                "=",
+                "<",
+                ">",
+                "≤",
+                "≥",
             },
             SubjectArea.READING: {
-                "read", "passage", "paragraph", "story", "character",
-                "setting", "plot", "author", "main idea", "detail",
-                "vocabulary", "word", "sentence", "comprehension",
-                "summarize", "infer", "conclude", "context",
+                "read",
+                "passage",
+                "paragraph",
+                "story",
+                "character",
+                "setting",
+                "plot",
+                "author",
+                "main idea",
+                "detail",
+                "vocabulary",
+                "word",
+                "sentence",
+                "comprehension",
+                "summarize",
+                "infer",
+                "conclude",
+                "context",
             },
             SubjectArea.SCIENCE: {
-                "observe", "hypothesis", "experiment", "data", "result",
-                "plant", "animal", "cell", "energy", "force", "motion",
-                "matter", "solid", "liquid", "gas", "weather", "earth",
-                "sun", "moon", "planet", "ecosystem", "habitat",
+                "observe",
+                "hypothesis",
+                "experiment",
+                "data",
+                "result",
+                "plant",
+                "animal",
+                "cell",
+                "energy",
+                "force",
+                "motion",
+                "matter",
+                "solid",
+                "liquid",
+                "gas",
+                "weather",
+                "earth",
+                "sun",
+                "moon",
+                "planet",
+                "ecosystem",
+                "habitat",
             },
             SubjectArea.SOCIAL_STUDIES: {
-                "map", "community", "city", "state", "country", "government",
-                "president", "history", "culture", "geography", "citizen",
-                "law", "rights", "economy", "trade", "timeline",
+                "map",
+                "community",
+                "city",
+                "state",
+                "country",
+                "government",
+                "president",
+                "history",
+                "culture",
+                "geography",
+                "citizen",
+                "law",
+                "rights",
+                "economy",
+                "trade",
+                "timeline",
             },
         }
 
@@ -300,8 +372,9 @@ class VisionToAIBridge:
             if lines:
                 # Look for numbered problems
                 import re
+
                 for line in lines:
-                    match = re.match(r'^(\d+)[.)\s]+(.+)', line)
+                    match = re.match(r"^(\d+)[.)\s]+(.+)", line)
                     if match:
                         problem_number = match.group(1)
                         problem_text = match.group(2)
@@ -319,10 +392,11 @@ class VisionToAIBridge:
             return []
 
         import re
+
         choices = []
 
         # Pattern for A) B) C) D) or A. B. C. D.
-        pattern = r'[A-Da-d][.)]\s*([^\n]+)'
+        pattern = r"[A-Da-d][.)]\s*([^\n]+)"
         matches = re.findall(pattern, text)
         choices = [m.strip() for m in matches]
 

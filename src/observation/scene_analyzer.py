@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class SceneType(Enum):
     """Types of scenes detectable."""
+
     HOMEWORK = "homework"
     NON_HOMEWORK = "non_homework"
     UNKNOWN = "unknown"
@@ -30,6 +31,7 @@ class SceneType(Enum):
 
 class SubjectType(Enum):
     """Subject types for homework."""
+
     MATH = "math"
     READING = "reading"
     SCIENCE = "science"
@@ -40,6 +42,7 @@ class SubjectType(Enum):
 @dataclass
 class SceneAnalysisResult:
     """Result of scene analysis."""
+
     scene_type: str  # SceneType value
     confidence: float
     subject: Optional[str] = None  # SubjectType value
@@ -73,22 +76,54 @@ class SceneAnalyzer:
 
     # Keywords that indicate different subjects
     MATH_KEYWORDS = [
-        "+", "-", "×", "÷", "=", "%",
-        "sum", "add", "subtract", "multiply", "divide",
-        "fraction", "decimal", "equation", "solve",
-        "total", "difference", "product", "quotient",
+        "+",
+        "-",
+        "×",
+        "÷",
+        "=",
+        "%",
+        "sum",
+        "add",
+        "subtract",
+        "multiply",
+        "divide",
+        "fraction",
+        "decimal",
+        "equation",
+        "solve",
+        "total",
+        "difference",
+        "product",
+        "quotient",
     ]
 
     READING_KEYWORDS = [
-        "read", "story", "paragraph", "sentence",
-        "word", "vocabulary", "comprehension",
-        "character", "author", "title", "chapter",
+        "read",
+        "story",
+        "paragraph",
+        "sentence",
+        "word",
+        "vocabulary",
+        "comprehension",
+        "character",
+        "author",
+        "title",
+        "chapter",
     ]
 
     SCIENCE_KEYWORDS = [
-        "experiment", "hypothesis", "observe",
-        "plant", "animal", "water", "earth", "sun",
-        "energy", "matter", "force", "motion",
+        "experiment",
+        "hypothesis",
+        "observe",
+        "plant",
+        "animal",
+        "water",
+        "earth",
+        "sun",
+        "energy",
+        "matter",
+        "force",
+        "motion",
     ]
 
     def __init__(
@@ -126,6 +161,7 @@ class SceneAnalyzer:
         """Lazy load OCR engine."""
         try:
             from src.vision.ocr_engine import OCREngine
+
             self.ocr_engine = OCREngine()
             logger.info("OCR engine loaded for scene analysis")
         except ImportError:
@@ -147,8 +183,7 @@ class SceneAnalyzer:
             img = self._decode_frame(frame.data)
             if img is None:
                 return SceneAnalysisResult(
-                    scene_type=SceneType.UNKNOWN.value,
-                    confidence=0.0
+                    scene_type=SceneType.UNKNOWN.value, confidence=0.0
                 ).to_dict()
 
             # Analyze image characteristics
@@ -198,7 +233,7 @@ class SceneAnalyzer:
                     "paper_score": paper_score,
                     "text_score": text_score,
                     "math_score": math_score,
-                }
+                },
             )
 
             # Update history
@@ -212,9 +247,7 @@ class SceneAnalyzer:
         except Exception as e:
             logger.error(f"Scene analysis error: {e}")
             return SceneAnalysisResult(
-                scene_type=SceneType.UNKNOWN.value,
-                confidence=0.0,
-                metadata={"error": str(e)}
+                scene_type=SceneType.UNKNOWN.value, confidence=0.0, metadata={"error": str(e)}
             ).to_dict()
 
     def _decode_frame(self, jpeg_data: bytes) -> Optional[np.ndarray]:
@@ -260,7 +293,9 @@ class SceneAnalyzer:
             logger.debug(f"Paper detection error: {e}")
             return 0.0
 
-    def _detect_text_regions(self, img: np.ndarray) -> Tuple[float, List[Tuple[int, int, int, int]]]:
+    def _detect_text_regions(
+        self, img: np.ndarray
+    ) -> Tuple[float, List[Tuple[int, int, int, int]]]:
         """
         Detect regions likely containing text.
 
@@ -272,14 +307,11 @@ class SceneAnalyzer:
 
             # Apply adaptive threshold to get binary image
             thresh = cv2.adaptiveThreshold(
-                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                cv2.THRESH_BINARY_INV, 11, 2
+                gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2
             )
 
             # Find contours
-            contours, _ = cv2.findContours(
-                thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-            )
+            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
             # Filter contours that look like text (small, horizontal)
             text_regions = []
@@ -322,10 +354,7 @@ class SceneAnalyzer:
 
             # Look for patterns typical of math worksheets
             # (This is a simplified heuristic)
-            lines = cv2.HoughLinesP(
-                horizontal, 1, np.pi/180, 50,
-                minLineLength=30, maxLineGap=10
-            )
+            lines = cv2.HoughLinesP(horizontal, 1, np.pi / 180, 50, minLineLength=30, maxLineGap=10)
 
             line_count = len(lines) if lines is not None else 0
 
@@ -355,9 +384,7 @@ class SceneAnalyzer:
         try:
             # Run OCR in thread pool to not block
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(
-                None, self.ocr_engine.extract_text, img
-            )
+            result = await loop.run_in_executor(None, self.ocr_engine.extract_text, img)
 
             full_text = result.get("text", "")
             regions = result.get("regions", [])
@@ -371,14 +398,12 @@ class SceneAnalyzer:
             logger.error(f"OCR error: {e}")
             return "", []
 
-    def _parse_problems(
-        self, text: str, regions: List[Dict]
-    ) -> List[Dict[str, Any]]:
+    def _parse_problems(self, text: str, regions: List[Dict]) -> List[Dict[str, Any]]:
         """Parse OCR text into individual problems."""
         problems = []
 
         # Simple parsing: split by newlines and look for problem patterns
-        lines = text.split('\n')
+        lines = text.split("\n")
 
         current_problem = None
         problem_id = 0
@@ -390,11 +415,13 @@ class SceneAnalyzer:
 
             # Check if this looks like a new problem (starts with number/letter)
             is_new_problem = False
-            if line and (line[0].isdigit() or (line[0].isalpha() and len(line) > 1 and line[1] in '.)')):
+            if line and (
+                line[0].isdigit() or (line[0].isalpha() and len(line) > 1 and line[1] in ".)")
+            ):
                 is_new_problem = True
 
             # Check for equation patterns
-            has_equation = any(op in line for op in ['=', '+', '-', '×', '÷', '*', '/'])
+            has_equation = any(op in line for op in ["=", "+", "-", "×", "÷", "*", "/"])
 
             if is_new_problem or (has_equation and current_problem is None):
                 if current_problem:
@@ -430,7 +457,7 @@ class SceneAnalyzer:
         science_count = sum(1 for kw in self.SCIENCE_KEYWORDS if kw in text_lower)
 
         # Check for math symbols (high weight)
-        math_symbols = sum(1 for c in text if c in '+-×÷=')
+        math_symbols = sum(1 for c in text if c in "+-×÷=")
         math_count += math_symbols * 2
 
         # Determine subject
@@ -444,11 +471,7 @@ class SceneAnalyzer:
             return SubjectType.UNKNOWN.value
 
     def _calculate_homework_confidence(
-        self,
-        paper_score: float,
-        text_score: float,
-        math_score: float,
-        problem_count: int
+        self, paper_score: float, text_score: float, math_score: float, problem_count: int
     ) -> float:
         """Calculate overall confidence that this is homework."""
         # Weighted combination
@@ -463,10 +486,10 @@ class SceneAnalyzer:
         problem_score = min(problem_count / 5, 1.0)  # 5+ problems = full score
 
         confidence = (
-            weights["paper"] * paper_score +
-            weights["text"] * text_score +
-            weights["math"] * math_score +
-            weights["problems"] * problem_score
+            weights["paper"] * paper_score
+            + weights["text"] * text_score
+            + weights["math"] * math_score
+            + weights["problems"] * problem_score
         )
 
         return min(confidence, 1.0)

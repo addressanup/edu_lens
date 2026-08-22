@@ -12,19 +12,20 @@ Tests OCR functionality including:
 Author: Testing Agent (TST-001)
 """
 
-import pytest
-import numpy as np
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
+import numpy as np
+import pytest
 from PIL import Image
 
 from src.vision.ocr_engine import (
-    OCREngine,
-    OCRBackend,
-    DocumentType,
     BoundingBox,
-    TextRegion,
+    DocumentType,
+    OCRBackend,
+    OCREngine,
     OCRResult,
+    TextRegion,
 )
 from src.vision.preprocessing import ImagePreprocessor
 
@@ -62,12 +63,7 @@ class TestTextRegion:
     def test_text_region_creation(self):
         """Test creating a text region."""
         bbox = BoundingBox(x=10, y=20, width=100, height=50)
-        region = TextRegion(
-            text="Hello World",
-            confidence=0.95,
-            bounding_box=bbox,
-            language="en"
-        )
+        region = TextRegion(text="Hello World", confidence=0.95, bounding_box=bbox, language="en")
 
         assert region.text == "Hello World"
         assert region.confidence == 0.95
@@ -76,11 +72,7 @@ class TestTextRegion:
     def test_to_dict(self):
         """Test converting text region to dictionary."""
         bbox = BoundingBox(x=10, y=20, width=100, height=50)
-        region = TextRegion(
-            text="Test",
-            confidence=0.9,
-            bounding_box=bbox
-        )
+        region = TextRegion(text="Test", confidence=0.9, bounding_box=bbox)
 
         region_dict = region.to_dict()
         assert region_dict["text"] == "Test"
@@ -108,7 +100,7 @@ class TestOCRResult:
             regions=[region],
             full_text="Test",
             average_confidence=0.9,
-            document_type=DocumentType.TEXTBOOK
+            document_type=DocumentType.TEXTBOOK,
         )
 
         assert len(result.regions) == 1
@@ -118,10 +110,7 @@ class TestOCRResult:
 
     def test_to_dict(self):
         """Test converting OCR result to dictionary."""
-        result = OCRResult(
-            full_text="Test",
-            average_confidence=0.9
-        )
+        result = OCRResult(full_text="Test", average_confidence=0.9)
 
         result_dict = result.to_dict()
         assert "full_text" in result_dict
@@ -157,11 +146,7 @@ class TestOCREngine:
 
     def test_engine_with_config(self):
         """Test OCR engine with custom configuration."""
-        config = {
-            "tesseract_psm": 6,
-            "tesseract_oem": 1,
-            "preprocessing": {"denoise": True}
-        }
+        config = {"tesseract_psm": 6, "tesseract_oem": 1, "preprocessing": {"denoise": True}}
 
         engine = OCREngine(config=config)
         assert engine.config == config
@@ -169,19 +154,21 @@ class TestOCREngine:
     def test_configure_for_education(self, ocr_engine):
         """Test educational mode configuration."""
         ocr_engine.configure_for_education(
-            document_type=DocumentType.WORKSHEET,
-            enable_math_symbols=True
+            document_type=DocumentType.WORKSHEET, enable_math_symbols=True
         )
 
         assert ocr_engine.education_mode is True
         assert ocr_engine.config["document_type"] == DocumentType.WORKSHEET
         assert ocr_engine.config["math_symbols"] is True
 
-    @pytest.mark.parametrize("doc_type", [
-        DocumentType.WORKSHEET,
-        DocumentType.TEXTBOOK,
-        DocumentType.FLASHCARD,
-    ])
+    @pytest.mark.parametrize(
+        "doc_type",
+        [
+            DocumentType.WORKSHEET,
+            DocumentType.TEXTBOOK,
+            DocumentType.FLASHCARD,
+        ],
+    )
     def test_configure_different_document_types(self, ocr_engine, doc_type):
         """Test configuration for different document types."""
         ocr_engine.configure_for_education(document_type=doc_type)
@@ -213,24 +200,21 @@ class TestOCREngine:
     def test_custom_preprocessing_pipeline(self, ocr_engine, sample_image):
         """Test custom preprocessing pipeline."""
         custom_pipeline = ["denoise", "enhance_contrast"]
-        processed = ocr_engine.preprocess_image(
-            sample_image,
-            custom_pipeline=custom_pipeline
-        )
+        processed = ocr_engine.preprocess_image(sample_image, custom_pipeline=custom_pipeline)
 
         assert processed is not None
 
-    @patch('pytesseract.image_to_data')
+    @patch("pytesseract.image_to_data")
     def test_detect_text_regions(self, mock_image_to_data, ocr_engine, sample_image):
         """Test text region detection."""
         # Mock Tesseract output
         mock_image_to_data.return_value = {
-            'text': ['Hello', 'World', ''],
-            'conf': [95, 90, -1],
-            'left': [10, 100, 0],
-            'top': [20, 20, 0],
-            'width': [80, 90, 0],
-            'height': [30, 30, 0]
+            "text": ["Hello", "World", ""],
+            "conf": [95, 90, -1],
+            "left": [10, 100, 0],
+            "top": [20, 20, 0],
+            "width": [80, 90, 0],
+            "height": [30, 30, 0],
         }
 
         regions = ocr_engine.detect_text_regions(sample_image, min_confidence=0.5)
@@ -238,30 +222,30 @@ class TestOCREngine:
         assert len(regions) == 2
         assert all(isinstance(r, BoundingBox) for r in regions)
 
-    @patch('pytesseract.image_to_data')
+    @patch("pytesseract.image_to_data")
     def test_detect_text_regions_low_confidence(self, mock_image_to_data, ocr_engine, sample_image):
         """Test filtering low confidence regions."""
         mock_image_to_data.return_value = {
-            'text': ['Hello', 'World'],
-            'conf': [95, 30],  # Second word has low confidence
-            'left': [10, 100],
-            'top': [20, 20],
-            'width': [80, 90],
-            'height': [30, 30]
+            "text": ["Hello", "World"],
+            "conf": [95, 30],  # Second word has low confidence
+            "left": [10, 100],
+            "top": [20, 20],
+            "width": [80, 90],
+            "height": [30, 30],
         }
 
         regions = ocr_engine.detect_text_regions(sample_image, min_confidence=0.5)
 
         assert len(regions) == 1  # Only high confidence region
 
-    @patch('pytesseract.image_to_string')
-    @patch('pytesseract.image_to_data')
-    def test_recognize_text(self, mock_image_to_data, mock_image_to_string, ocr_engine, sample_image):
+    @patch("pytesseract.image_to_string")
+    @patch("pytesseract.image_to_data")
+    def test_recognize_text(
+        self, mock_image_to_data, mock_image_to_string, ocr_engine, sample_image
+    ):
         """Test text recognition."""
         mock_image_to_string.return_value = "Hello World"
-        mock_image_to_data.return_value = {
-            'conf': [95, 90]
-        }
+        mock_image_to_data.return_value = {"conf": [95, 90]}
 
         region = ocr_engine.recognize_text(sample_image)
 
@@ -269,28 +253,30 @@ class TestOCREngine:
         assert region.text == "Hello World"
         assert region.confidence > 0
 
-    @patch('pytesseract.image_to_string')
-    @patch('pytesseract.image_to_data')
-    def test_recognize_text_with_region(self, mock_image_to_data, mock_image_to_string, ocr_engine, sample_image):
+    @patch("pytesseract.image_to_string")
+    @patch("pytesseract.image_to_data")
+    def test_recognize_text_with_region(
+        self, mock_image_to_data, mock_image_to_string, ocr_engine, sample_image
+    ):
         """Test text recognition in specific region."""
         bbox = BoundingBox(x=10, y=10, width=100, height=50)
         mock_image_to_string.return_value = "Test"
-        mock_image_to_data.return_value = {'conf': [95]}
+        mock_image_to_data.return_value = {"conf": [95]}
 
         region = ocr_engine.recognize_text(sample_image, region=bbox)
 
         assert region.text == "Test"
 
-    @patch('pytesseract.image_to_data')
+    @patch("pytesseract.image_to_data")
     def test_extract_structured_content(self, mock_image_to_data, ocr_engine, sample_image):
         """Test structured content extraction."""
         mock_image_to_data.return_value = {
-            'text': ['Hello', 'World'],
-            'conf': [95, 90],
-            'left': [10, 100],
-            'top': [20, 20],
-            'width': [80, 90],
-            'height': [30, 30]
+            "text": ["Hello", "World"],
+            "conf": [95, 90],
+            "left": [10, 100],
+            "top": [20, 20],
+            "width": [80, 90],
+            "height": [30, 30],
         }
 
         result = ocr_engine.extract_structured_content(sample_image)
@@ -301,41 +287,37 @@ class TestOCREngine:
         assert result.average_confidence > 0
         assert result.processing_time_ms > 0
 
-    @patch('pytesseract.image_to_data')
-    def test_extract_structured_content_no_preprocessing(self, mock_image_to_data, ocr_engine, sample_image):
+    @patch("pytesseract.image_to_data")
+    def test_extract_structured_content_no_preprocessing(
+        self, mock_image_to_data, ocr_engine, sample_image
+    ):
         """Test extraction without preprocessing."""
         mock_image_to_data.return_value = {
-            'text': ['Test'],
-            'conf': [95],
-            'left': [10],
-            'top': [20],
-            'width': [80],
-            'height': [30]
+            "text": ["Test"],
+            "conf": [95],
+            "left": [10],
+            "top": [20],
+            "width": [80],
+            "height": [30],
         }
 
-        result = ocr_engine.extract_structured_content(
-            sample_image,
-            preprocess=False
-        )
+        result = ocr_engine.extract_structured_content(sample_image, preprocess=False)
 
         assert isinstance(result, OCRResult)
 
-    @patch('pytesseract.image_to_data')
+    @patch("pytesseract.image_to_data")
     def test_extract_with_confidence_threshold(self, mock_image_to_data, ocr_engine, sample_image):
         """Test extraction with confidence threshold."""
         mock_image_to_data.return_value = {
-            'text': ['High', 'Low'],
-            'conf': [95, 40],
-            'left': [10, 100],
-            'top': [20, 20],
-            'width': [80, 90],
-            'height': [30, 30]
+            "text": ["High", "Low"],
+            "conf": [95, 40],
+            "left": [10, 100],
+            "top": [20, 20],
+            "width": [80, 90],
+            "height": [30, 30],
         }
 
-        result = ocr_engine.extract_structured_content(
-            sample_image,
-            min_confidence=0.7
-        )
+        result = ocr_engine.extract_structured_content(sample_image, min_confidence=0.7)
 
         assert len(result.regions) == 1  # Only high confidence text
 
@@ -344,9 +326,11 @@ class TestOCREngine:
         with pytest.raises(ValueError):
             ocr_engine.extract_structured_content(None)
 
-    @patch('cv2.imread')
-    @patch('pytesseract.image_to_data')
-    def test_process_document_from_file(self, mock_image_to_data, mock_imread, ocr_engine, tmp_path):
+    @patch("cv2.imread")
+    @patch("pytesseract.image_to_data")
+    def test_process_document_from_file(
+        self, mock_image_to_data, mock_imread, ocr_engine, tmp_path
+    ):
         """Test processing document from file path."""
         # Create a temporary test file
         test_file = tmp_path / "test.jpg"
@@ -355,12 +339,12 @@ class TestOCREngine:
         # Mock image loading
         mock_imread.return_value = np.ones((100, 100, 3), dtype=np.uint8) * 255
         mock_image_to_data.return_value = {
-            'text': ['Test'],
-            'conf': [95],
-            'left': [10],
-            'top': [20],
-            'width': [80],
-            'height': [30]
+            "text": ["Test"],
+            "conf": [95],
+            "left": [10],
+            "top": [20],
+            "width": [80],
+            "height": [30],
         }
 
         result = ocr_engine.process_document(str(test_file))
@@ -373,7 +357,7 @@ class TestOCREngine:
         with pytest.raises(FileNotFoundError):
             ocr_engine.process_document("/nonexistent/file.jpg")
 
-    @patch('cv2.imread')
+    @patch("cv2.imread")
     def test_process_document_invalid_image(self, mock_imread, ocr_engine, tmp_path):
         """Test processing invalid image file."""
         test_file = tmp_path / "invalid.jpg"
@@ -384,61 +368,68 @@ class TestOCREngine:
         with pytest.raises(ValueError, match="Failed to load image"):
             ocr_engine.process_document(str(test_file))
 
-    @patch('pytesseract.image_to_data')
-    def test_process_document_json_output(self, mock_image_to_data, ocr_engine, sample_image, tmp_path):
+    @patch("pytesseract.image_to_data")
+    def test_process_document_json_output(
+        self, mock_image_to_data, ocr_engine, sample_image, tmp_path
+    ):
         """Test document processing with JSON output."""
         test_file = tmp_path / "test.jpg"
         Image.fromarray(sample_image).save(test_file)
 
         mock_image_to_data.return_value = {
-            'text': ['Test'],
-            'conf': [95],
-            'left': [10],
-            'top': [20],
-            'width': [80],
-            'height': [30]
+            "text": ["Test"],
+            "conf": [95],
+            "left": [10],
+            "top": [20],
+            "width": [80],
+            "height": [30],
         }
 
-        with patch('cv2.imread', return_value=sample_image):
+        with patch("cv2.imread", return_value=sample_image):
             result = ocr_engine.process_document(str(test_file), output_format="json")
 
         assert isinstance(result, str)  # JSON string
 
-    @pytest.mark.parametrize("image_quality,expected_regions", [
-        ("high", 5),
-        ("medium", 3),
-        ("low", 1),
-    ])
-    @patch('pytesseract.image_to_data')
-    def test_different_image_qualities(self, mock_image_to_data, ocr_engine, sample_image, image_quality, expected_regions):
+    @pytest.mark.parametrize(
+        "image_quality,expected_regions",
+        [
+            ("high", 5),
+            ("medium", 3),
+            ("low", 1),
+        ],
+    )
+    @patch("pytesseract.image_to_data")
+    def test_different_image_qualities(
+        self, mock_image_to_data, ocr_engine, sample_image, image_quality, expected_regions
+    ):
         """Test OCR with different image qualities."""
         # Simulate different qualities with different confidence levels
         if image_quality == "high":
             mock_data = {
-                'text': ['Word'] * 5,
-                'conf': [95] * 5,
-                'left': list(range(0, 500, 100)),
-                'top': [20] * 5,
-                'width': [80] * 5,
-                'height': [30] * 5
+                "text": ["Word"] * 5,
+                "conf": [95] * 5,
+                "left": list(range(0, 500, 100)),
+                "top": [20] * 5,
+                "width": [80] * 5,
+                "height": [30] * 5,
             }
         elif image_quality == "medium":
             mock_data = {
-                'text': ['Word'] * 3,
-                'conf': [75] * 3,
-                'left': [10, 100, 200],
-                'top': [20] * 3,
-                'width': [80] * 3,
-                'height': [30] * 3
+                "text": ["Word"] * 3,
+                "conf": [75] * 3,
+                "left": [10, 100, 200],
+                "top": [20] * 3,
+                "width": [80] * 3,
+                "height": [30] * 3,
             }
         else:  # low
             mock_data = {
-                'text': ['Word'],
-                'conf': [65],
-                'left': [10],
-                'top': [20],
-                'width': [80],
-                'height': [30]
+                "text": ["Word"],
+                "conf": [65],
+                "left": [10],
+                "top": [20],
+                "width": [80],
+                "height": [30],
             }
 
         mock_image_to_data.return_value = mock_data
@@ -447,29 +438,32 @@ class TestOCREngine:
 
         assert len(result.regions) == expected_regions
 
-    @pytest.mark.parametrize("text_format", [
-        "simple_sentence",
-        "with_numbers_123",
-        "With-Punctuation!?",
-        "UPPERCASE TEXT",
-    ])
-    @patch('pytesseract.image_to_data')
+    @pytest.mark.parametrize(
+        "text_format",
+        [
+            "simple_sentence",
+            "with_numbers_123",
+            "With-Punctuation!?",
+            "UPPERCASE TEXT",
+        ],
+    )
+    @patch("pytesseract.image_to_data")
     def test_various_text_formats(self, mock_image_to_data, ocr_engine, sample_image, text_format):
         """Test OCR with various text formats."""
         mock_image_to_data.return_value = {
-            'text': [text_format],
-            'conf': [90],
-            'left': [10],
-            'top': [20],
-            'width': [100],
-            'height': [30]
+            "text": [text_format],
+            "conf": [90],
+            "left": [10],
+            "top": [20],
+            "width": [100],
+            "height": [30],
         }
 
         result = ocr_engine.extract_structured_content(sample_image)
 
         assert text_format in result.full_text
 
-    @patch('pytesseract.image_to_data')
+    @patch("pytesseract.image_to_data")
     def test_error_handling_tesseract_failure(self, mock_image_to_data, ocr_engine, sample_image):
         """Test error handling when Tesseract fails."""
         mock_image_to_data.side_effect = Exception("Tesseract error")
@@ -482,14 +476,14 @@ class TestOCREngine:
 
     def test_metadata_inclusion(self, ocr_engine, sample_image):
         """Test that metadata is included in results."""
-        with patch('pytesseract.image_to_data') as mock:
+        with patch("pytesseract.image_to_data") as mock:
             mock.return_value = {
-                'text': ['Test'],
-                'conf': [95],
-                'left': [10],
-                'top': [20],
-                'width': [80],
-                'height': [30]
+                "text": ["Test"],
+                "conf": [95],
+                "left": [10],
+                "top": [20],
+                "width": [80],
+                "height": [30],
             }
 
             result = ocr_engine.extract_structured_content(sample_image)
@@ -504,7 +498,7 @@ class TestOCREdgeCases:
 
     def test_missing_dependencies(self):
         """Test handling of missing dependencies."""
-        with patch('src.vision.ocr_engine.cv2', None):
+        with patch("src.vision.ocr_engine.cv2", None):
             with pytest.raises(ImportError, match="OpenCV"):
                 OCREngine()
 
@@ -518,14 +512,14 @@ class TestOCREdgeCases:
 
         engine = OCREngine()
 
-        with patch('pytesseract.image_to_data') as mock:
+        with patch("pytesseract.image_to_data") as mock:
             mock.return_value = {
-                'text': ['Rotated'],
-                'conf': [80],
-                'left': [10],
-                'top': [20],
-                'width': [80],
-                'height': [30]
+                "text": ["Rotated"],
+                "conf": [80],
+                "left": [10],
+                "top": [20],
+                "width": [80],
+                "height": [30],
             }
 
             result = engine.extract_structured_content(img)
@@ -537,14 +531,14 @@ class TestOCREdgeCases:
         engine = OCREngine()
         img = np.ones((200, 400, 3), dtype=np.uint8) * 255
 
-        with patch('pytesseract.image_to_data') as mock:
+        with patch("pytesseract.image_to_data") as mock:
             mock.return_value = {
-                'text': ['Hello', 'Bonjour'],
-                'conf': [90, 85],
-                'left': [10, 100],
-                'top': [20, 20],
-                'width': [80, 90],
-                'height': [30, 30]
+                "text": ["Hello", "Bonjour"],
+                "conf": [90, 85],
+                "left": [10, 100],
+                "top": [20, 20],
+                "width": [80, 90],
+                "height": [30, 30],
             }
 
             result = engine.extract_structured_content(img)
@@ -558,34 +552,34 @@ class TestOCREdgeCases:
 
         img = np.ones((100, 200, 3), dtype=np.uint8) * 255
 
-        with patch('pytesseract.image_to_data') as mock:
+        with patch("pytesseract.image_to_data") as mock:
             mock.return_value = {
-                'text': ['2', '+', '3', '=', '5'],
-                'conf': [95] * 5,
-                'left': [10, 30, 50, 70, 90],
-                'top': [20] * 5,
-                'width': [15] * 5,
-                'height': [20] * 5
+                "text": ["2", "+", "3", "=", "5"],
+                "conf": [95] * 5,
+                "left": [10, 30, 50, 70, 90],
+                "top": [20] * 5,
+                "width": [15] * 5,
+                "height": [20] * 5,
             }
 
             result = engine.extract_structured_content(img)
 
-        assert '2' in result.full_text
-        assert '5' in result.full_text
+        assert "2" in result.full_text
+        assert "5" in result.full_text
 
     def test_empty_text_regions(self):
         """Test handling of empty text regions."""
         engine = OCREngine()
         img = np.ones((100, 100, 3), dtype=np.uint8) * 255
 
-        with patch('pytesseract.image_to_data') as mock:
+        with patch("pytesseract.image_to_data") as mock:
             mock.return_value = {
-                'text': ['', '', 'Valid'],
-                'conf': [-1, -1, 90],
-                'left': [0, 0, 10],
-                'top': [0, 0, 20],
-                'width': [0, 0, 80],
-                'height': [0, 0, 30]
+                "text": ["", "", "Valid"],
+                "conf": [-1, -1, 90],
+                "left": [0, 0, 10],
+                "top": [0, 0, 20],
+                "width": [0, 0, 80],
+                "height": [0, 0, 30],
             }
 
             result = engine.extract_structured_content(img)

@@ -13,11 +13,11 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from agents.base_agent import (
-    BaseAgent,
     AgentCapability,
     AgentContext,
     AgentResult,
     AgentStatus,
+    BaseAgent,
 )
 
 
@@ -211,10 +211,12 @@ class MCPEngineerAgent(BaseAgent):
         # Add data requirements
         data_requirements = context.input_data.get("data_requirements", [])
         if data_requirements:
-            prompt_parts.extend([
-                "## Data Requirements",
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Data Requirements",
+                    "",
+                ]
+            )
             for req in data_requirements:
                 prompt_parts.append(f"- {req}")
             prompt_parts.append("")
@@ -222,41 +224,47 @@ class MCPEngineerAgent(BaseAgent):
         # Add MCP server info
         mcp_servers = context.input_data.get("mcp_servers", [])
         if mcp_servers:
-            prompt_parts.extend([
-                "## Available MCP Servers",
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Available MCP Servers",
+                    "",
+                ]
+            )
             for server in mcp_servers:
                 prompt_parts.append(f"- {server.get('name')}: {server.get('url')}")
             prompt_parts.append("")
 
         # Add schema expectations
         if context.input_data.get("expected_schema"):
-            prompt_parts.extend([
-                "## Expected Data Schema",
-                str(context.input_data["expected_schema"]),
-                "",
-            ])
+            prompt_parts.extend(
+                [
+                    "## Expected Data Schema",
+                    str(context.input_data["expected_schema"]),
+                    "",
+                ]
+            )
 
-        prompt_parts.extend([
-            "## Required Output",
-            "",
-            "Please retrieve the required data and return it in JSON format:",
-            "",
-            "```json",
-            "{",
-            '  "success": true,',
-            '  "data": {',
-            '    "source": "MCP server name",',
-            '    "retrieved_at": "ISO timestamp",',
-            '    "records": [...],',
-            '    "schema": {...}',
-            "  },",
-            '  "transformation_notes": "Any data transformation applied",',
-            '  "cache_key": "Suggested cache key for this data"',
-            "}",
-            "```",
-        ])
+        prompt_parts.extend(
+            [
+                "## Required Output",
+                "",
+                "Please retrieve the required data and return it in JSON format:",
+                "",
+                "```json",
+                "{",
+                '  "success": true,',
+                '  "data": {',
+                '    "source": "MCP server name",',
+                '    "retrieved_at": "ISO timestamp",',
+                '    "records": [...],',
+                '    "schema": {...}',
+                "  },",
+                '  "transformation_notes": "Any data transformation applied",',
+                '  "cache_key": "Suggested cache key for this data"',
+                "}",
+                "```",
+            ]
+        )
 
         return "\n".join(prompt_parts)
 

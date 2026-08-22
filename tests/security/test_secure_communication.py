@@ -9,26 +9,26 @@ This test suite validates the security implementation including:
 - Attack resistance
 """
 
-import unittest
-import tempfile
 import os
-import time
+import sys
+import tempfile
 import threading
+import time
+import unittest
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography import x509
-from cryptography.hazmat.primitives import hashes
 from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
 
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../src"))
 
-from security.crypto_utils import CryptoUtils, SymmetricKey, KeyPair
-from security.certificate_manager import CertificateManager, CertificateInfo
+from security.certificate_manager import CertificateInfo, CertificateManager
+from security.crypto_utils import CryptoUtils, KeyPair, SymmetricKey
 from security.pairing_protocol import PairingProtocol, PairingState, format_pairing_code
-from security.secure_channel import SecureChannel, ChannelState, ChannelConfig
+from security.secure_channel import ChannelConfig, ChannelState, SecureChannel
 
 
 class TestCryptoUtils(unittest.TestCase):
@@ -72,14 +72,8 @@ class TestCryptoUtils(unittest.TestCase):
         keypair2 = self.crypto.generate_key_pair()
 
         # Perform ECDH from both sides
-        shared_secret1 = self.crypto.perform_ecdh(
-            keypair1.private_key,
-            keypair2.public_key
-        )
-        shared_secret2 = self.crypto.perform_ecdh(
-            keypair2.private_key,
-            keypair1.public_key
-        )
+        shared_secret1 = self.crypto.perform_ecdh(keypair1.private_key, keypair2.public_key)
+        shared_secret2 = self.crypto.perform_ecdh(keypair2.private_key, keypair1.public_key)
 
         # Secrets should match
         self.assertEqual(shared_secret1, shared_secret2)
@@ -90,28 +84,16 @@ class TestCryptoUtils(unittest.TestCase):
         input_material = self.crypto.generate_random_bytes(32)
         salt = self.crypto.generate_salt()
 
-        derived_key = self.crypto.derive_key(
-            input_material,
-            salt=salt,
-            info=b"test_context"
-        )
+        derived_key = self.crypto.derive_key(input_material, salt=salt, info=b"test_context")
 
         self.assertEqual(len(derived_key), CryptoUtils.AES_KEY_SIZE)
 
         # Same inputs should produce same output
-        derived_key2 = self.crypto.derive_key(
-            input_material,
-            salt=salt,
-            info=b"test_context"
-        )
+        derived_key2 = self.crypto.derive_key(input_material, salt=salt, info=b"test_context")
         self.assertEqual(derived_key, derived_key2)
 
         # Different info should produce different output
-        derived_key3 = self.crypto.derive_key(
-            input_material,
-            salt=salt,
-            info=b"different_context"
-        )
+        derived_key3 = self.crypto.derive_key(input_material, salt=salt, info=b"different_context")
         self.assertNotEqual(derived_key, derived_key3)
 
     def test_derive_session_keys(self):
@@ -119,11 +101,7 @@ class TestCryptoUtils(unittest.TestCase):
         shared_secret = self.crypto.generate_random_bytes(32)
         salt = self.crypto.generate_salt()
 
-        session_keys = self.crypto.derive_session_keys(
-            shared_secret,
-            salt,
-            context="test_session"
-        )
+        session_keys = self.crypto.derive_session_keys(shared_secret, salt, context="test_session")
 
         self.assertIn("encryption_key", session_keys)
         self.assertIn("mac_key", session_keys)
@@ -158,28 +136,18 @@ class TestCryptoUtils(unittest.TestCase):
 
         # Encrypt with AAD
         ciphertext, nonce = self.crypto.encrypt_aes_gcm(
-            plaintext,
-            key,
-            associated_data=associated_data
+            plaintext, key, associated_data=associated_data
         )
 
         # Decrypt with correct AAD
         decrypted = self.crypto.decrypt_aes_gcm(
-            ciphertext,
-            key,
-            nonce,
-            associated_data=associated_data
+            ciphertext, key, nonce, associated_data=associated_data
         )
         self.assertEqual(decrypted, plaintext)
 
         # Decrypt with wrong AAD should fail
         with self.assertRaises(InvalidTag):
-            self.crypto.decrypt_aes_gcm(
-                ciphertext,
-                key,
-                nonce,
-                associated_data=b"wrong_metadata"
-            )
+            self.crypto.decrypt_aes_gcm(ciphertext, key, nonce, associated_data=b"wrong_metadata")
 
     def test_aes_gcm_tamper_detection(self):
         """Test that AES-GCM detects tampering."""
@@ -275,6 +243,7 @@ class TestCertificateManager(unittest.TestCase):
     def tearDown(self):
         """Clean up test fixtures."""
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_generate_device_certificate_ec(self):
@@ -283,9 +252,7 @@ class TestCertificateManager(unittest.TestCase):
         device_name = "Test EduLens Glasses"
 
         cert, private_key = self.cert_manager.generate_device_cert(
-            device_id,
-            device_name,
-            use_ec=True
+            device_id, device_name, use_ec=True
         )
 
         self.assertIsInstance(cert, x509.Certificate)
@@ -293,12 +260,10 @@ class TestCertificateManager(unittest.TestCase):
 
         # Verify certificate properties
         self.assertEqual(
-            cert.subject.get_attributes_for_oid(x509.NameOID.SERIAL_NUMBER)[0].value,
-            device_id
+            cert.subject.get_attributes_for_oid(x509.NameOID.SERIAL_NUMBER)[0].value, device_id
         )
         self.assertEqual(
-            cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value,
-            device_name
+            cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)[0].value, device_name
         )
 
     def test_generate_device_certificate_rsa(self):
@@ -307,9 +272,7 @@ class TestCertificateManager(unittest.TestCase):
         device_name = "Test Companion App"
 
         cert, private_key = self.cert_manager.generate_device_cert(
-            device_id,
-            device_name,
-            use_ec=False
+            device_id, device_name, use_ec=False
         )
 
         self.assertIsInstance(cert, x509.Certificate)
@@ -317,15 +280,10 @@ class TestCertificateManager(unittest.TestCase):
 
     def test_validate_self_signed_certificate(self):
         """Test validation of self-signed certificate."""
-        cert, _ = self.cert_manager.generate_device_cert(
-            "test_device",
-            "Test Device"
-        )
+        cert, _ = self.cert_manager.generate_device_cert("test_device", "Test Device")
 
         is_valid, errors = self.cert_manager.validate_cert(
-            cert,
-            check_expiration=True,
-            check_revocation=False
+            cert, check_expiration=True, check_revocation=False
         )
 
         self.assertTrue(is_valid)
@@ -335,18 +293,13 @@ class TestCertificateManager(unittest.TestCase):
         """Test detection of expired certificates."""
         # Generate certificate with 0 day validity (expired)
         cert, _ = self.cert_manager.generate_device_cert(
-            "test_device",
-            "Test Device",
-            validity_days=0
+            "test_device", "Test Device", validity_days=0
         )
 
         # Wait a moment to ensure expiration
         time.sleep(0.1)
 
-        is_valid, errors = self.cert_manager.validate_cert(
-            cert,
-            check_expiration=True
-        )
+        is_valid, errors = self.cert_manager.validate_cert(cert, check_expiration=True)
 
         self.assertFalse(is_valid)
         self.assertTrue(any("expired" in err.lower() for err in errors))
@@ -354,10 +307,7 @@ class TestCertificateManager(unittest.TestCase):
     def test_certificate_pinning(self):
         """Test certificate pinning."""
         hostname = "test.edulens.com"
-        cert, _ = self.cert_manager.generate_device_cert(
-            "test_device",
-            "Test Device"
-        )
+        cert, _ = self.cert_manager.generate_device_cert("test_device", "Test Device")
 
         # Pin certificate
         pinned = self.cert_manager.pin_certificate(hostname, cert)
@@ -371,10 +321,7 @@ class TestCertificateManager(unittest.TestCase):
         self.assertTrue(is_valid)
 
         # Generate different certificate
-        cert2, _ = self.cert_manager.generate_device_cert(
-            "other_device",
-            "Other Device"
-        )
+        cert2, _ = self.cert_manager.generate_device_cert("other_device", "Other Device")
 
         # Verification should fail for different certificate
         is_valid = self.cert_manager.verify_pinned_certificate(hostname, cert2)
@@ -383,10 +330,7 @@ class TestCertificateManager(unittest.TestCase):
     def test_certificate_unpinning(self):
         """Test unpinning certificates."""
         hostname = "test.edulens.com"
-        cert, _ = self.cert_manager.generate_device_cert(
-            "test_device",
-            "Test Device"
-        )
+        cert, _ = self.cert_manager.generate_device_cert("test_device", "Test Device")
 
         # Pin and then unpin
         self.cert_manager.pin_certificate(hostname, cert)
@@ -400,10 +344,7 @@ class TestCertificateManager(unittest.TestCase):
         device_id = "test_device_123"
         device_name = "Test Device"
 
-        cert, _ = self.cert_manager.generate_device_cert(
-            device_id,
-            device_name
-        )
+        cert, _ = self.cert_manager.generate_device_cert(device_id, device_name)
 
         cert_info = self.cert_manager.get_cert_info(cert)
 
@@ -419,14 +360,10 @@ class TestPairingProtocol(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.device1 = PairingProtocol(
-            device_id="glasses_001",
-            device_name="EduLens Glasses",
-            device_type="glasses"
+            device_id="glasses_001", device_name="EduLens Glasses", device_type="glasses"
         )
         self.device2 = PairingProtocol(
-            device_id="app_001",
-            device_name="Companion App",
-            device_type="app"
+            device_id="app_001", device_name="Companion App", device_type="app"
         )
 
     def test_generate_pairing_code(self):
@@ -443,24 +380,14 @@ class TestPairingProtocol(unittest.TestCase):
         """Test verification of valid pairing code."""
         code, _ = self.device1.generate_pairing_code()
 
-        is_valid = self.device1.verify_pairing_code(
-            code,
-            "app_001",
-            "Companion App",
-            "app"
-        )
+        is_valid = self.device1.verify_pairing_code(code, "app_001", "Companion App", "app")
 
         self.assertTrue(is_valid)
         self.assertEqual(self.device1.state, PairingState.WAITING_FOR_PEER)
 
     def test_verify_invalid_pairing_code(self):
         """Test verification of invalid pairing code."""
-        is_valid = self.device1.verify_pairing_code(
-            "123456",
-            "app_001",
-            "Companion App",
-            "app"
-        )
+        is_valid = self.device1.verify_pairing_code("123456", "app_001", "Companion App", "app")
 
         self.assertFalse(is_valid)
 
@@ -473,11 +400,7 @@ class TestPairingProtocol(unittest.TestCase):
         self.device1.active_codes[code].expires_at = datetime.utcnow() - timedelta(seconds=1)
 
         # Verification should fail
-        is_valid = self.device1.verify_pairing_code(
-            code,
-            "app_001",
-            "Companion App"
-        )
+        is_valid = self.device1.verify_pairing_code(code, "app_001", "Companion App")
 
         self.assertFalse(is_valid)
 
@@ -526,16 +449,8 @@ class TestPairingProtocol(unittest.TestCase):
         shared_secret2 = self.device2.complete_key_exchange()
 
         # Complete pairing
-        paired_device1 = self.device1.complete_pairing(
-            "app_001",
-            "Companion App",
-            "app"
-        )
-        paired_device2 = self.device2.complete_pairing(
-            "glasses_001",
-            "EduLens Glasses",
-            "glasses"
-        )
+        paired_device1 = self.device1.complete_pairing("app_001", "Companion App", "app")
+        paired_device2 = self.device2.complete_pairing("glasses_001", "EduLens Glasses", "glasses")
 
         self.assertEqual(self.device1.state, PairingState.PAIRED)
         self.assertEqual(self.device2.state, PairingState.PAIRED)
@@ -613,21 +528,14 @@ class TestSecureChannel(unittest.TestCase):
         """Set up test fixtures."""
         self.temp_dir = tempfile.mkdtemp()
 
-        self.config = ChannelConfig(
-            use_tls=False,  # Disable TLS for testing
-            connection_timeout=5
-        )
+        self.config = ChannelConfig(use_tls=False, connection_timeout=5)  # Disable TLS for testing
 
         self.channel1 = SecureChannel(
-            device_id="device_1",
-            device_name="Device 1",
-            config=self.config
+            device_id="device_1", device_name="Device 1", config=self.config
         )
 
         self.channel2 = SecureChannel(
-            device_id="device_2",
-            device_name="Device 2",
-            config=self.config
+            device_id="device_2", device_name="Device 2", config=self.config
         )
 
     def tearDown(self):
@@ -636,6 +544,7 @@ class TestSecureChannel(unittest.TestCase):
         self.channel2.close()
 
         import shutil
+
         shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     def test_channel_initialization(self):
@@ -652,7 +561,7 @@ class TestSecureChannel(unittest.TestCase):
             message_type=MessageType.DATA,
             sequence_number=42,
             timestamp=time.time(),
-            payload=b"Test payload data"
+            payload=b"Test payload data",
         )
 
         # Serialize
@@ -686,22 +595,17 @@ class TestSecureChannel(unittest.TestCase):
             message_type=MessageType.DATA,
             sequence_number=0,
             timestamp=time.time(),
-            payload=test_data
+            payload=test_data,
         )
 
         plaintext = self.channel1._serialize_message(message)
         ciphertext, nonce = crypto.encrypt_aes_gcm(
-            plaintext,
-            self.channel1.send_key,
-            associated_data=b'\x00' * 8
+            plaintext, self.channel1.send_key, associated_data=b"\x00" * 8
         )
 
         # Simulate receiving (decryption)
         decrypted = crypto.decrypt_aes_gcm(
-            ciphertext,
-            self.channel2.receive_key,
-            nonce,
-            associated_data=b'\x00' * 8
+            ciphertext, self.channel2.receive_key, nonce, associated_data=b"\x00" * 8
         )
 
         received_message = self.channel2._deserialize_message(decrypted)
@@ -714,7 +618,9 @@ class TestSecureChannel(unittest.TestCase):
         self.assertEqual(self.channel1.receive_sequence, 0)
 
         # Increment sequence numbers
-        self.channel1.send_sequence = (self.channel1.send_sequence + 1) % SecureChannel.MAX_SEQUENCE_NUMBER
+        self.channel1.send_sequence = (
+            self.channel1.send_sequence + 1
+        ) % SecureChannel.MAX_SEQUENCE_NUMBER
         self.assertEqual(self.channel1.send_sequence, 1)
 
     def test_channel_statistics(self):
@@ -748,28 +654,18 @@ class TestSecurityFeatures(unittest.TestCase):
         sequence_num = 42
 
         ciphertext, nonce = self.crypto.encrypt_aes_gcm(
-            plaintext,
-            key,
-            associated_data=str(sequence_num).encode()
+            plaintext, key, associated_data=str(sequence_num).encode()
         )
 
         # Decrypt with correct sequence number
         decrypted = self.crypto.decrypt_aes_gcm(
-            ciphertext,
-            key,
-            nonce,
-            associated_data=str(sequence_num).encode()
+            ciphertext, key, nonce, associated_data=str(sequence_num).encode()
         )
         self.assertEqual(decrypted, plaintext)
 
         # Decrypt with different sequence number should fail
         with self.assertRaises(InvalidTag):
-            self.crypto.decrypt_aes_gcm(
-                ciphertext,
-                key,
-                nonce,
-                associated_data=str(999).encode()
-            )
+            self.crypto.decrypt_aes_gcm(ciphertext, key, nonce, associated_data=str(999).encode())
 
     def test_tampering_detection(self):
         """Test detection of message tampering."""
@@ -794,8 +690,7 @@ class TestSecurityFeatures(unittest.TestCase):
 
         # Keys should be different
         self.assertNotEqual(
-            session1_keypair.serialize_public_key(),
-            session2_keypair.serialize_public_key()
+            session1_keypair.serialize_public_key(), session2_keypair.serialize_public_key()
         )
 
     def test_key_rotation(self):
@@ -849,16 +744,8 @@ class TestIntegration(unittest.TestCase):
     def test_complete_pairing_and_communication(self):
         """Test complete flow from pairing to secure communication."""
         # Create two devices
-        glasses = PairingProtocol(
-            "glasses_001",
-            "EduLens Glasses",
-            "glasses"
-        )
-        app = PairingProtocol(
-            "app_001",
-            "Companion App",
-            "app"
-        )
+        glasses = PairingProtocol("glasses_001", "EduLens Glasses", "glasses")
+        app = PairingProtocol("app_001", "Companion App", "app")
 
         # Step 1: Generate pairing code
         code, _ = glasses.generate_pairing_code()
@@ -915,7 +802,7 @@ def run_security_tests():
     return result.wasSuccessful()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Run all tests
     success = run_security_tests()
     sys.exit(0 if success else 1)

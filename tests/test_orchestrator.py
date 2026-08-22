@@ -7,10 +7,13 @@ validation gates, error recovery, and checkpoint management.
 
 import asyncio
 import json
-import pytest
 from datetime import datetime, timezone
+from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any
+
+import pytest
+
+from orchestrator.config import ConfigManager
 
 # Import modules under test
 from orchestrator.orchestrator import (
@@ -20,8 +23,7 @@ from orchestrator.orchestrator import (
     PhaseResult,
     ProjectContext,
 )
-from orchestrator.config import ConfigManager
-from orchestrator.state_manager import StateStore, Checkpoint
+from orchestrator.state_manager import Checkpoint, StateStore
 
 
 class TestOrchestratorPhase:
@@ -178,7 +180,10 @@ class TestClaudeAgentsOrchestrator:
     def test_phase_agents_mapping(self, orchestrator):
         """Test phase to agents mapping."""
         assert "concept_designer" in orchestrator._phase_agents[OrchestratorPhase.PHASE_1_CONCEPT]
-        assert "backend_engineer" in orchestrator._phase_agents[OrchestratorPhase.PHASE_3_IMPLEMENTATION]
+        assert (
+            "backend_engineer"
+            in orchestrator._phase_agents[OrchestratorPhase.PHASE_3_IMPLEMENTATION]
+        )
         assert "qa_engineer" in orchestrator._phase_agents[OrchestratorPhase.PHASE_4_TESTING]
         assert "security_engineer" in orchestrator._phase_agents[OrchestratorPhase.PHASE_5_SECURITY]
         assert "devops_engineer" in orchestrator._phase_agents[OrchestratorPhase.PHASE_6_DEPLOYMENT]

@@ -270,9 +270,7 @@ class ComponentManager:
                 # Check for unhealthy components
                 for name, status in health.items():
                     if not status.is_healthy:
-                        logger.warning(
-                            f"Component '{name}' unhealthy: {status.error_message}"
-                        )
+                        logger.warning(f"Component '{name}' unhealthy: {status.error_message}")
                         await self.event_bus.publish(
                             create_event(
                                 EventType.SYSTEM_ERROR,

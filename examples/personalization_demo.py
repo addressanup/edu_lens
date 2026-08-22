@@ -15,12 +15,12 @@ import time
 from pathlib import Path
 
 from src.ai.personalization import (
-    create_student_model,
-    create_adaptive_tutor,
-    create_progress_tracker,
-    create_learning_analytics,
     AdaptationContext,
-    MasteryLevel
+    MasteryLevel,
+    create_adaptive_tutor,
+    create_learning_analytics,
+    create_progress_tracker,
+    create_student_model,
 )
 
 
@@ -28,7 +28,7 @@ def print_section(title: str):
     """Print a section header."""
     print(f"\n{'=' * 70}")
     print(f"  {title}")
-    print('=' * 70)
+    print("=" * 70)
 
 
 def simulate_learning_session():
@@ -42,11 +42,7 @@ def simulate_learning_session():
     age = 9
     grade = 4
 
-    student = create_student_model(
-        student_id=student_id,
-        age=age,
-        grade=grade
-    )
+    student = create_student_model(student_id=student_id, age=age, grade=grade)
 
     print(f"Created student model:")
     print(f"  Student ID: {student_id}")
@@ -77,7 +73,7 @@ def simulate_learning_session():
             "student_answer": "15",
             "correct": False,
             "time_spent": 45.0,
-            "attempts": 2
+            "attempts": 2,
         },
         {
             "id": "prob_2",
@@ -86,7 +82,7 @@ def simulate_learning_session():
             "student_answer": "10",
             "correct": True,
             "time_spent": 30.0,
-            "attempts": 1
+            "attempts": 1,
         },
         {
             "id": "prob_3",
@@ -95,7 +91,7 @@ def simulate_learning_session():
             "student_answer": "18",
             "correct": True,
             "time_spent": 25.0,
-            "attempts": 1
+            "attempts": 1,
         },
         {
             "id": "prob_4",
@@ -104,7 +100,7 @@ def simulate_learning_session():
             "student_answer": "28",
             "correct": True,
             "time_spent": 20.0,
-            "attempts": 1
+            "attempts": 1,
         },
         {
             "id": "prob_5",
@@ -113,7 +109,7 @@ def simulate_learning_session():
             "student_answer": "40",
             "correct": True,
             "time_spent": 18.0,
-            "attempts": 1
+            "attempts": 1,
         },
     ]
 
@@ -139,7 +135,7 @@ def simulate_learning_session():
             time_spent=problem["time_spent"],
             hint_level_used=1 if problem["attempts"] > 1 else 0,
             student_response=problem["student_answer"],
-            difficulty_level=2
+            difficulty_level=2,
         )
 
         # Record in progress tracker
@@ -150,7 +146,7 @@ def simulate_learning_session():
             time_spent=problem["time_spent"],
             hints_used=1 if problem["attempts"] > 1 else 0,
             difficulty=2,
-            attempts_on_problem=problem["attempts"]
+            attempts_on_problem=problem["attempts"],
         )
 
         if problem["correct"]:
@@ -166,7 +162,7 @@ def simulate_learning_session():
                 hints_used=1 if problem["attempts"] > 1 else 0,
                 difficulty_level=2,
                 session_duration=time.time() - session_start,
-                problems_solved_today=i
+                problems_solved_today=i,
             )
 
             hint = tutor.generate_hint(context)
@@ -188,7 +184,7 @@ def simulate_learning_session():
                 hints_used=1 if problem["attempts"] > 1 else 0,
                 difficulty_level=2,
                 session_duration=time.time() - session_start,
-                problems_solved_today=correct_count
+                problems_solved_today=correct_count,
             )
 
             emotion, confidence = tutor.detect_frustration(context)
@@ -197,13 +193,13 @@ def simulate_learning_session():
 
     # Update analytics
     session_data = {
-        'session_id': 'demo_session',
-        'start_time': session_start,
-        'end_time': time.time(),
-        'problems_attempted': len(problems),
-        'problems_correct': correct_count,
-        'concepts_practiced': [concept_id],
-        'mastery_scores': {concept_id: tracker.calculate_mastery(concept_id)}
+        "session_id": "demo_session",
+        "start_time": session_start,
+        "end_time": time.time(),
+        "problems_attempted": len(problems),
+        "problems_correct": correct_count,
+        "concepts_practiced": [concept_id],
+        "mastery_scores": {concept_id: tracker.calculate_mastery(concept_id)},
     }
     analytics.update_from_session(session_data)
 
@@ -235,8 +231,7 @@ def simulate_learning_session():
 
     # Get explanation adjusted to learning style
     explanation = tutor.adjust_explanation(
-        concept_id=concept_id,
-        base_explanation="Multiplication is repeated addition."
+        concept_id=concept_id, base_explanation="Multiplication is repeated addition."
     )
     print(f"\nExplanation Style: {explanation.explanation_type.name}")
     print(f"Learning Style Match: {student.get_learning_style().name}")
@@ -310,16 +305,12 @@ def simulate_learning_session():
 
     if mastery_level.value >= MasteryLevel.PROFICIENT.value:
         celebration = tutor.celebrate_progress(
-            'mastery',
-            {'concept': 'Multiplication', 'count': correct_count}
+            "mastery", {"concept": "Multiplication", "count": correct_count}
         )
         print(f"\n🎉 {celebration}")
 
     if correct_count >= 4:
-        streak_celebration = tutor.celebrate_progress(
-            'streak',
-            {'count': correct_count}
-        )
+        streak_celebration = tutor.celebrate_progress("streak", {"count": correct_count})
         print(f"🔥 {streak_celebration}")
 
     # Final Summary

@@ -23,14 +23,16 @@ logger = logging.getLogger(__name__)
 
 class TaskPriority(Enum):
     """Priority levels for pipeline tasks."""
+
     CRITICAL = 0  # Immediate processing required
-    HIGH = 1      # Important, process soon
-    NORMAL = 2    # Standard priority
-    LOW = 3       # Background task
+    HIGH = 1  # Important, process soon
+    NORMAL = 2  # Standard priority
+    LOW = 3  # Background task
 
 
 class TaskStatus(Enum):
     """Status of a pipeline task."""
+
     PENDING = auto()
     RUNNING = auto()
     COMPLETED = auto()
@@ -41,6 +43,7 @@ class TaskStatus(Enum):
 @dataclass
 class PipelineTask:
     """Represents a task in the pipeline."""
+
     task_id: str
     task_type: str
     priority: TaskPriority
@@ -65,6 +68,7 @@ class PipelineTask:
 @dataclass
 class CoordinatorStats:
     """Statistics for the pipeline coordinator."""
+
     tasks_scheduled: int = 0
     tasks_completed: int = 0
     tasks_failed: int = 0
@@ -87,11 +91,7 @@ class PipelineCoordinator:
     - Resource management
     """
 
-    def __init__(
-        self,
-        max_concurrent_tasks: int = 5,
-        max_queue_size: int = 100
-    ) -> None:
+    def __init__(self, max_concurrent_tasks: int = 5, max_queue_size: int = 100) -> None:
         """
         Initialize the pipeline coordinator.
 
@@ -104,8 +104,7 @@ class PipelineCoordinator:
 
         # Task management
         self._task_queues: dict[TaskPriority, asyncio.Queue] = {
-            priority: asyncio.Queue(maxsize=max_queue_size)
-            for priority in TaskPriority
+            priority: asyncio.Queue(maxsize=max_queue_size) for priority in TaskPriority
         }
         self._active_tasks: dict[str, PipelineTask] = {}
         self._completed_tasks: dict[str, PipelineTask] = {}
@@ -175,7 +174,7 @@ class PipelineCoordinator:
         coroutine: Coroutine,
         priority: TaskPriority = TaskPriority.NORMAL,
         callback: Optional[Callable[[PipelineTask], None]] = None,
-        metadata: Optional[dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None,
     ) -> str:
         """
         Schedule a task for execution.
@@ -200,7 +199,7 @@ class PipelineCoordinator:
             task_type=task_type,
             priority=priority,
             coroutine=coroutine,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         # Add callback if provided
@@ -226,10 +225,7 @@ class PipelineCoordinator:
             raise ValueError(f"Task queue full for priority {priority.name}")
 
     async def start_session(
-        self,
-        session_id: str,
-        student_id: str,
-        metadata: Optional[dict[str, Any]] = None
+        self, session_id: str, student_id: str, metadata: Optional[dict[str, Any]] = None
     ) -> None:
         """
         Start a new tutoring session.
@@ -239,27 +235,25 @@ class PipelineCoordinator:
             student_id: Student identifier
             metadata: Optional session metadata
         """
+
         async def _start_session() -> dict[str, Any]:
             logger.info(f"Starting session: {session_id} for student: {student_id}")
             return {
                 "session_id": session_id,
                 "student_id": student_id,
                 "started_at": datetime.utcnow().isoformat(),
-                "metadata": metadata or {}
+                "metadata": metadata or {},
             }
 
         await self.schedule_task(
             task_type="start_session",
             coroutine=_start_session(),
             priority=TaskPriority.HIGH,
-            metadata={"session_id": session_id, "student_id": student_id}
+            metadata={"session_id": session_id, "student_id": student_id},
         )
 
     async def process_frame(
-        self,
-        frame_data: Any,
-        session_id: str,
-        processor: Callable[[Any], Coroutine[Any, Any, Any]]
+        self, frame_data: Any, session_id: str, processor: Callable[[Any], Coroutine[Any, Any, Any]]
     ) -> str:
         """
         Process a camera frame.
@@ -276,14 +270,11 @@ class PipelineCoordinator:
             task_type="process_frame",
             coroutine=processor(frame_data),
             priority=TaskPriority.NORMAL,
-            metadata={"session_id": session_id}
+            metadata={"session_id": session_id},
         )
 
     async def process_audio(
-        self,
-        audio_data: Any,
-        session_id: str,
-        processor: Callable[[Any], Coroutine[Any, Any, Any]]
+        self, audio_data: Any, session_id: str, processor: Callable[[Any], Coroutine[Any, Any, Any]]
     ) -> str:
         """
         Process audio input.
@@ -300,7 +291,7 @@ class PipelineCoordinator:
             task_type="process_audio",
             coroutine=processor(audio_data),
             priority=TaskPriority.HIGH,  # Audio is time-sensitive
-            metadata={"session_id": session_id}
+            metadata={"session_id": session_id},
         )
 
     async def generate_response(
@@ -308,7 +299,7 @@ class PipelineCoordinator:
         query: str,
         context: dict[str, Any],
         session_id: str,
-        generator: Callable[[str, dict], Coroutine[Any, Any, Any]]
+        generator: Callable[[str, dict], Coroutine[Any, Any, Any]],
     ) -> str:
         """
         Generate AI response.
@@ -326,14 +317,14 @@ class PipelineCoordinator:
             task_type="generate_response",
             coroutine=generator(query, context),
             priority=TaskPriority.HIGH,
-            metadata={"session_id": session_id, "query": query[:50]}
+            metadata={"session_id": session_id, "query": query[:50]},
         )
 
     async def deliver_response(
         self,
         response_text: str,
         session_id: str,
-        deliverer: Callable[[str], Coroutine[Any, Any, Any]]
+        deliverer: Callable[[str], Coroutine[Any, Any, Any]],
     ) -> str:
         """
         Deliver response via TTS.
@@ -350,14 +341,10 @@ class PipelineCoordinator:
             task_type="deliver_response",
             coroutine=deliverer(response_text),
             priority=TaskPriority.CRITICAL,  # TTS should be immediate
-            metadata={"session_id": session_id}
+            metadata={"session_id": session_id},
         )
 
-    async def wait_for_task(
-        self,
-        task_id: str,
-        timeout: Optional[float] = None
-    ) -> Optional[Any]:
+    async def wait_for_task(self, task_id: str, timeout: Optional[float] = None) -> Optional[Any]:
         """
         Wait for a task to complete.
 
@@ -409,12 +396,12 @@ class PipelineCoordinator:
     def get_stats(self) -> CoordinatorStats:
         """Get coordinator statistics."""
         self._stats.active_workers = len([w for w in self._workers if not w.done()])
-        self._stats.queue_depth = sum(
-            q.qsize() for q in self._task_queues.values()
-        )
+        self._stats.queue_depth = sum(q.qsize() for q in self._task_queues.values())
 
         if self._task_durations:
-            self._stats.average_task_duration_ms = sum(self._task_durations) / len(self._task_durations)
+            self._stats.average_task_duration_ms = sum(self._task_durations) / len(
+                self._task_durations
+            )
 
         return self._stats
 
@@ -481,8 +468,7 @@ class PipelineCoordinator:
         self._active_tasks[task.task_id] = task
 
         logger.debug(
-            f"Worker {worker_id} executing task: "
-            f"id={task.task_id}, type={task.task_type}"
+            f"Worker {worker_id} executing task: " f"id={task.task_id}, type={task.task_type}"
         )
 
         try:
@@ -502,8 +488,7 @@ class PipelineCoordinator:
                     self._task_durations = self._task_durations[-100:]
 
             logger.debug(
-                f"Task completed: id={task.task_id}, "
-                f"duration={task.duration_ms:.1f}ms"
+                f"Task completed: id={task.task_id}, " f"duration={task.duration_ms:.1f}ms"
             )
 
         except Exception as e:
@@ -514,8 +499,7 @@ class PipelineCoordinator:
             self._stats.tasks_failed += 1
 
             logger.error(
-                f"Task failed: id={task.task_id}, type={task.task_type}, error={e}",
-                exc_info=True
+                f"Task failed: id={task.task_id}, type={task.task_type}, error={e}", exc_info=True
             )
 
         finally:
@@ -538,15 +522,14 @@ class PipelineCoordinator:
             if len(self._completed_tasks) > 1000:
                 oldest_ids = sorted(
                     self._completed_tasks.keys(),
-                    key=lambda k: self._completed_tasks[k].completed_at or datetime.min
+                    key=lambda k: self._completed_tasks[k].completed_at or datetime.min,
                 )[:100]
                 for task_id in oldest_ids:
                     del self._completed_tasks[task_id]
 
 
 async def create_coordinator(
-    max_concurrent_tasks: int = 5,
-    max_queue_size: int = 100
+    max_concurrent_tasks: int = 5, max_queue_size: int = 100
 ) -> PipelineCoordinator:
     """
     Create and start a pipeline coordinator.
@@ -559,8 +542,7 @@ async def create_coordinator(
         Started coordinator
     """
     coordinator = PipelineCoordinator(
-        max_concurrent_tasks=max_concurrent_tasks,
-        max_queue_size=max_queue_size
+        max_concurrent_tasks=max_concurrent_tasks, max_queue_size=max_queue_size
     )
     await coordinator.start()
     return coordinator

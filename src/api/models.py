@@ -4,15 +4,17 @@ EduLens Database Models
 SQLAlchemy models for persistent storage of children profiles and sessions.
 """
 
+import os
 import uuid
 from datetime import datetime
-from typing import Optional, List
-from sqlalchemy import Column, String, Integer, DateTime, JSON, ForeignKey, Boolean, create_engine
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker as async_sessionmaker
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
-import os
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String, create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker as async_sessionmaker
 
 Base = declarative_base()
 
@@ -21,8 +23,10 @@ Base = declarative_base()
 # SQLAlchemy ORM Models (Database Tables)
 # ============================================
 
+
 class ChildDB(Base):
     """Child profile stored in database."""
+
     __tablename__ = "children"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -46,6 +50,7 @@ class ChildDB(Base):
 
 class SessionDB(Base):
     """Tutoring session stored in database."""
+
     __tablename__ = "sessions"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -64,8 +69,10 @@ class SessionDB(Base):
 # Pydantic Models (API Request/Response)
 # ============================================
 
+
 class ChildCreate(BaseModel):
     """Request model for creating a child profile."""
+
     name: str = Field(..., min_length=1, max_length=100)
     age: int = Field(..., ge=3, le=18)
     grade: str = Field(..., min_length=1, max_length=20)
@@ -79,6 +86,7 @@ class ChildCreate(BaseModel):
 
 class ChildUpdate(BaseModel):
     """Request model for updating a child profile."""
+
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     age: Optional[int] = Field(None, ge=3, le=18)
     grade: Optional[str] = Field(None, min_length=1, max_length=20)
@@ -91,6 +99,7 @@ class ChildUpdate(BaseModel):
 
 class ChildResponse(BaseModel):
     """Response model for child profile."""
+
     id: str
     name: str
     age: int
@@ -108,6 +117,7 @@ class ChildResponse(BaseModel):
 
 class SessionResponse(BaseModel):
     """Response model for session."""
+
     id: str
     child_id: Optional[str]
     history: List[dict]
@@ -122,12 +132,10 @@ class SessionResponse(BaseModel):
 # Database Connection & Session Management
 # ============================================
 
+
 def get_database_url() -> str:
     """Get database URL from environment."""
-    return os.getenv(
-        "DATABASE_URL",
-        "postgresql://edulens:edulens_dev@localhost:5432/edulens"
-    )
+    return os.getenv("DATABASE_URL", "postgresql://edulens:edulens_dev@localhost:5432/edulens")
 
 
 def get_async_database_url() -> str:
@@ -157,9 +165,7 @@ def get_sync_session():
 
 async def get_async_session():
     engine = create_async_db_engine()
-    async_session = async_sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
-    )
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with async_session() as session:
         yield session
 
@@ -167,6 +173,7 @@ async def get_async_session():
 # ============================================
 # Database Initialization
 # ============================================
+
 
 def init_db():
     """Initialize database tables."""

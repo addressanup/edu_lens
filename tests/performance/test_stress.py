@@ -17,7 +17,7 @@ import random
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import numpy as np
 import pytest
@@ -29,9 +29,9 @@ except ImportError:
     psutil = None
 
 try:
-    from src.vision.ocr_engine import OCREngine, OCRBackend
-    from src.audio.speech_recognizer import SpeechRecognizer, SpeechConfig
-    from src.audio.tts_engine import TTSEngine, TTSConfig, TTSBackend
+    from src.audio.speech_recognizer import SpeechConfig, SpeechRecognizer
+    from src.audio.tts_engine import TTSBackend, TTSConfig, TTSEngine
+    from src.vision.ocr_engine import OCRBackend, OCREngine
 except ImportError:
     OCREngine = None
     SpeechRecognizer = None
@@ -109,8 +109,9 @@ class TestExtendedOperation:
         avg_latency = np.mean(latencies) if latencies else 0
 
         # Verify stability
-        assert failure_rate < STRESS_THRESHOLDS["max_failure_rate"], \
-            f"Failure rate {failure_rate:.2%} exceeds threshold"
+        assert (
+            failure_rate < STRESS_THRESHOLDS["max_failure_rate"]
+        ), f"Failure rate {failure_rate:.2%} exceeds threshold"
         assert avg_latency < 1000, "Average latency degraded over time"
 
     @pytest.mark.timeout(7200)
@@ -217,16 +218,15 @@ class TestExtendedOperation:
 
         # Analyze memory trend
         # Should not show continuous growth (memory leak)
-        first_quarter = memory_samples[:len(memory_samples)//4]
-        last_quarter = memory_samples[-len(memory_samples)//4:]
+        first_quarter = memory_samples[: len(memory_samples) // 4]
+        last_quarter = memory_samples[-len(memory_samples) // 4 :]
 
         avg_early = np.mean(first_quarter)
         avg_late = np.mean(last_quarter)
         growth_percent = ((avg_late - avg_early) / avg_early) * 100
 
         # Memory should not grow more than 20% over extended run
-        assert growth_percent < 20, \
-            f"Memory grew {growth_percent:.1f}% during extended operation"
+        assert growth_percent < 20, f"Memory grew {growth_percent:.1f}% during extended operation"
 
 
 # ============================================================================
@@ -323,8 +323,7 @@ class TestRapidBursts:
             for _ in range(10):
                 loop = asyncio.get_event_loop()
                 result = await loop.run_in_executor(
-                    None,
-                    lambda: ocr_engine.extract_structured_content(image)
+                    None, lambda: ocr_engine.extract_structured_content(image)
                 )
                 results.append(result)
             return results
@@ -506,10 +505,7 @@ class TestRecovery:
             start = time.perf_counter()
 
             # Process multiple samples concurrently based on load level
-            tasks = [
-                recognizer.transcribe(sample_audio_data)
-                for _ in range(load_level)
-            ]
+            tasks = [recognizer.transcribe(sample_audio_data) for _ in range(load_level)]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             latency = time.perf_counter() - start
@@ -568,7 +564,7 @@ class TestEdgeCases:
 
         # Create corrupted image file
         corrupted_file = temp_dir / "corrupted.jpg"
-        with open(corrupted_file, 'wb') as f:
+        with open(corrupted_file, "wb") as f:
             f.write(b"corrupted data")
 
         ocr_engine = OCREngine()
@@ -668,7 +664,7 @@ def test_stress_test_summary(tmp_path):
                 "corrupted_input_handled": True,
                 "extreme_sizes_handled": True,
                 "concurrent_init_success": True,
-            }
+            },
         },
         "recommendations": [
             "System handles extended operation well with <5% failure rate",
@@ -677,12 +673,13 @@ def test_stress_test_summary(tmp_path):
             "Edge cases are handled gracefully",
             "Consider adding circuit breakers for overload protection",
             "Monitor memory growth in production deployments",
-        ]
+        ],
     }
 
     import json
+
     report_file = tmp_path / "stress_test_report.json"
-    with open(report_file, 'w') as f:
+    with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
     assert report_file.exists()

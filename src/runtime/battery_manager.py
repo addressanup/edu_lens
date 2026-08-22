@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 class BatteryState(Enum):
     """Battery charge states."""
 
-    FULL = auto()           # 80-100%
-    NORMAL = auto()         # 20-80%
-    LOW = auto()            # 10-20%
-    CRITICAL = auto()       # 0-10%
+    FULL = auto()  # 80-100%
+    NORMAL = auto()  # 20-80%
+    LOW = auto()  # 10-20%
+    CRITICAL = auto()  # 0-10%
     CHARGING = auto()
 
 
@@ -74,18 +74,22 @@ class PowerBudget:
     total_budget_mw: int = 2500  # ~2.5W total
 
     # Component allocations
-    vision_mw: int = 800      # Camera + processing
-    audio_mw: int = 400       # Mic + speaker + processing
-    ai_mw: int = 600          # LLM inference
-    display_mw: int = 100     # Status LED
+    vision_mw: int = 800  # Camera + processing
+    audio_mw: int = 400  # Mic + speaker + processing
+    ai_mw: int = 600  # LLM inference
+    display_mw: int = 100  # Status LED
     communication_mw: int = 300  # Bluetooth
-    base_mw: int = 300        # System baseline
+    base_mw: int = 300  # System baseline
 
     def get_available(self) -> int:
         """Get remaining power budget."""
         used = (
-            self.vision_mw + self.audio_mw + self.ai_mw +
-            self.display_mw + self.communication_mw + self.base_mw
+            self.vision_mw
+            + self.audio_mw
+            + self.ai_mw
+            + self.display_mw
+            + self.communication_mw
+            + self.base_mw
         )
         return max(0, self.total_budget_mw - used)
 
@@ -240,7 +244,7 @@ class BatteryManager:
             time_to_empty_minutes=self._estimate_time_to_empty(),
             time_to_full_minutes=self._estimate_time_to_full(),
             health_percent=95,  # Simulated
-            cycle_count=50,     # Simulated
+            cycle_count=50,  # Simulated
         )
 
     def _estimate_time_to_empty(self) -> int | None:

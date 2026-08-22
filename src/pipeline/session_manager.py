@@ -20,24 +20,24 @@ logger = logging.getLogger(__name__)
 class SessionState(Enum):
     """States of a tutoring session."""
 
-    IDLE = auto()              # Waiting for wake word
-    LISTENING = auto()         # Listening for student input
-    PROCESSING = auto()        # Processing visual/audio input
-    RESPONDING = auto()        # AI generating/speaking response
+    IDLE = auto()  # Waiting for wake word
+    LISTENING = auto()  # Listening for student input
+    PROCESSING = auto()  # Processing visual/audio input
+    RESPONDING = auto()  # AI generating/speaking response
     WAITING_RESPONSE = auto()  # Waiting for student response
-    PAUSED = auto()            # Session paused
-    ENDED = auto()             # Session ended
+    PAUSED = auto()  # Session paused
+    ENDED = auto()  # Session ended
 
 
 class InteractionType(Enum):
     """Types of tutoring interactions."""
 
-    PROBLEM_HELP = auto()      # Help with a specific problem
+    PROBLEM_HELP = auto()  # Help with a specific problem
     CONCEPT_EXPLANATION = auto()  # Explaining a concept
-    ANSWER_CHECK = auto()      # Checking student's answer
-    ENCOURAGEMENT = auto()     # Positive feedback
-    HINT_GIVEN = auto()        # Provided a hint
-    CLARIFICATION = auto()     # Clarifying previous response
+    ANSWER_CHECK = auto()  # Checking student's answer
+    ENCOURAGEMENT = auto()  # Positive feedback
+    HINT_GIVEN = auto()  # Provided a hint
+    CLARIFICATION = auto()  # Clarifying previous response
 
 
 @dataclass

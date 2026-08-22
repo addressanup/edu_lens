@@ -15,15 +15,14 @@ from pathlib import Path
 from src.audio.audio_pipeline import (
     AudioPipeline,
     PipelineConfig,
-    PipelineState,
     PipelineEvent,
-    create_pipeline
+    PipelineState,
+    create_pipeline,
 )
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger(__name__)
@@ -44,9 +43,7 @@ class PipelineDemo:
         Args:
             event: Pipeline event
         """
-        logger.info(
-            f"State transition: {event.previous_state.value} -> {event.state.value}"
-        )
+        logger.info(f"State transition: {event.previous_state.value} -> {event.state.value}")
 
         if event.state == PipelineState.WAKE_DETECTED:
             logger.info("Wake word detected! Listening for your question...")
@@ -148,7 +145,7 @@ class PipelineDemo:
                     f"interactions={self.interaction_count}"
                 )
 
-                if stats.get('total_sessions', 0) > 0:
+                if stats.get("total_sessions", 0) > 0:
                     logger.info(
                         f"Latency stats: "
                         f"avg={stats.get('avg_latency', 0):.1f}ms, "

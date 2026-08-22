@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
 from typing import Any, Callable, Coroutine, Optional
+
 import psutil
 
 logger = logging.getLogger(__name__)
@@ -23,15 +24,17 @@ logger = logging.getLogger(__name__)
 
 class HealthStatus(Enum):
     """Health status levels."""
-    HEALTHY = auto()      # All systems operational
-    DEGRADED = auto()     # Some issues but functional
-    UNHEALTHY = auto()    # Significant issues
-    CRITICAL = auto()     # System failure imminent
-    OFFLINE = auto()      # Component offline
+
+    HEALTHY = auto()  # All systems operational
+    DEGRADED = auto()  # Some issues but functional
+    UNHEALTHY = auto()  # Significant issues
+    CRITICAL = auto()  # System failure imminent
+    OFFLINE = auto()  # Component offline
 
 
 class ComponentType(Enum):
     """Types of components to monitor."""
+
     VISION = "vision"
     AUDIO = "audio"
     AI = "ai"
@@ -43,6 +46,7 @@ class ComponentType(Enum):
 @dataclass
 class ComponentHealth:
     """Health status of a component."""
+
     component_name: str
     component_type: ComponentType
     status: HealthStatus
@@ -56,6 +60,7 @@ class ComponentHealth:
 @dataclass
 class SystemHealth:
     """Overall system health."""
+
     overall_status: HealthStatus
     components: dict[str, ComponentHealth]
     system_metrics: dict[str, Any] = field(default_factory=dict)
@@ -65,6 +70,7 @@ class SystemHealth:
 @dataclass
 class DiagnosticResult:
     """Result of diagnostic test."""
+
     test_name: str
     passed: bool
     message: str
@@ -75,6 +81,7 @@ class DiagnosticResult:
 @dataclass
 class HealthCheckConfig:
     """Configuration for health checking."""
+
     check_interval_seconds: float = 30.0
     component_timeout_seconds: float = 5.0
     enable_auto_recovery: bool = True
@@ -99,7 +106,7 @@ class HealthChecker:
     def __init__(
         self,
         config: Optional[HealthCheckConfig] = None,
-        alert_callback: Optional[Callable[[ComponentHealth], Coroutine]] = None
+        alert_callback: Optional[Callable[[ComponentHealth], Coroutine]] = None,
     ) -> None:
         """
         Initialize health checker.
@@ -127,10 +134,7 @@ class HealthChecker:
         logger.info("HealthChecker initialized")
 
     def register_component(
-        self,
-        component_name: str,
-        component_type: ComponentType,
-        component: Any
+        self, component_name: str, component_type: ComponentType, component: Any
     ) -> None:
         """
         Register a component for monitoring.
@@ -143,9 +147,7 @@ class HealthChecker:
         self._components[component_name] = component
         self._component_start_times[component_name] = datetime.utcnow()
 
-        logger.info(
-            f"Registered component: {component_name} ({component_type.value})"
-        )
+        logger.info(f"Registered component: {component_name} ({component_type.value})")
 
     def unregister_component(self, component_name: str) -> None:
         """
@@ -208,14 +210,13 @@ class HealthChecker:
 
         # Determine overall status
         overall_status = self._determine_overall_status(
-            list(component_health.values()),
-            system_metrics
+            list(component_health.values()), system_metrics
         )
 
         system_health = SystemHealth(
             overall_status=overall_status,
             components=component_health,
-            system_metrics=system_metrics
+            system_metrics=system_metrics,
         )
 
         # Store in history
@@ -225,10 +226,7 @@ class HealthChecker:
 
         return system_health
 
-    async def get_component_status(
-        self,
-        component_name: str
-    ) -> Optional[ComponentHealth]:
+    async def get_component_status(self, component_name: str) -> Optional[ComponentHealth]:
         """
         Get health status of a specific component.
 
@@ -245,10 +243,7 @@ class HealthChecker:
         component = self._components[component_name]
         return await self._check_component(component_name, component)
 
-    async def run_diagnostics(
-        self,
-        component_name: Optional[str] = None
-    ) -> list[DiagnosticResult]:
+    async def run_diagnostics(self, component_name: Optional[str] = None) -> list[DiagnosticResult]:
         """
         Run diagnostic tests on components.
 
@@ -282,10 +277,7 @@ class HealthChecker:
 
         return results
 
-    def get_health_history(
-        self,
-        duration: Optional[timedelta] = None
-    ) -> list[SystemHealth]:
+    def get_health_history(self, duration: Optional[timedelta] = None) -> list[SystemHealth]:
         """
         Get health history.
 
@@ -299,31 +291,21 @@ class HealthChecker:
             return self._health_history
 
         cutoff = datetime.utcnow() - duration
-        return [
-            h for h in self._health_history
-            if h.timestamp >= cutoff
-        ]
+        return [h for h in self._health_history if h.timestamp >= cutoff]
 
-    async def _check_component(
-        self,
-        name: str,
-        component: Any
-    ) -> ComponentHealth:
+    async def _check_component(self, name: str, component: Any) -> ComponentHealth:
         """Check health of a single component."""
         start_time = asyncio.get_event_loop().time()
 
         try:
             # Try to call health_check method if available
-            if hasattr(component, 'health_check'):
+            if hasattr(component, "health_check"):
                 result = await asyncio.wait_for(
-                    component.health_check(),
-                    timeout=self.config.component_timeout_seconds
+                    component.health_check(), timeout=self.config.component_timeout_seconds
                 )
 
                 # Calculate response time
-                response_time_ms = (
-                    asyncio.get_event_loop().time() - start_time
-                ) * 1000
+                response_time_ms = (asyncio.get_event_loop().time() - start_time) * 1000
 
                 # Calculate uptime
                 uptime = 0.0
@@ -332,7 +314,7 @@ class HealthChecker:
                     uptime = delta.total_seconds()
 
                 # Extract status from result
-                if hasattr(result, 'is_healthy'):
+                if hasattr(result, "is_healthy"):
                     is_healthy = result.is_healthy
                 else:
                     is_healthy = result
@@ -346,9 +328,9 @@ class HealthChecker:
                     component_name=name,
                     component_type=component_type,
                     status=status,
-                    metrics=getattr(result, 'metrics', {}),
+                    metrics=getattr(result, "metrics", {}),
                     uptime_seconds=uptime,
-                    response_time_ms=response_time_ms
+                    response_time_ms=response_time_ms,
                 )
 
                 # Alert if unhealthy
@@ -364,7 +346,7 @@ class HealthChecker:
                     component_name=name,
                     component_type=component_type,
                     status=HealthStatus.HEALTHY,
-                    metrics={"note": "No health_check method available"}
+                    metrics={"note": "No health_check method available"},
                 )
 
         except asyncio.TimeoutError:
@@ -374,7 +356,7 @@ class HealthChecker:
                 component_name=name,
                 component_type=component_type,
                 status=HealthStatus.UNHEALTHY,
-                error_message="Health check timeout"
+                error_message="Health check timeout",
             )
 
         except Exception as e:
@@ -384,7 +366,7 @@ class HealthChecker:
                 component_name=name,
                 component_type=component_type,
                 status=HealthStatus.UNHEALTHY,
-                error_message=str(e)
+                error_message=str(e),
             )
 
     def _determine_component_type(self, component_name: str) -> ComponentType:
@@ -407,15 +389,15 @@ class HealthChecker:
         try:
             cpu_percent = psutil.cpu_percent(interval=0.1)
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
 
             metrics = {
                 "cpu_percent": cpu_percent,
                 "memory_percent": memory.percent,
-                "memory_available_gb": memory.available / (1024 ** 3),
+                "memory_available_gb": memory.available / (1024**3),
                 "disk_percent": disk.percent,
-                "disk_free_gb": disk.free / (1024 ** 3),
-                "timestamp": datetime.utcnow().isoformat()
+                "disk_free_gb": disk.free / (1024**3),
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
             # Check thresholds
@@ -433,9 +415,7 @@ class HealthChecker:
             return {"error": str(e)}
 
     def _determine_overall_status(
-        self,
-        component_health: list[ComponentHealth],
-        system_metrics: dict[str, Any]
+        self, component_health: list[ComponentHealth], system_metrics: dict[str, Any]
     ) -> HealthStatus:
         """Determine overall system health status."""
         if not component_health:
@@ -466,10 +446,7 @@ class HealthChecker:
 
         return HealthStatus.HEALTHY
 
-    async def _run_component_diagnostics(
-        self,
-        component_name: str
-    ) -> list[DiagnosticResult]:
+    async def _run_component_diagnostics(self, component_name: str) -> list[DiagnosticResult]:
         """Run diagnostics on a component."""
         results = []
 
@@ -480,12 +457,14 @@ class HealthChecker:
         health = await self.get_component_status(component_name)
         duration = (asyncio.get_event_loop().time() - start) * 1000
 
-        results.append(DiagnosticResult(
-            test_name=f"{component_name}_connectivity",
-            passed=health.status == HealthStatus.HEALTHY if health else False,
-            message=f"Component reachable and responsive",
-            duration_ms=duration
-        ))
+        results.append(
+            DiagnosticResult(
+                test_name=f"{component_name}_connectivity",
+                passed=health.status == HealthStatus.HEALTHY if health else False,
+                message=f"Component reachable and responsive",
+                duration_ms=duration,
+            )
+        )
 
         # Component-specific tests
         if component_type == ComponentType.VISION:
@@ -503,72 +482,69 @@ class HealthChecker:
 
         # CPU test
         cpu_percent = psutil.cpu_percent(interval=1.0)
-        results.append(DiagnosticResult(
-            test_name="system_cpu",
-            passed=cpu_percent < self.config.cpu_threshold_percent,
-            message=f"CPU usage: {cpu_percent:.1f}%",
-            details={"cpu_percent": cpu_percent}
-        ))
+        results.append(
+            DiagnosticResult(
+                test_name="system_cpu",
+                passed=cpu_percent < self.config.cpu_threshold_percent,
+                message=f"CPU usage: {cpu_percent:.1f}%",
+                details={"cpu_percent": cpu_percent},
+            )
+        )
 
         # Memory test
         memory = psutil.virtual_memory()
-        results.append(DiagnosticResult(
-            test_name="system_memory",
-            passed=memory.percent < self.config.memory_threshold_percent,
-            message=f"Memory usage: {memory.percent:.1f}%",
-            details={"memory_percent": memory.percent}
-        ))
+        results.append(
+            DiagnosticResult(
+                test_name="system_memory",
+                passed=memory.percent < self.config.memory_threshold_percent,
+                message=f"Memory usage: {memory.percent:.1f}%",
+                details={"memory_percent": memory.percent},
+            )
+        )
 
         # Disk test
-        disk = psutil.disk_usage('/')
-        results.append(DiagnosticResult(
-            test_name="system_disk",
-            passed=disk.percent < self.config.disk_threshold_percent,
-            message=f"Disk usage: {disk.percent:.1f}%",
-            details={"disk_percent": disk.percent}
-        ))
+        disk = psutil.disk_usage("/")
+        results.append(
+            DiagnosticResult(
+                test_name="system_disk",
+                passed=disk.percent < self.config.disk_threshold_percent,
+                message=f"Disk usage: {disk.percent:.1f}%",
+                details={"disk_percent": disk.percent},
+            )
+        )
 
         return results
 
-    async def _test_vision_component(
-        self,
-        component_name: str
-    ) -> list[DiagnosticResult]:
+    async def _test_vision_component(self, component_name: str) -> list[DiagnosticResult]:
         """Run vision-specific tests."""
         # Placeholder for vision tests
         return [
             DiagnosticResult(
                 test_name=f"{component_name}_vision_test",
                 passed=True,
-                message="Vision component operational"
+                message="Vision component operational",
             )
         ]
 
-    async def _test_audio_component(
-        self,
-        component_name: str
-    ) -> list[DiagnosticResult]:
+    async def _test_audio_component(self, component_name: str) -> list[DiagnosticResult]:
         """Run audio-specific tests."""
         # Placeholder for audio tests
         return [
             DiagnosticResult(
                 test_name=f"{component_name}_audio_test",
                 passed=True,
-                message="Audio component operational"
+                message="Audio component operational",
             )
         ]
 
-    async def _test_ai_component(
-        self,
-        component_name: str
-    ) -> list[DiagnosticResult]:
+    async def _test_ai_component(self, component_name: str) -> list[DiagnosticResult]:
         """Run AI-specific tests."""
         # Placeholder for AI tests
         return [
             DiagnosticResult(
                 test_name=f"{component_name}_ai_test",
                 passed=True,
-                message="AI component operational"
+                message="AI component operational",
             )
         ]
 
@@ -600,7 +576,7 @@ class HealthChecker:
 
 def create_health_checker(
     config: Optional[HealthCheckConfig] = None,
-    alert_callback: Optional[Callable[[ComponentHealth], Coroutine]] = None
+    alert_callback: Optional[Callable[[ComponentHealth], Coroutine]] = None,
 ) -> HealthChecker:
     """
     Create a health checker instance.

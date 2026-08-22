@@ -10,13 +10,13 @@ Protocol:
 """
 
 import asyncio
+import io
 import json
 import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, Optional, Callable, Awaitable
-import io
+from typing import Any, Awaitable, Callable, Dict, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -25,23 +25,25 @@ logger = logging.getLogger(__name__)
 
 class MessageType(Enum):
     """WebSocket message types."""
-    FRAME = 0x01           # Binary JPEG frame from glasses
-    EVENT = 0x02           # JSON event from backend
-    AUDIO = 0x03           # Binary audio chunk from backend
-    CONTROL = 0x04         # Control message (start/stop/config)
-    HEARTBEAT = 0x05       # Keep-alive heartbeat
+
+    FRAME = 0x01  # Binary JPEG frame from glasses
+    EVENT = 0x02  # JSON event from backend
+    AUDIO = 0x03  # Binary audio chunk from backend
+    CONTROL = 0x04  # Control message (start/stop/config)
+    HEARTBEAT = 0x05  # Keep-alive heartbeat
 
 
 @dataclass
 class FrameMessage:
     """Incoming frame from glasses."""
+
     frame_id: int
     timestamp: float
     data: bytes  # JPEG compressed frame
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_binary(cls, data: bytes) -> 'FrameMessage':
+    def from_binary(cls, data: bytes) -> "FrameMessage":
         """Parse binary frame message."""
         # Protocol: [1 byte type][4 bytes frame_id][8 bytes timestamp][N bytes JPEG]
         if len(data) < 13:
@@ -51,8 +53,8 @@ class FrameMessage:
         if msg_type != MessageType.FRAME.value:
             raise ValueError(f"Invalid message type: {msg_type}")
 
-        frame_id = int.from_bytes(data[1:5], 'big')
-        timestamp = int.from_bytes(data[5:13], 'big') / 1000.0  # ms to seconds
+        frame_id = int.from_bytes(data[1:5], "big")
+        timestamp = int.from_bytes(data[5:13], "big") / 1000.0  # ms to seconds
         jpeg_data = data[13:]
 
         return cls(frame_id=frame_id, timestamp=timestamp, data=jpeg_data)
@@ -61,6 +63,7 @@ class FrameMessage:
 @dataclass
 class ObservationEvent:
     """Outgoing event to glasses."""
+
     event_type: str  # "struggle_detected", "scene_change", "intervention"
     payload: Dict[str, Any]
     audio_url: Optional[str] = None  # URL or base64 audio
@@ -68,22 +71,25 @@ class ObservationEvent:
 
     def to_json(self) -> str:
         """Convert to JSON string."""
-        return json.dumps({
-            "event_type": self.event_type,
-            "payload": self.payload,
-            "audio_url": self.audio_url,
-            "timestamp": self.timestamp,
-        })
+        return json.dumps(
+            {
+                "event_type": self.event_type,
+                "payload": self.payload,
+                "audio_url": self.audio_url,
+                "timestamp": self.timestamp,
+            }
+        )
 
     def to_binary(self) -> bytes:
         """Convert to binary message."""
-        json_bytes = self.to_json().encode('utf-8')
+        json_bytes = self.to_json().encode("utf-8")
         # Protocol: [1 byte type][N bytes JSON]
         return bytes([MessageType.EVENT.value]) + json_bytes
 
 
 class ConnectionState(Enum):
     """WebSocket connection states."""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -148,14 +154,16 @@ class GlassesWebSocketHandler:
             logger.info(f"WebSocket connected for session {self.session_id}")
 
             # Send welcome message
-            await self.send_event(ObservationEvent(
-                event_type="connected",
-                payload={
-                    "session_id": self.session_id,
-                    "child_id": self.child_id,
-                    "message": "Observation session started"
-                }
-            ))
+            await self.send_event(
+                ObservationEvent(
+                    event_type="connected",
+                    payload={
+                        "session_id": self.session_id,
+                        "child_id": self.child_id,
+                        "message": "Observation session started",
+                    },
+                )
+            )
 
         except Exception as e:
             self.state = ConnectionState.ERROR
@@ -303,7 +311,7 @@ class GlassesWebSocketHandler:
         try:
             # Protocol: [1 byte type][4 bytes length][N bytes audio]
             length = len(audio_data)
-            header = bytes([MessageType.AUDIO.value]) + length.to_bytes(4, 'big')
+            header = bytes([MessageType.AUDIO.value]) + length.to_bytes(4, "big")
             await self.websocket.send_bytes(header + audio_data)
 
         except Exception as e:
@@ -314,7 +322,7 @@ class GlassesWebSocketHandler:
         self,
         message: str,
         audio_data: Optional[bytes] = None,
-        intervention_type: str = "gentle_prompt"
+        intervention_type: str = "gentle_prompt",
     ) -> None:
         """
         Send proactive intervention to glasses.
@@ -325,14 +333,16 @@ class GlassesWebSocketHandler:
             intervention_type: Type of intervention
         """
         # Send event first
-        await self.send_event(ObservationEvent(
-            event_type="intervention",
-            payload={
-                "intervention_type": intervention_type,
-                "message": message,
-                "has_audio": audio_data is not None
-            }
-        ))
+        await self.send_event(
+            ObservationEvent(
+                event_type="intervention",
+                payload={
+                    "intervention_type": intervention_type,
+                    "message": message,
+                    "has_audio": audio_data is not None,
+                },
+            )
+        )
 
         # Send audio if provided
         if audio_data:
@@ -362,15 +372,17 @@ class GlassesWebSocketHandler:
         # Send stop confirmation (only if websocket is still open)
         if self.websocket and self.websocket.client_state.name == "CONNECTED":
             try:
-                await self.send_event(ObservationEvent(
-                    event_type="observation_stopped",
-                    payload={
-                        "session_id": self.session_id,
-                        "total_frames": self.frame_count,
-                        "total_events": self.event_count,
-                        "duration_seconds": time.time() - (self.connected_at or time.time())
-                    }
-                ))
+                await self.send_event(
+                    ObservationEvent(
+                        event_type="observation_stopped",
+                        payload={
+                            "session_id": self.session_id,
+                            "total_frames": self.frame_count,
+                            "total_events": self.event_count,
+                            "duration_seconds": time.time() - (self.connected_at or time.time()),
+                        },
+                    )
+                )
             except Exception as e:
                 logger.debug(f"Could not send stop event (connection closed): {e}")
 

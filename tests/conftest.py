@@ -272,7 +272,7 @@ def sample_ai_response() -> Dict[str, Any]:
     """Sample AI response for educational queries."""
     return {
         "response": "Photosynthesis is the process by which plants use sunlight, water, and "
-                   "carbon dioxide to create oxygen and energy in the form of sugar.",
+        "carbon dioxide to create oxygen and energy in the form of sugar.",
         "age_appropriate": True,
         "grade_level": "3-5",
         "follow_up_questions": [

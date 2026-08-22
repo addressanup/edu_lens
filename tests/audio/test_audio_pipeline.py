@@ -17,16 +17,16 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import numpy as np
 import pytest
 
+from src.audio.audio_buffer import BufferConfig, SpeechSegment
 from src.audio.audio_pipeline import (
     AudioPipeline,
     PipelineConfig,
-    PipelineState,
     PipelineEvent,
-    create_pipeline
+    PipelineState,
+    create_pipeline,
 )
-from src.audio.audio_buffer import BufferConfig, SpeechSegment
 from src.audio.interruption_handler import InterruptionEvent, InterruptionType
-from src.audio.latency_monitor import PipelineStage, LatencyMetrics
+from src.audio.latency_monitor import LatencyMetrics, PipelineStage
 from src.audio.speech_recognizer import TranscriptionResult
 from src.audio.tts_engine import AudioOutput
 from src.audio.wake_word_engine import DetectionResult
@@ -46,7 +46,7 @@ def pipeline_config():
         silence_timeout=0.5,
         latency_threshold=2000.0,
         enable_barge_in=True,
-        barge_in_sensitivity=0.7
+        barge_in_sensitivity=0.7,
     )
 
 
@@ -56,10 +56,10 @@ async def pipeline(pipeline_config):
     pipeline = AudioPipeline(pipeline_config)
 
     # Mock components to avoid requiring actual models
-    with patch('src.audio.audio_pipeline.AsyncWakeWordDetector'):
-        with patch('src.audio.audio_pipeline.SpeechRecognizer'):
-            with patch('src.audio.audio_pipeline.TTSEngine'):
-                with patch('src.audio.audio_pipeline.MicrophoneStream'):
+    with patch("src.audio.audio_pipeline.AsyncWakeWordDetector"):
+        with patch("src.audio.audio_pipeline.SpeechRecognizer"):
+            with patch("src.audio.audio_pipeline.TTSEngine"):
+                with patch("src.audio.audio_pipeline.MicrophoneStream"):
                     await pipeline.initialize()
                     yield pipeline
 
@@ -85,12 +85,7 @@ def mock_audio_data():
 @pytest.fixture
 def mock_wake_detection():
     """Create mock wake word detection result."""
-    return DetectionResult(
-        detected=True,
-        confidence=0.95,
-        timestamp=time.time(),
-        latency_ms=50.0
-    )
+    return DetectionResult(detected=True, confidence=0.95, timestamp=time.time(), latency_ms=50.0)
 
 
 @pytest.fixture
@@ -101,7 +96,7 @@ def mock_transcription():
         confidence=0.92,
         language="en",
         word_timestamps=[],
-        processing_time=0.5
+        processing_time=0.5,
     )
 
 
@@ -109,10 +104,7 @@ def mock_transcription():
 def mock_audio_output():
     """Create mock TTS audio output."""
     return AudioOutput(
-        audio_data=b"mock_audio_data",
-        sample_rate=22050,
-        duration_ms=2000.0,
-        format="wav"
+        audio_data=b"mock_audio_data", sample_rate=22050, duration_ms=2000.0, format="wav"
     )
 
 
@@ -141,9 +133,9 @@ class TestPipelineInitialization:
     @pytest.mark.asyncio
     async def test_create_pipeline_helper(self):
         """Test create_pipeline helper function."""
-        with patch('src.audio.audio_pipeline.AsyncWakeWordDetector'):
-            with patch('src.audio.audio_pipeline.SpeechRecognizer'):
-                with patch('src.audio.audio_pipeline.TTSEngine'):
+        with patch("src.audio.audio_pipeline.AsyncWakeWordDetector"):
+            with patch("src.audio.audio_pipeline.SpeechRecognizer"):
+                with patch("src.audio.audio_pipeline.TTSEngine"):
                     pipeline = await create_pipeline()
 
                     assert isinstance(pipeline, AudioPipeline)
@@ -195,16 +187,13 @@ class TestStateTransitions:
             end_time=time.time() + 1.0,
             duration=1.0,
             rms_level=0.1,
-            is_speech=True
+            is_speech=True,
         )
 
         # Mock ASR
         pipeline._speech_recognizer.transcribe = AsyncMock(
             return_value=TranscriptionResult(
-                text="test",
-                confidence=0.9,
-                language="en",
-                processing_time=0.3
+                text="test", confidence=0.9, language="en", processing_time=0.3
             )
         )
 
@@ -241,10 +230,7 @@ class TestAudioProcessing:
         assert not pipeline._audio_queue.empty()
 
         # Get audio back
-        audio = await asyncio.wait_for(
-            pipeline._audio_queue.get(),
-            timeout=1.0
-        )
+        audio = await asyncio.wait_for(pipeline._audio_queue.get(), timeout=1.0)
 
         assert np.array_equal(audio, mock_audio_data)
 
@@ -299,9 +285,7 @@ class TestSpeechRecognition:
         pipeline._current_session_id = "test_session"
 
         # Mock ASR
-        pipeline._speech_recognizer.transcribe = AsyncMock(
-            return_value=mock_transcription
-        )
+        pipeline._speech_recognizer.transcribe = AsyncMock(return_value=mock_transcription)
 
         # Create speech segment
         segment = SpeechSegment(
@@ -310,7 +294,7 @@ class TestSpeechRecognition:
             end_time=time.time() + 1.0,
             duration=1.0,
             rms_level=0.1,
-            is_speech=True
+            is_speech=True,
         )
 
         await pipeline.handle_speech_end(segment)
@@ -331,9 +315,7 @@ class TestTTSIntegration:
         pipeline._current_session_id = "test_session"
 
         # Mock TTS
-        pipeline._tts_engine.synthesize = AsyncMock(
-            return_value=mock_audio_output
-        )
+        pipeline._tts_engine.synthesize = AsyncMock(return_value=mock_audio_output)
         pipeline._play_audio = AsyncMock()
 
         await pipeline.play_response("Test response")
@@ -351,9 +333,7 @@ class TestTTSIntegration:
         pipeline._latency_monitor.start_timer(pipeline._current_session_id)
 
         # Mock TTS
-        pipeline._tts_engine.synthesize = AsyncMock(
-            return_value=mock_audio_output
-        )
+        pipeline._tts_engine.synthesize = AsyncMock(return_value=mock_audio_output)
         pipeline._play_audio = AsyncMock()
 
         await pipeline.play_response("Test response")
@@ -379,7 +359,7 @@ class TestBargeIn:
             interrupt_type=InterruptionType.SPEECH,
             timestamp=time.time(),
             audio_level=0.15,
-            confidence=0.85
+            confidence=0.85,
         )
 
         await pipeline.handle_barge_in(interrupt)
@@ -398,8 +378,7 @@ class TestBargeIn:
         loud_audio = mock_audio_data * 3.0
 
         interrupt = await pipeline._interruption_handler.detect_interruption(
-            loud_audio,
-            pipeline.config.sample_rate
+            loud_audio, pipeline.config.sample_rate
         )
 
         # May or may not detect depending on thresholds
@@ -419,22 +398,13 @@ class TestLatencyMonitoring:
 
         # Record checkpoints
         await asyncio.sleep(0.05)
-        pipeline._latency_monitor.record_checkpoint(
-            session_id,
-            PipelineStage.WAKE_WORD_DETECTION
-        )
+        pipeline._latency_monitor.record_checkpoint(session_id, PipelineStage.WAKE_WORD_DETECTION)
 
         await asyncio.sleep(0.1)
-        pipeline._latency_monitor.record_checkpoint(
-            session_id,
-            PipelineStage.ASR_START
-        )
+        pipeline._latency_monitor.record_checkpoint(session_id, PipelineStage.ASR_START)
 
         await asyncio.sleep(0.2)
-        pipeline._latency_monitor.record_checkpoint(
-            session_id,
-            PipelineStage.ASR_END
-        )
+        pipeline._latency_monitor.record_checkpoint(session_id, PipelineStage.ASR_END)
 
         # End tracking
         metrics = pipeline._latency_monitor.end_timer(session_id)
@@ -476,9 +446,7 @@ class TestErrorHandling:
         pipeline._current_session_id = "test_session"
 
         # Mock ASR to raise exception
-        pipeline._speech_recognizer.transcribe = AsyncMock(
-            side_effect=Exception("ASR failed")
-        )
+        pipeline._speech_recognizer.transcribe = AsyncMock(side_effect=Exception("ASR failed"))
 
         segment = SpeechSegment(
             audio_data=np.random.randn(16000).astype(np.float32),
@@ -486,7 +454,7 @@ class TestErrorHandling:
             end_time=time.time() + 1.0,
             duration=1.0,
             rms_level=0.1,
-            is_speech=True
+            is_speech=True,
         )
 
         await pipeline.handle_speech_end(segment)
@@ -500,9 +468,7 @@ class TestErrorHandling:
         pipeline._current_session_id = "test_session"
 
         # Mock TTS to raise exception
-        pipeline._tts_engine.synthesize = AsyncMock(
-            side_effect=Exception("TTS failed")
-        )
+        pipeline._tts_engine.synthesize = AsyncMock(side_effect=Exception("TTS failed"))
 
         await pipeline.play_response("Test response")
 
@@ -586,20 +552,12 @@ class TestEndToEndFlow:
 
     @pytest.mark.asyncio
     async def test_complete_interaction_flow(
-        self,
-        pipeline,
-        mock_wake_detection,
-        mock_transcription,
-        mock_audio_output
+        self, pipeline, mock_wake_detection, mock_transcription, mock_audio_output
     ):
         """Test complete interaction: wake word -> ASR -> TTS."""
         # Setup mocks
-        pipeline._speech_recognizer.transcribe = AsyncMock(
-            return_value=mock_transcription
-        )
-        pipeline._tts_engine.synthesize = AsyncMock(
-            return_value=mock_audio_output
-        )
+        pipeline._speech_recognizer.transcribe = AsyncMock(return_value=mock_transcription)
+        pipeline._tts_engine.synthesize = AsyncMock(return_value=mock_audio_output)
         pipeline._play_audio = AsyncMock()
 
         # 1. Wake word detected
@@ -615,7 +573,7 @@ class TestEndToEndFlow:
             end_time=time.time() + 1.0,
             duration=1.0,
             rms_level=0.1,
-            is_speech=True
+            is_speech=True,
         )
 
         await pipeline.handle_speech_end(segment)
@@ -623,10 +581,7 @@ class TestEndToEndFlow:
         assert pipeline.get_state() == PipelineState.PROCESSING
 
         # 3. Get response from queue and play
-        response = await asyncio.wait_for(
-            pipeline._response_queue.get(),
-            timeout=1.0
-        )
+        response = await asyncio.wait_for(pipeline._response_queue.get(), timeout=1.0)
 
         await pipeline.play_response("Test response")
 

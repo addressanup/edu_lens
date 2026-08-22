@@ -8,11 +8,10 @@ Handles specialized pronunciation for educational content including:
 - Number and equation reading
 """
 
+import logging
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Pattern
-import logging
-
+from typing import Dict, List, Optional, Pattern, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PronunciationRule:
     """Single pronunciation rule"""
+
     pattern: str
     replacement: str
     context: Optional[str] = None  # Optional context requirement
@@ -47,120 +47,104 @@ class MathPronunciationEngine:
     def _create_symbol_map(self) -> Dict[str, str]:
         """Create mathematical symbol to pronunciation mapping"""
         return {
-            '+': 'plus',
-            '-': 'minus',
-            '−': 'minus',  # Unicode minus
-            '×': 'times',
-            '*': 'times',
-            '÷': 'divided by',
-            '/': 'divided by',
-            '=': 'equals',
-            '≠': 'does not equal',
-            '<': 'is less than',
-            '>': 'is greater than',
-            '≤': 'is less than or equal to',
-            '≥': 'is greater than or equal to',
-            '√': 'square root of',
-            '∛': 'cube root of',
-            '²': 'squared',
-            '³': 'cubed',
-            '∞': 'infinity',
-            'π': 'pi',
-            '°': 'degrees',
-            '%': 'percent',
-            '±': 'plus or minus',
-            '∑': 'sum of',
-            '∏': 'product of',
-            '∫': 'integral of',
-            '∂': 'partial derivative of',
-            '∆': 'delta',
-            'Δ': 'delta',
-            '≈': 'approximately equals',
-            '∈': 'is an element of',
-            '∉': 'is not an element of',
-            '⊂': 'is a subset of',
-            '⊃': 'is a superset of',
-            '∪': 'union',
-            '∩': 'intersection',
-            '∅': 'empty set',
+            "+": "plus",
+            "-": "minus",
+            "−": "minus",  # Unicode minus
+            "×": "times",
+            "*": "times",
+            "÷": "divided by",
+            "/": "divided by",
+            "=": "equals",
+            "≠": "does not equal",
+            "<": "is less than",
+            ">": "is greater than",
+            "≤": "is less than or equal to",
+            "≥": "is greater than or equal to",
+            "√": "square root of",
+            "∛": "cube root of",
+            "²": "squared",
+            "³": "cubed",
+            "∞": "infinity",
+            "π": "pi",
+            "°": "degrees",
+            "%": "percent",
+            "±": "plus or minus",
+            "∑": "sum of",
+            "∏": "product of",
+            "∫": "integral of",
+            "∂": "partial derivative of",
+            "∆": "delta",
+            "Δ": "delta",
+            "≈": "approximately equals",
+            "∈": "is an element of",
+            "∉": "is not an element of",
+            "⊂": "is a subset of",
+            "⊃": "is a superset of",
+            "∪": "union",
+            "∩": "intersection",
+            "∅": "empty set",
         }
 
     def _create_operator_pronunciations(self) -> Dict[str, List[str]]:
         """Create context-aware operator pronunciations"""
         return {
-            '+': ['plus', 'add', 'and'],
-            '-': ['minus', 'subtract', 'take away'],
-            '×': ['times', 'multiplied by'],
-            '÷': ['divided by', 'over'],
-            '=': ['equals', 'is equal to', 'is']
+            "+": ["plus", "add", "and"],
+            "-": ["minus", "subtract", "take away"],
+            "×": ["times", "multiplied by"],
+            "÷": ["divided by", "over"],
+            "=": ["equals", "is equal to", "is"],
         }
 
     def _initialize_rules(self):
         """Initialize pronunciation rules in priority order"""
 
         # Fractions (e.g., 1/2 -> "one half")
-        self.rules.append(PronunciationRule(
-            pattern=r'(\d+)/(\d+)',
-            replacement=self._format_fraction,
-            priority=100
-        ))
+        self.rules.append(
+            PronunciationRule(
+                pattern=r"(\d+)/(\d+)", replacement=self._format_fraction, priority=100
+            )
+        )
 
         # Exponents (e.g., x² -> "x squared", x³ -> "x cubed")
-        self.rules.append(PronunciationRule(
-            pattern=r'(\w+)²',
-            replacement=r'\1 squared',
-            priority=90
-        ))
-        self.rules.append(PronunciationRule(
-            pattern=r'(\w+)³',
-            replacement=r'\1 cubed',
-            priority=90
-        ))
+        self.rules.append(
+            PronunciationRule(pattern=r"(\w+)²", replacement=r"\1 squared", priority=90)
+        )
+        self.rules.append(
+            PronunciationRule(pattern=r"(\w+)³", replacement=r"\1 cubed", priority=90)
+        )
 
         # General exponents (e.g., x^2 -> "x to the power of 2")
-        self.rules.append(PronunciationRule(
-            pattern=r'(\w+)\^(\d+)',
-            replacement=r'\1 to the power of \2',
-            priority=85
-        ))
+        self.rules.append(
+            PronunciationRule(
+                pattern=r"(\w+)\^(\d+)", replacement=r"\1 to the power of \2", priority=85
+            )
+        )
 
         # Decimals (e.g., 3.14 -> "three point one four")
-        self.rules.append(PronunciationRule(
-            pattern=r'(\d+)\.(\d+)',
-            replacement=self._format_decimal,
-            priority=80
-        ))
+        self.rules.append(
+            PronunciationRule(
+                pattern=r"(\d+)\.(\d+)", replacement=self._format_decimal, priority=80
+            )
+        )
 
         # Negative numbers (e.g., -5 -> "negative five")
-        self.rules.append(PronunciationRule(
-            pattern=r'-(\d+)',
-            replacement=r'negative \1',
-            priority=75
-        ))
+        self.rules.append(
+            PronunciationRule(pattern=r"-(\d+)", replacement=r"negative \1", priority=75)
+        )
 
         # Parentheses
-        self.rules.append(PronunciationRule(
-            pattern=r'\(',
-            replacement='open parenthesis',
-            priority=50
-        ))
-        self.rules.append(PronunciationRule(
-            pattern=r'\)',
-            replacement='close parenthesis',
-            priority=50
-        ))
+        self.rules.append(
+            PronunciationRule(pattern=r"\(", replacement="open parenthesis", priority=50)
+        )
+        self.rules.append(
+            PronunciationRule(pattern=r"\)", replacement="close parenthesis", priority=50)
+        )
 
         # Brackets
-        self.rules.append(PronunciationRule(
-            pattern=r'\[',
-            replacement='open bracket',
-            priority=50
-        ))
-        self.rules.append(PronunciationRule(
-            pattern=r'\]',
-            replacement='close bracket',
-            priority=50
-        ))
+        self.rules.append(PronunciationRule(pattern=r"\[", replacement="open bracket", priority=50))
+        self.rules.append(
+            PronunciationRule(pattern=r"\]", replacement="close bracket", priority=50)
+        )
 
     def convert_expression(self, expression: str, verbose: bool = True) -> str:
         """
@@ -187,10 +171,10 @@ class MathPronunciationEngine:
 
         # Replace mathematical symbols
         for symbol, pronunciation in self.symbol_map.items():
-            result = result.replace(symbol, f' {pronunciation} ')
+            result = result.replace(symbol, f" {pronunciation} ")
 
         # Clean up spacing
-        result = re.sub(r'\s+', ' ', result).strip()
+        result = re.sub(r"\s+", " ", result).strip()
 
         # Convert numbers to words for better pronunciation
         if verbose:
@@ -228,18 +212,19 @@ class MathPronunciationEngine:
         decimal_part = match.group(2)
 
         # Read decimal digits individually
-        decimal_words = ' '.join(self._number_to_word(int(d)) for d in decimal_part)
+        decimal_words = " ".join(self._number_to_word(int(d)) for d in decimal_part)
 
         return f"{self._number_to_word(int(integer_part))} point {decimal_words}"
 
     def _numbers_to_words(self, text: str) -> str:
         """Convert standalone numbers to words"""
+
         def replace_number(match):
             number = int(match.group(0))
             return self._number_to_word(number)
 
         # Replace standalone numbers
-        return re.sub(r'\b\d+\b', replace_number, text)
+        return re.sub(r"\b\d+\b", replace_number, text)
 
     def _number_to_word(self, n: int) -> str:
         """Convert number to word (0-999)"""
@@ -250,9 +235,30 @@ class MathPronunciationEngine:
             return "zero"
 
         ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
-        teens = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
-                 "sixteen", "seventeen", "eighteen", "nineteen"]
-        tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+        teens = [
+            "ten",
+            "eleven",
+            "twelve",
+            "thirteen",
+            "fourteen",
+            "fifteen",
+            "sixteen",
+            "seventeen",
+            "eighteen",
+            "nineteen",
+        ]
+        tens = [
+            "",
+            "",
+            "twenty",
+            "thirty",
+            "forty",
+            "fifty",
+            "sixty",
+            "seventy",
+            "eighty",
+            "ninety",
+        ]
 
         if n < 10:
             return ones[n]
@@ -261,19 +267,37 @@ class MathPronunciationEngine:
         elif n < 100:
             return tens[n // 10] + (" " + ones[n % 10] if n % 10 else "")
         elif n < 1000:
-            return (ones[n // 100] + " hundred" +
-                    (" and " + self._number_to_word(n % 100) if n % 100 else ""))
+            return (
+                ones[n // 100]
+                + " hundred"
+                + (" and " + self._number_to_word(n % 100) if n % 100 else "")
+            )
         else:
             return str(n)  # Fallback for large numbers
 
     def _ordinal_to_word(self, n: int) -> str:
         """Convert number to ordinal word (first, second, etc.)"""
         ordinals = {
-            1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth",
-            6: "sixth", 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth",
-            11: "eleventh", 12: "twelfth", 13: "thirteenth", 14: "fourteenth",
-            15: "fifteenth", 16: "sixteenth", 17: "seventeenth", 18: "eighteenth",
-            19: "nineteenth", 20: "twentieth"
+            1: "first",
+            2: "second",
+            3: "third",
+            4: "fourth",
+            5: "fifth",
+            6: "sixth",
+            7: "seventh",
+            8: "eighth",
+            9: "ninth",
+            10: "tenth",
+            11: "eleventh",
+            12: "twelfth",
+            13: "thirteenth",
+            14: "fourteenth",
+            15: "fifteenth",
+            16: "sixteenth",
+            17: "seventeenth",
+            18: "eighteenth",
+            19: "nineteenth",
+            20: "twentieth",
         }
 
         if n in ordinals:
@@ -302,66 +326,83 @@ class SciencePronunciationEngine:
     def _create_element_names(self) -> Dict[str, str]:
         """Chemical element symbol to name mapping"""
         return {
-            'H': 'Hydrogen', 'He': 'Helium', 'Li': 'Lithium', 'Be': 'Beryllium',
-            'B': 'Boron', 'C': 'Carbon', 'N': 'Nitrogen', 'O': 'Oxygen',
-            'F': 'Fluorine', 'Ne': 'Neon', 'Na': 'Sodium', 'Mg': 'Magnesium',
-            'Al': 'Aluminum', 'Si': 'Silicon', 'P': 'Phosphorus', 'S': 'Sulfur',
-            'Cl': 'Chlorine', 'Ar': 'Argon', 'K': 'Potassium', 'Ca': 'Calcium',
-            'Fe': 'Iron', 'Cu': 'Copper', 'Zn': 'Zinc', 'Ag': 'Silver',
-            'Au': 'Gold', 'Hg': 'Mercury', 'Pb': 'Lead'
+            "H": "Hydrogen",
+            "He": "Helium",
+            "Li": "Lithium",
+            "Be": "Beryllium",
+            "B": "Boron",
+            "C": "Carbon",
+            "N": "Nitrogen",
+            "O": "Oxygen",
+            "F": "Fluorine",
+            "Ne": "Neon",
+            "Na": "Sodium",
+            "Mg": "Magnesium",
+            "Al": "Aluminum",
+            "Si": "Silicon",
+            "P": "Phosphorus",
+            "S": "Sulfur",
+            "Cl": "Chlorine",
+            "Ar": "Argon",
+            "K": "Potassium",
+            "Ca": "Calcium",
+            "Fe": "Iron",
+            "Cu": "Copper",
+            "Zn": "Zinc",
+            "Ag": "Silver",
+            "Au": "Gold",
+            "Hg": "Mercury",
+            "Pb": "Lead",
         }
 
     def _create_unit_pronunciations(self) -> Dict[str, str]:
         """Unit abbreviation to pronunciation mapping"""
         return {
-            'm': 'meters',
-            'cm': 'centimeters',
-            'mm': 'millimeters',
-            'km': 'kilometers',
-            'g': 'grams',
-            'kg': 'kilograms',
-            'mg': 'milligrams',
-            'L': 'liters',
-            'mL': 'milliliters',
-            's': 'seconds',
-            'min': 'minutes',
-            'h': 'hours',
-            'N': 'newtons',
-            'J': 'joules',
-            'W': 'watts',
-            'V': 'volts',
-            'A': 'amperes',
-            'Ω': 'ohms',
-            '°C': 'degrees Celsius',
-            '°F': 'degrees Fahrenheit',
-            'K': 'kelvin',
-            'Pa': 'pascals',
-            'Hz': 'hertz',
-            'mol': 'moles'
+            "m": "meters",
+            "cm": "centimeters",
+            "mm": "millimeters",
+            "km": "kilometers",
+            "g": "grams",
+            "kg": "kilograms",
+            "mg": "milligrams",
+            "L": "liters",
+            "mL": "milliliters",
+            "s": "seconds",
+            "min": "minutes",
+            "h": "hours",
+            "N": "newtons",
+            "J": "joules",
+            "W": "watts",
+            "V": "volts",
+            "A": "amperes",
+            "Ω": "ohms",
+            "°C": "degrees Celsius",
+            "°F": "degrees Fahrenheit",
+            "K": "kelvin",
+            "Pa": "pascals",
+            "Hz": "hertz",
+            "mol": "moles",
         }
 
     def _create_term_overrides(self) -> Dict[str, str]:
         """Override pronunciations for tricky scientific terms"""
         return {
             # Biology
-            'mitochondria': 'my-toe-CON-dree-uh',
-            'photosynthesis': 'foe-toe-SIN-the-sis',
-            'chromosome': 'CHROME-uh-soam',
-
+            "mitochondria": "my-toe-CON-dree-uh",
+            "photosynthesis": "foe-toe-SIN-the-sis",
+            "chromosome": "CHROME-uh-soam",
             # Chemistry
-            'molecule': 'MOL-uh-kyool',
-            'atom': 'AT-um',
-            'isotope': 'EYE-so-tope',
-
+            "molecule": "MOL-uh-kyool",
+            "atom": "AT-um",
+            "isotope": "EYE-so-tope",
             # Physics
-            'velocity': 'veh-LOS-ih-tee',
-            'acceleration': 'ak-sell-er-AY-shun',
-            'momentum': 'moe-MEN-tum',
-
+            "velocity": "veh-LOS-ih-tee",
+            "acceleration": "ak-sell-er-AY-shun",
+            "momentum": "moe-MEN-tum",
             # Astronomy
-            'galaxy': 'GAL-ack-see',
-            'nebula': 'NEB-yoo-luh',
-            'asteroid': 'ASS-ter-oid'
+            "galaxy": "GAL-ack-see",
+            "nebula": "NEB-yoo-luh",
+            "asteroid": "ASS-ter-oid",
         }
 
     def convert_formula(self, formula: str) -> str:
@@ -379,8 +420,8 @@ class SciencePronunciationEngine:
 
         while i < len(formula):
             # Check for element symbol (1-2 characters)
-            if i + 1 < len(formula) and formula[i:i+2] in self.element_names:
-                element = formula[i:i+2]
+            if i + 1 < len(formula) and formula[i : i + 2] in self.element_names:
+                element = formula[i : i + 2]
                 result.append(self.element_names[element])
                 i += 2
             elif formula[i] in self.element_names:
@@ -390,7 +431,7 @@ class SciencePronunciationEngine:
             # Check for subscript numbers
             elif formula[i].isdigit():
                 # Read subscript
-                num = ''
+                num = ""
                 while i < len(formula) and formula[i].isdigit():
                     num += formula[i]
                     i += 1
@@ -399,7 +440,7 @@ class SciencePronunciationEngine:
             else:
                 i += 1
 
-        return ' '.join(result)
+        return " ".join(result)
 
     def convert_scientific_notation(self, notation: str) -> str:
         """
@@ -411,7 +452,7 @@ class SciencePronunciationEngine:
         Returns:
             Speakable text
         """
-        match = re.match(r'([\d.]+)e([+-]?\d+)', notation.lower())
+        match = re.match(r"([\d.]+)e([+-]?\d+)", notation.lower())
         if match:
             coefficient = match.group(1)
             exponent = match.group(2)
@@ -442,7 +483,7 @@ class SciencePronunciationEngine:
         Returns:
             Speakable text
         """
-        match = re.match(r'([\d.]+)\s*([a-zA-Z°Ω]+)', measurement)
+        match = re.match(r"([\d.]+)\s*([a-zA-Z°Ω]+)", measurement)
         if match:
             value = match.group(1)
             unit = match.group(2)
@@ -466,26 +507,25 @@ class PhoneticOverrideEngine:
 
     def _initialize_common_overrides(self):
         """Initialize common pronunciation overrides"""
-        self.overrides.update({
-            # Common mispronunciations
-            'often': 'OFF-en',  # Not OFF-ten
-            'nuclear': 'NEW-klee-er',
-            'mischievous': 'MISS-chuh-vuss',
-
-            # Educational terms
-            'algorithm': 'AL-go-rith-um',
-            'arithmetic': 'uh-RITH-meh-tick',
-            'geometry': 'jee-AH-meh-tree',
-
-            # Tricky words for kids
-            'colonel': 'KER-nul',
-            'queue': 'KYOO',
-            'recipe': 'RESS-uh-pee',
-
-            # Numbers
-            'eighth': 'AYTTH',
-            'twelfth': 'TWELFTH',
-        })
+        self.overrides.update(
+            {
+                # Common mispronunciations
+                "often": "OFF-en",  # Not OFF-ten
+                "nuclear": "NEW-klee-er",
+                "mischievous": "MISS-chuh-vuss",
+                # Educational terms
+                "algorithm": "AL-go-rith-um",
+                "arithmetic": "uh-RITH-meh-tick",
+                "geometry": "jee-AH-meh-tree",
+                # Tricky words for kids
+                "colonel": "KER-nul",
+                "queue": "KYOO",
+                "recipe": "RESS-uh-pee",
+                # Numbers
+                "eighth": "AYTTH",
+                "twelfth": "TWELFTH",
+            }
+        )
 
     def add_override(self, word: str, pronunciation: str):
         """Add custom pronunciation override"""
@@ -511,19 +551,19 @@ class PhoneticOverrideEngine:
 
         for word in words:
             # Remove punctuation for lookup
-            clean_word = re.sub(r'[^\w]', '', word.lower())
+            clean_word = re.sub(r"[^\w]", "", word.lower())
             override = self.get_override(clean_word)
 
             if override:
                 # Preserve original punctuation
-                if word[-1] in '.!?,;:':
+                if word[-1] in ".!?,;:":
                     result.append(override + word[-1])
                 else:
                     result.append(override)
             else:
                 result.append(word)
 
-        return ' '.join(result)
+        return " ".join(result)
 
 
 class PronunciationRulesEngine:
@@ -539,11 +579,7 @@ class PronunciationRulesEngine:
         self.science_engine = SciencePronunciationEngine()
         self.phonetic_engine = PhoneticOverrideEngine()
 
-    def process_text(
-        self,
-        text: str,
-        context: Optional[str] = None
-    ) -> str:
+    def process_text(self, text: str, context: Optional[str] = None) -> str:
         """
         Process text with appropriate pronunciation rules
 
@@ -557,20 +593,20 @@ class PronunciationRulesEngine:
         result = text
 
         # Apply context-specific rules
-        if context == 'math':
+        if context == "math":
             result = self.math_engine.convert_expression(result)
-        elif context == 'science':
+        elif context == "science":
             # Convert scientific notation
             result = re.sub(
-                r'[\d.]+e[+-]?\d+',
+                r"[\d.]+e[+-]?\d+",
                 lambda m: self.science_engine.convert_scientific_notation(m.group(0)),
-                result
+                result,
             )
             # Convert measurements
             result = re.sub(
-                r'[\d.]+\s*[a-zA-Z°Ω]+',
+                r"[\d.]+\s*[a-zA-Z°Ω]+",
                 lambda m: self.science_engine.convert_measurement(m.group(0)),
-                result
+                result,
             )
 
         # Apply phonetic overrides
@@ -578,12 +614,7 @@ class PronunciationRulesEngine:
 
         return result
 
-    def add_custom_rule(
-        self,
-        word: str,
-        pronunciation: str,
-        context: Optional[str] = None
-    ):
+    def add_custom_rule(self, word: str, pronunciation: str, context: Optional[str] = None):
         """
         Add custom pronunciation rule
 

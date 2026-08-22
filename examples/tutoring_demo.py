@@ -14,9 +14,9 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.ai.tutor_inference import create_tutor_engine, ResponseType
+from src.ai.prompt_templates import HintLevel, PromptTemplateManager
 from src.ai.response_validator import validate_educational_response
-from src.ai.prompt_templates import PromptTemplateManager, HintLevel
+from src.ai.tutor_inference import ResponseType, create_tutor_engine
 
 
 def print_section(title: str):
@@ -37,24 +37,16 @@ def demo_basic_response():
 
     engine = create_tutor_engine()
 
-    context = {
-        'age': 8,
-        'grade': '3',
-        'subject': 'math',
-        'concept_id': 'math_3_oa_001'
-    }
+    context = {"age": 8, "grade": "3", "subject": "math", "concept_id": "math_3_oa_001"}
 
-    result = engine.generate_response(
-        student_query="What is 5 times 3?",
-        context=context
-    )
+    result = engine.generate_response(student_query="What is 5 times 3?", context=context)
 
     print_result("Student Query", "What is 5 times 3?")
-    print_result("Response Type", result['response_type'])
-    print_result("Tutor Response", result['response'])
-    print_result("Hint Level", result['metadata']['hint_level'] or "N/A")
-    print_result("Difficulty", result['metadata']['difficulty'])
-    print_result("Turn Count", result['metadata']['turn_count'])
+    print_result("Response Type", result["response_type"])
+    print_result("Tutor Response", result["response"])
+    print_result("Hint Level", result["metadata"]["hint_level"] or "N/A")
+    print_result("Difficulty", result["metadata"]["difficulty"])
+    print_result("Turn Count", result["metadata"]["turn_count"])
 
 
 def demo_multi_turn_guidance():
@@ -63,12 +55,7 @@ def demo_multi_turn_guidance():
 
     engine = create_tutor_engine()
 
-    context = {
-        'age': 9,
-        'grade': '4',
-        'subject': 'math',
-        'concept_id': 'math_4_nbt_001'
-    }
+    context = {"age": 9, "grade": "4", "subject": "math", "concept_id": "math_4_nbt_001"}
 
     # Simulate multiple attempts
     attempts = ["700", "790", "801"]
@@ -80,13 +67,11 @@ def demo_multi_turn_guidance():
         print(f"--- Attempt {i}: {attempt} ---")
 
         guidance = engine.guide_to_answer(
-            problem_statement="What is 234 + 567?",
-            student_attempts=attempts[:i],
-            context=context
+            problem_statement="What is 234 + 567?", student_attempts=attempts[:i], context=context
         )
 
-        print_result("Hint Level", guidance['metadata']['hint_level'])
-        print_result("Guidance", guidance['response'])
+        print_result("Hint Level", guidance["metadata"]["hint_level"])
+        print_result("Guidance", guidance["response"])
         print()
 
 
@@ -102,13 +87,13 @@ def demo_concept_explanation():
         print(f"--- Explanation for {age}-year-old ---")
 
         explanation = engine.explain_concept(
-            concept_id='math_3_oa_001',
+            concept_id="math_3_oa_001",
             student_age=age,
-            current_understanding="I know that multiplication is like adding"
+            current_understanding="I know that multiplication is like adding",
         )
 
         print_result("Age", age)
-        print_result("Explanation", explanation['response'])
+        print_result("Explanation", explanation["response"])
         print()
 
 
@@ -118,29 +103,18 @@ def demo_comprehension_check():
 
     engine = create_tutor_engine()
 
-    context = {
-        'age': 8,
-        'grade': '3',
-        'subject': 'math',
-        'concept_id': 'math_3_oa_001'
-    }
+    context = {"age": 8, "grade": "3", "subject": "math", "concept_id": "math_3_oa_001"}
 
-    responses = [
-        "Multiplication is repeated addition",
-        "It makes numbers bigger",
-        "I don't know"
-    ]
+    responses = ["Multiplication is repeated addition", "It makes numbers bigger", "I don't know"]
 
     for student_response in responses:
         print(f"--- Student Response: '{student_response}' ---")
 
         check = engine.check_understanding(
-            concept_id='math_3_oa_001',
-            student_response=student_response,
-            context=context
+            concept_id="math_3_oa_001", student_response=student_response, context=context
         )
 
-        print_result("Tutor Check", check['response'])
+        print_result("Tutor Check", check["response"])
         print()
 
 
@@ -157,13 +131,13 @@ def demo_validation():
                 "Try drawing 5 groups with 3 items in each!"
             ),
             "age": 8,
-            "subject": "math"
+            "subject": "math",
         },
         {
             "name": "Bad: Direct Answer",
             "response": "The answer is 15. You multiply 5 times 3.",
             "age": 8,
-            "subject": "math"
+            "subject": "math",
         },
         {
             "name": "Bad: Too Complex",
@@ -172,31 +146,29 @@ def demo_validation():
                 "of iterative summation utilizing multiplicative factors."
             ),
             "age": 7,
-            "subject": "math"
-        }
+            "subject": "math",
+        },
     ]
 
     for test in test_cases:
         print(f"--- {test['name']} ---")
-        print_result("Response", test['response'])
+        print_result("Response", test["response"])
 
         result = validate_educational_response(
-            response=test['response'],
-            age=test['age'],
-            subject=test['subject']
+            response=test["response"], age=test["age"], subject=test["subject"]
         )
 
-        print_result("Valid", result['is_valid'])
+        print_result("Valid", result["is_valid"])
         print_result("Overall Score", f"{result['overall_score']:.2f}")
 
-        if result['issues']:
-            print_result("Issues", ", ".join(result['issues']))
+        if result["issues"]:
+            print_result("Issues", ", ".join(result["issues"]))
 
-        if result['warnings']:
-            print_result("Warnings", ", ".join(result['warnings'][:2]))
+        if result["warnings"]:
+            print_result("Warnings", ", ".join(result["warnings"][:2]))
 
         print("\nDetailed Scores:")
-        for key, score in result['scores'].items():
+        for key, score in result["scores"].items():
             print(f"  - {key}: {score:.2f}")
 
         print()
@@ -209,10 +181,10 @@ def demo_prompt_templates():
     manager = PromptTemplateManager()
 
     # Show subject-specific templates
-    subjects = ['math', 'reading', 'science']
+    subjects = ["math", "reading", "science"]
 
     for subject in subjects:
-        template = manager.get_template(subject, 'socratic_question')
+        template = manager.get_template(subject, "socratic_question")
         print(f"--- {subject.title()} Template (first 200 chars) ---")
         print(template[:200] + "...")
         print()
@@ -228,7 +200,7 @@ def demo_prompt_templates():
 
     # Show Socratic patterns
     print("\n--- Socratic Questioning Patterns ---")
-    patterns = ['prior_knowledge', 'break_down', 'visualization', 'reasoning']
+    patterns = ["prior_knowledge", "break_down", "visualization", "reasoning"]
 
     for pattern in patterns:
         question = manager.get_socratic_pattern(pattern)
@@ -250,40 +222,28 @@ def demo_difficulty_adjustment():
     scenarios = [
         {
             "name": "High Success Rate",
-            "performance": {
-                'correct_attempts': 8,
-                'total_attempts': 10,
-                'time_spent': 300
-            }
+            "performance": {"correct_attempts": 8, "total_attempts": 10, "time_spent": 300},
         },
         {
             "name": "Struggling Student",
-            "performance": {
-                'correct_attempts': 2,
-                'total_attempts': 10,
-                'time_spent': 600
-            }
+            "performance": {"correct_attempts": 2, "total_attempts": 10, "time_spent": 600},
         },
         {
             "name": "Moderate Performance",
-            "performance": {
-                'correct_attempts': 6,
-                'total_attempts': 10,
-                'time_spent': 400
-            }
-        }
+            "performance": {"correct_attempts": 6, "total_attempts": 10, "time_spent": 400},
+        },
     ]
 
     for scenario in scenarios:
         print(f"--- {scenario['name']} ---")
 
-        perf = scenario['performance']
-        success_rate = perf['correct_attempts'] / perf['total_attempts']
+        perf = scenario["performance"]
+        success_rate = perf["correct_attempts"] / perf["total_attempts"]
 
         print_result("Correct/Total", f"{perf['correct_attempts']}/{perf['total_attempts']}")
         print_result("Success Rate", f"{success_rate:.0%}")
 
-        new_difficulty = engine.adjust_difficulty(scenario['performance'])
+        new_difficulty = engine.adjust_difficulty(scenario["performance"])
 
         print_result("New Difficulty", new_difficulty.name)
         print()
@@ -295,17 +255,12 @@ def demo_conversation_flow():
 
     engine = create_tutor_engine()
 
-    context = {
-        'age': 8,
-        'grade': '3',
-        'subject': 'reading',
-        'concept_id': 'reading_3_001'
-    }
+    context = {"age": 8, "grade": "3", "subject": "reading", "concept_id": "reading_3_001"}
 
     conversation = [
         "What does the word 'gleaming' mean?",
         "Is it something shiny?",
-        "Oh, so the knight's armor was shining!"
+        "Oh, so the knight's armor was shining!",
     ]
 
     print("=== Simulated Reading Tutoring Session ===\n")
@@ -314,10 +269,7 @@ def demo_conversation_flow():
         print(f"Turn {i}")
         print(f"Student: {query}")
 
-        result = engine.generate_response(
-            student_query=query,
-            context=context
-        )
+        result = engine.generate_response(student_query=query, context=context)
 
         print(f"Tutor: {result['response']}")
         print()
@@ -361,6 +313,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Error during demo: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

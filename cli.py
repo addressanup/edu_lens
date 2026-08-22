@@ -61,10 +61,18 @@ def main(ctx: click.Context, debug: bool, config: Optional[str]) -> None:
 
 @main.command()
 @click.option("--project", "-p", required=True, help="Project name or description")
-@click.option("--spec-file", "-s", type=click.Path(exists=True), help="Path to project specification file")
+@click.option(
+    "--spec-file", "-s", type=click.Path(exists=True), help="Path to project specification file"
+)
 @click.option("--resume", "-r", type=str, help="Resume from checkpoint ID")
 @click.option("--dry-run/--no-dry-run", default=False, help="Validate without executing")
-@click.option("--output-dir", "-o", type=click.Path(), default="./output", help="Output directory for generated files")
+@click.option(
+    "--output-dir",
+    "-o",
+    type=click.Path(),
+    default="./output",
+    help="Output directory for generated files",
+)
 @click.pass_context
 def run(
     ctx: click.Context,
@@ -72,7 +80,7 @@ def run(
     spec_file: Optional[str],
     resume: Optional[str],
     dry_run: bool,
-    output_dir: str
+    output_dir: str,
 ) -> None:
     """Run the orchestration pipeline for a project.
 
@@ -113,9 +121,7 @@ def run(
 
         # Initialize orchestrator
         orchestrator = ClaudeAgentsOrchestrator(
-            config=config_manager,
-            logger=logger,
-            output_dir=output_path
+            config=config_manager, logger=logger, output_dir=output_path
         )
 
         # Run the pipeline
@@ -146,7 +152,9 @@ def run(
             console.print("\n[bold red]Pipeline failed![/bold red]")
             console.print(f"Error: {result.error_message}")
             if result.checkpoint_id:
-                console.print(f"\n[yellow]Resume with:[/yellow] cao run --project \"{project}\" --resume {result.checkpoint_id}")
+                console.print(
+                    f'\n[yellow]Resume with:[/yellow] cao run --project "{project}" --resume {result.checkpoint_id}'
+                )
             sys.exit(1)
 
     except KeyboardInterrupt:
@@ -294,7 +302,7 @@ def checkpoints(ctx: click.Context, all: bool) -> None:
                 cp.project_name[:20],
                 str(cp.current_phase),
                 f"[{status_style}]{cp.status}[/{status_style}]",
-                str(cp.created_at)[:19]
+                str(cp.created_at)[:19],
             )
 
         console.print(table)
@@ -334,10 +342,26 @@ def agents(ctx: click.Context) -> None:
     console.print("\n[bold]Available Agents[/bold]\n")
 
     agent_info = [
-        ("Concept Designer", "Phase 1", "Requirements analysis, architecture decisions, tech stack selection"),
-        ("MCP Engineer", "Phase 2", "External data integration via MCP servers, schema transformation"),
-        ("Integration Engineer", "Phase 3", "Infrastructure provisioning, CI/CD setup, cloud configuration"),
-        ("Backend Engineer", "Phase 4", "API design, database integration, server-side code generation"),
+        (
+            "Concept Designer",
+            "Phase 1",
+            "Requirements analysis, architecture decisions, tech stack selection",
+        ),
+        (
+            "MCP Engineer",
+            "Phase 2",
+            "External data integration via MCP servers, schema transformation",
+        ),
+        (
+            "Integration Engineer",
+            "Phase 3",
+            "Infrastructure provisioning, CI/CD setup, cloud configuration",
+        ),
+        (
+            "Backend Engineer",
+            "Phase 4",
+            "API design, database integration, server-side code generation",
+        ),
         ("Frontend Engineer", "Phase 4", "UI components, state management, responsive design"),
         ("Security Engineer", "Phase 5", "SAST scanning, OWASP validation, secret detection"),
         ("QA Engineer", "Phase 5", "Test generation, integration testing, coverage analysis"),

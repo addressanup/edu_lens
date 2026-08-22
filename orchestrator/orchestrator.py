@@ -15,33 +15,31 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
+from agents import BaseAgent, get_agent_registry
+from core.communication_protocol import (
+    MessageType,
+    create_message,
+    sign_message,
+    validate_message,
+)
+from core.context_budget import BudgetAllocation, ContextBudgetManager
+from core.error_recovery import ErrorRecoveryManager, ErrorSeverity, RecoveryLevel
+from core.message_broker import Message, MessageBroker, MessagePriority
+from core.validation_gates import (
+    GateType,
+    ValidationGateManager,
+)
+from core.validation_gates import ValidationResult as GateValidationResult
 from orchestrator.config import ConfigManager, get_config
 from orchestrator.logger import LoggerManager, get_logger
-from orchestrator.state_manager import StateStore, Checkpoint, AgentExecutionRecord
-
-from core.message_broker import MessageBroker, Message, MessagePriority
-from core.communication_protocol import (
-    create_message,
-    MessageType,
-    validate_message,
-    sign_message,
-)
-from core.validation_gates import (
-    ValidationGateManager,
-    GateType,
-    ValidationResult as GateValidationResult,
-)
-from core.error_recovery import ErrorRecoveryManager, RecoveryLevel, ErrorSeverity
-from core.context_budget import ContextBudgetManager, BudgetAllocation
-
-from agents import get_agent_registry, BaseAgent
-from utils.token_counter import TokenCounter
+from orchestrator.state_manager import AgentExecutionRecord, Checkpoint, StateStore
 from utils.context_compressor import ContextCompressor
 from utils.cost_tracker import CostTracker, ModelTier
-from utils.mcp_client import MCPClient, MCPServerConfig, AuthType
-from utils.validators import InputValidator, SecretDetector
 from utils.health_checks import HealthChecker, HealthStatus
-from utils.helpers import generate_uuid, format_timestamp, ensure_dir
+from utils.helpers import ensure_dir, format_timestamp, generate_uuid
+from utils.mcp_client import AuthType, MCPClient, MCPServerConfig
+from utils.token_counter import TokenCounter
+from utils.validators import InputValidator, SecretDetector
 
 
 class OrchestratorPhase(str, Enum):
@@ -403,6 +401,7 @@ class ClaudeAgentsOrchestrator:
             PhaseResult with outcomes
         """
         import time
+
         start_time = time.time()
 
         self._logger.log_event("phase_start", f"Starting phase: {phase.value}")
@@ -443,7 +442,9 @@ class ClaudeAgentsOrchestrator:
                         output_tokens=agent_result.get("output_tokens", 0),
                     )
                 else:
-                    phase_errors.append(f"{agent_name}: {agent_result.get('error', 'Unknown error')}")
+                    phase_errors.append(
+                        f"{agent_name}: {agent_result.get('error', 'Unknown error')}"
+                    )
 
             # Run validation gate
             validation_score = 0.0
@@ -782,7 +783,7 @@ class ClaudeAgentsOrchestrator:
 
         # Find starting phase
         current_index = self._phase_sequence.index(OrchestratorPhase(checkpoint.phase))
-        remaining_phases = self._phase_sequence[current_index + 1:]
+        remaining_phases = self._phase_sequence[current_index + 1 :]
 
         self._status = OrchestratorStatus.RUNNING
 
@@ -916,9 +917,11 @@ class ClaudeAgentsOrchestrator:
             "phases": [r.to_dict() for r in self._phase_results],
             "cost_summary": self._cost_tracker.get_summary(),
             "context_summary": self._context_budget.get_summary(),
-            "output_directory": str(self._output_dir / self._current_context.project_name)
-            if self._current_context
-            else None,
+            "output_directory": (
+                str(self._output_dir / self._current_context.project_name)
+                if self._current_context
+                else None
+            ),
         }
 
     def _validate_specification(self, specification: Dict[str, Any]) -> Dict[str, Any]:
@@ -944,9 +947,9 @@ class ClaudeAgentsOrchestrator:
         """Get current orchestrator status."""
         return {
             "status": self._status.value,
-            "current_phase": self._current_context.current_phase.value
-            if self._current_context
-            else None,
+            "current_phase": (
+                self._current_context.current_phase.value if self._current_context else None
+            ),
             "phases_completed": len(self._phase_results),
             "cost": self._cost_tracker.get_total_cost(),
             "budget_remaining": self._cost_tracker.get_remaining_budget(),
