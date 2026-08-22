@@ -74,10 +74,47 @@ class LLMConfig:
 
 @dataclass
 class LLMMessage:
-    """A message in a conversation."""
+    """A message in a conversation.
+
+    content may be:
+      - a plain string (text-only), or
+      - a list of OpenAI-compatible content blocks, e.g.:
+        [
+            {"type": "text", "text": "What is in this image?"},
+            {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,..."}},
+        ]
+    Images are only valid in "user" role messages.
+    """
     role: str  # "system", "user", "assistant"
-    content: str
+    content: Union[str, List[Dict[str, Any]]]
     name: Optional[str] = None
+
+    def to_api_dict(self) -> Dict[str, Any]:
+        """Serialize to an OpenAI-compatible message dict."""
+        msg: Dict[str, Any] = {"role": self.role, "content": self.content}
+        if self.name:
+            msg["name"] = self.name
+        return msg
+
+    @property
+    def text(self) -> str:
+        """Extract concatenated text from string or content-block content."""
+        if isinstance(self.content, str):
+            return self.content
+        return " ".join(
+            block.get("text", "")
+            for block in self.content
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+
+    def has_image(self) -> bool:
+        """Whether this message carries image content."""
+        if not isinstance(self.content, list):
+            return False
+        return any(
+            isinstance(block, dict) and block.get("type") == "image_url"
+            for block in self.content
+        )
 
 
 @dataclass
@@ -293,10 +330,7 @@ class OpenAIProvider(BaseLLMProvider):
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
-        openai_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        openai_messages = [msg.to_api_dict() for msg in messages]
 
         response = client.chat.completions.create(
             model=kwargs.get("model", self.config.model),
@@ -324,10 +358,7 @@ class OpenAIProvider(BaseLLMProvider):
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
-        openai_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        openai_messages = [msg.to_api_dict() for msg in messages]
 
         stream = client.chat.completions.create(
             model=kwargs.get("model", self.config.model),
@@ -343,13 +374,21 @@ class OpenAIProvider(BaseLLMProvider):
 
 
 class DeepSeekProvider(BaseLLMProvider):
-    """DeepSeek provider (OpenAI-compatible API)."""
+    """DeepSeek provider (OpenAI-compatible API).
+
+    Text model:   deepseek-chat
+    Vision model: deepseek-v4-flash-vision-exp (accepts image_url content blocks
+                  in user messages, base64 data URLs supported).
+    """
 
     DEEPSEEK_BASE_URL = "https://api.deepseek.com"
+    VISION_MODEL = "deepseek-v4-flash-vision-exp"
 
     def __init__(self, config: LLMConfig):
         super().__init__(config)
         self._client = None
+        # Allow model override via env (e.g. DEEPSEEK_VISION_MODEL=deepseek-v4-flash-vision-exp)
+        self.vision_model = os.getenv("DEEPSEEK_VISION_MODEL", self.VISION_MODEL)
 
     def _get_client(self):
         if self._client is None:
@@ -371,10 +410,7 @@ class DeepSeekProvider(BaseLLMProvider):
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
-        openai_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        openai_messages = [msg.to_api_dict() for msg in messages]
 
         response = client.chat.completions.create(
             model=kwargs.get("model", self.config.model),
@@ -402,10 +438,7 @@ class DeepSeekProvider(BaseLLMProvider):
         client = self._get_client()
         messages = self._apply_safety_filter(messages)
 
-        openai_messages = [
-            {"role": msg.role, "content": msg.content}
-            for msg in messages
-        ]
+        openai_messages = [msg.to_api_dict() for msg in messages]
 
         stream = client.chat.completions.create(
             model=kwargs.get("model", self.config.model),
@@ -721,6 +754,61 @@ class LLMService:
 
         async for chunk in self._provider.generate_stream(messages, **kwargs):
             yield chunk
+
+    async def generate_with_image(
+        self,
+        prompt: str,
+        image_base64: str,
+        image_mime: str = "image/jpeg",
+        history: Optional[List[LLMMessage]] = None,
+        system: Optional[str] = None,
+        detail: str = "low",
+        **kwargs
+    ) -> LLMResponse:
+        """
+        Generate a response that sees an image (vision models only).
+
+        Args:
+            prompt: Text question/instruction about the image
+            image_base64: Raw base64-encoded image data (no data: prefix)
+            image_mime: Image MIME type (image/jpeg, image/png, ...)
+            history: Optional prior conversation messages
+            system: Optional system instruction (kept text-only; DeepSeek
+                    forbids images in system messages)
+            detail: DeepSeek image detail level ("low" = 512px downscale,
+                    "original" = full resolution). "low" is recommended for
+                    live video frames.
+            **kwargs: Override config (max_tokens, temperature, model...)
+
+        Returns:
+            LLMResponse from the provider's vision model.
+        """
+        if not hasattr(self._provider, "vision_model"):
+            raise ValueError(
+                f"Provider {self.config.provider.value} does not support vision. "
+                "Use deepseek with a vision-capable model."
+            )
+
+        vision_model = kwargs.pop("model", getattr(self._provider, "vision_model"))
+
+        content_blocks: List[Dict[str, Any]] = [
+            {"type": "text", "text": prompt},
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:{image_mime};base64,{image_base64}",
+                    "detail": detail,
+                },
+            },
+        ]
+
+        messages: List[LLMMessage] = []
+        if system:
+            messages.append(LLMMessage(role="system", content=system))
+        messages.extend(history or [])
+        messages.append(LLMMessage(role="user", content=content_blocks))
+
+        return await self.generate(messages, model=vision_model, **kwargs)
 
     def generate_sync(
         self,

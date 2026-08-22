@@ -77,6 +77,7 @@ markers = [
     "redis: Redis cache tests",
     "requires_api: Tests that require external API access",
     "requires_gpu: Tests that require GPU access",
+    "edge: Edge deployment optimization tests",
 ]
 
 # Async test configuration

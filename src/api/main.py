@@ -17,6 +17,10 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
@@ -261,6 +265,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Live tutoring WebSocket router (student app camera streaming)
+from src.api.live_ws import router as live_ws_router  # noqa: E402
+app.include_router(live_ws_router)
+
 
 def get_or_create_session(session_id: Optional[str]) -> str:
     """Get existing session or create new one."""
@@ -435,6 +443,64 @@ async def tutor_image(
 
     except Exception as e:
         logger.error(f"Image processing failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/tutor/vision")
+async def tutor_vision(
+    image: UploadFile = File(..., description="Homework photo for the vision model"),
+    question: Optional[str] = Form(None),
+    session_id: Optional[str] = Form(None),
+    child_name: str = Form("friend"),
+    child_age: int = Form(8),
+):
+    """
+    Vision-native tutoring: send the homework photo straight to the DeepSeek
+    vision model (no local OCR). The model sees the page and answers with a
+    Socratic, age-appropriate hint.
+
+    This is the one-shot counterpart of the /ws/live streaming protocol.
+    """
+    if not tutor_engine:
+        raise HTTPException(status_code=503, detail="Tutor engine not available")
+
+    session_id = get_or_create_session(session_id)
+
+    try:
+        contents = await image.read()
+        image_b64 = base64.b64encode(contents).decode("utf-8")
+
+        from src.api.live_tutor import TUTOR_SYSTEM_PROMPT
+
+        llm = tutor_engine.llm  # Shared LLMService instance
+        prompt = (
+            f"The child ({child_name}, age {child_age}) "
+            + (f"asks: \"{question}\"" if question else "needs help with what is shown.")
+            + "\n\nLook at the attached image of their work and respond "
+            "following your tutoring guidelines."
+        )
+
+        response = await llm.generate_with_image(
+            prompt=prompt,
+            image_base64=image_b64,
+            image_mime=image.content_type or "image/jpeg",
+            system=TUTOR_SYSTEM_PROMPT,
+            detail="original",
+            max_tokens=1000,  # thinking model: reasoning tokens count against this
+            temperature=0.6,
+        )
+
+        return {
+            "session_id": session_id,
+            "response": response.content.strip(),
+            "model": response.model,
+            "usage": response.usage,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Vision tutoring failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
