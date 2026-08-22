@@ -237,6 +237,14 @@ class ResponseValidator:
                 f"{', '.join(list(negative_words)[:3])}"
             )
 
+            # Insults are never encouraging, no matter what else is present.
+            insult_words = {"stupid", "idiot", "dumb", "worthless"}
+            if negative_words & insult_words:
+                score = min(score, 0.2)
+                issues_hint = "Response contains insulting language"
+                if issues_hint not in warnings:
+                    warnings.append(issues_hint)
+
         # Check for growth mindset language
         if not self._has_growth_mindset_language(response):
             score -= 0.1
@@ -557,7 +565,8 @@ class ResponseValidator:
             "proud",
             "impressive",
             "terrific",
-            "you're",
+            # "you're" removed: too generic — it matched nearly any response,
+            # giving encouragement credit to insulting sentences.
             "you can",
             "well done",
             "keep going",

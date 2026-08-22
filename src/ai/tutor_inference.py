@@ -45,6 +45,19 @@ class ResponseType(Enum):
     GUIDED_DISCOVERY = "guided_discovery"
 
 
+# Fallback when neither config nor caller specifies a model.
+DEFAULT_MODEL_FALLBACK = "claude-sonnet-4-20250514"
+
+# Sensible default model per explicit provider choice.
+DEFAULT_PROVIDER_MODELS = {
+    "anthropic": "claude-sonnet-4-20250514",
+    "openai": "gpt-4o",
+    "google": "gemini-1.5-flash",
+    "deepseek": "deepseek-chat",
+    "ollama": "llama3.2:3b",
+}
+
+
 class TutorEngine:
     """
     Main tutoring inference engine for generating educational responses.
@@ -55,29 +68,48 @@ class TutorEngine:
 
     def __init__(
         self,
-        model_name: str = "claude-sonnet-4-20250514",
+        model_name: Optional[str] = None,
         config_path: Optional[str] = None,
         curriculum_manager: Optional[CurriculumManager] = None,
-        llm_provider: str = "anthropic",
+        llm_provider: Optional[str] = None,
         llm_api_key: Optional[str] = None,
     ):
         """
         Initialize the TutorEngine.
 
+        Model and provider resolution order:
+        1. Explicit arguments
+        2. ``configs/llm/generation_config.yaml`` (``model.name``) — the
+           edge-first default (e.g. ``llama-3.2-3B``)
+        3. Provider defaults / ``DEFAULT_MODEL_FALLBACK``
+
         Args:
             model_name: Name of the LLM model to use
             config_path: Path to generation config YAML file
             curriculum_manager: Optional pre-initialized CurriculumManager
-            llm_provider: LLM provider (anthropic, openai, google, ollama)
+            llm_provider: LLM provider (anthropic, openai, google, deepseek, ollama)
             llm_api_key: API key (or set via environment variable)
         """
-        self.model_name = model_name
         self.config_path = config_path or self._get_default_config_path()
 
         # Initialize components
         self.curriculum_manager = curriculum_manager or create_curriculum_manager()
         self.template_manager = PromptTemplateManager()
         self.validator = ResponseValidator()
+
+        # Load configuration BEFORE LLM init so model/provider are config-driven.
+        self.config = self._load_config()
+        config_model = (self.config or {}).get("model", {}) or {}
+
+        if llm_provider is None:
+            llm_provider = config_model.get("provider") or "anthropic"
+        if model_name is None:
+            model_name = (
+                config_model.get("name")
+                or DEFAULT_PROVIDER_MODELS.get(llm_provider, DEFAULT_MODEL_FALLBACK)
+            )
+
+        self.model_name = model_name
 
         # Initialize LLM service
         self.llm_service = LLMService(
@@ -88,9 +120,6 @@ class TutorEngine:
             max_tokens=1024,
             safety_filter=True,  # Always enable for child content
         )
-
-        # Load configuration
-        self.config = self._load_config()
 
         # Conversation state tracking
         self.conversation_history: List[Dict[str, str]] = []
@@ -122,7 +151,7 @@ class TutorEngine:
         """Get default configuration if file not found."""
         return {
             "model": {
-                "name": self.model_name,
+                "name": DEFAULT_MODEL_FALLBACK,
                 "max_tokens": 200,
                 "temperature": 0.7,
                 "top_p": 0.9,
@@ -198,9 +227,16 @@ class TutorEngine:
         )
 
         if not validation_result["is_valid"]:
-            # Regenerate with stricter constraints
+            # Regenerate with stricter constraints and re-validate the retry.
             logger.warning(f"Invalid response: {validation_result['issues']}")
             generated_text = self._regenerate_safe_response(prompt, context)
+            validation_result = self.validator.validate_response(
+                response=generated_text,
+                age=context.get("age", 8),
+                subject=context.get("subject", "general"),
+            )
+            if not validation_result["is_valid"]:
+                logger.warning("Regenerated response still invalid; returning best effort")
 
         # Update conversation history
         self.conversation_history.append({"role": "student", "content": student_query})
@@ -439,6 +475,18 @@ class TutorEngine:
         if any(word in query_lower for word in ["what is", "explain", "how does", "why"]):
             return ResponseType.EXPLANATION
 
+        # Check if the child is submitting an answer for verification
+        answer_check_patterns = [
+            "is this answer correct",
+            "is this right",
+            "did i get",
+            "check my answer",
+            "is my answer",
+            "am i right",
+        ]
+        if any(pattern in query_lower for pattern in answer_check_patterns):
+            return ResponseType.COMPREHENSION_CHECK
+
         # Check if this is likely an answer to check
         if "problem_statement" in context and len(student_query.split()) < 20:
             return ResponseType.COMPREHENSION_CHECK
@@ -534,14 +582,17 @@ class TutorEngine:
 
     def _assess_understanding(self, student_response: str, concept_id: str) -> str:
         """Assess level of student understanding from response."""
-        # Length-based initial assessment
+        # Length-based initial assessment. Bands are tuned for elementary
+        # children: short but substantive explanations (5+ words with subject
+        # vocabulary) already indicate basic understanding; ~8+ words that
+        # engage the concept indicate good understanding.
         response_length = len(student_response.split())
 
-        if response_length < 5:
+        if response_length < 4:
             return "minimal"
-        elif response_length < 15:
+        elif response_length < 8:
             return "basic"
-        elif response_length < 30:
+        elif response_length < 25:
             return "good"
         else:
             return "thorough"
@@ -624,23 +675,24 @@ SAFETY: Keep all content child-appropriate."""
 def create_tutor_engine(
     model_name: Optional[str] = None,
     config_path: Optional[str] = None,
-    llm_provider: str = "anthropic",
+    llm_provider: Optional[str] = None,
     llm_api_key: Optional[str] = None,
 ) -> TutorEngine:
     """
     Convenience function to create a TutorEngine instance.
 
     Args:
-        model_name: Name of the LLM model (uses provider default if None)
+        model_name: Name of the LLM model (config-driven default if None)
         config_path: Path to generation config file
-        llm_provider: LLM provider (anthropic, openai, google, ollama)
+        llm_provider: LLM provider (anthropic, openai, google, deepseek, ollama);
+            provider defaults apply only when explicitly given
         llm_api_key: API key (or set via environment variable)
 
     Returns:
         Initialized TutorEngine instance
 
     Example:
-        # Using Claude (default)
+        # Config-driven default (configs/llm/generation_config.yaml)
         engine = create_tutor_engine()
 
         # Using OpenAI
@@ -652,18 +704,6 @@ def create_tutor_engine(
         # Using local Ollama
         engine = create_tutor_engine(llm_provider="ollama", model_name="llama3.2:3b")
     """
-    # Default models per provider
-    default_models = {
-        "anthropic": "claude-sonnet-4-20250514",
-        "openai": "gpt-4o",
-        "google": "gemini-1.5-flash",
-        "deepseek": "deepseek-chat",
-        "ollama": "llama3.2:3b",
-    }
-
-    if model_name is None:
-        model_name = default_models.get(llm_provider, "claude-sonnet-4-20250514")
-
     return TutorEngine(
         model_name=model_name,
         config_path=config_path,

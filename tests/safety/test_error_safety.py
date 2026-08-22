@@ -91,17 +91,27 @@ class TestGracefulDegradation:
     @pytest.mark.safety
     def test_partial_feature_degradation(self):
         """Test that core functionality continues when optional features fail."""
-        # Simulate TTS failure
-        with patch("gtts.gTTS") as mock_tts:
-            mock_tts.side_effect = Exception("TTS unavailable")
+        try:
+            import gtts  # noqa: F401
 
+            has_gtts = True
+        except ImportError:
+            # gtts not installed: exactly the failure mode under test. The
+            # optional-TTS path must still degrade gracefully.
+            has_gtts = False
+
+        if has_gtts:
+            with patch("gtts.gTTS") as mock_tts:
+                mock_tts.side_effect = Exception("TTS unavailable")
+                result = self._process_with_optional_tts("Hello", use_tts=True)
+        else:
             result = self._process_with_optional_tts("Hello", use_tts=True)
 
-            # Core functionality should work, TTS is optional
-            assert result["core_success"] is True
-            assert result["tts_success"] is False
-            assert result["text_output"] == "Hello"
-            assert result["audio_output"] is None
+        # Core functionality should work, TTS is optional
+        assert result["core_success"] is True
+        assert result["tts_success"] is False
+        assert result["text_output"] == "Hello"
+        assert result["audio_output"] is None
 
     def _handle_ai_request_with_fallback(self, query: str) -> Dict[str, Any]:
         """Mock AI request with fallback."""
@@ -306,20 +316,10 @@ class TestSensitiveInfoProtection:
         raise ValueError("Invalid configuration")
 
     def _get_sanitized_stack_trace(self, exception: Exception) -> str:
-        """Get sanitized stack trace."""
-        import traceback
+        """Delegate to the product stack-trace sanitizer."""
+        from src.ai.safety.content_safety import sanitize_stack_trace
 
-        trace = traceback.format_exc()
-
-        # Redact sensitive patterns
-        import re
-
-        # Redact API keys
-        trace = re.sub(r"sk-ant-\w+", "sk-ant-****", trace)
-        # Redact passwords
-        trace = re.sub(r'password["\']?\s*[:=]\s*["\']?(\w+)', "password=****", trace)
-
-        return trace
+        return sanitize_stack_trace(exception)
 
 
 class TestDataLossPreventionDuringErrors:

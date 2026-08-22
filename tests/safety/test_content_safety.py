@@ -17,6 +17,12 @@ from typing import Any, Dict, List
 
 import pytest
 
+from src.ai.safety.content_safety import (
+    AgeAppropriatenessValidator,
+    ContentSafetyValidator,
+    EducationalContentValidator,
+)
+
 
 class TestInappropriateContentDetection:
     """Test detection of inappropriate content for children."""
@@ -94,52 +100,8 @@ class TestInappropriateContentDetection:
             assert result["is_safe"] == should_be_safe, f"Context detection failed for: {text}"
 
     def _check_content_safety(self, text: str) -> Dict[str, Any]:
-        """Mock content safety checker."""
-        # Simulate content safety API
-        violation_types = []
-
-        # Check for inappropriate words
-        inappropriate_words = {
-            "stupid",
-            "idiot",
-            "dumb",
-            "hate",
-            "terrible",
-            "nobody",
-            "worst",
-            "never",
-            "kill",
-            "died",
-            "dead",
-        }
-
-        text_lower = text.lower()
-        found_violations = [word for word in inappropriate_words if word in text_lower]
-
-        if any(word in text_lower for word in ["stupid", "idiot", "dumb"]):
-            violation_types.append("inappropriate_language")
-
-        if any(word in text_lower for word in ["nobody", "worst", "never"]):
-            violation_types.append("bullying")
-
-        # Profanity patterns
-        if any(pattern in text_lower for pattern in ["h*ll", "cr@p", "d@mn"]):
-            violation_types.append("profanity")
-
-        # Context-aware: allow "died" in plant/battery context
-        if "kill" in text_lower and "test" not in text_lower:
-            violation_types.append("violence")
-        elif "died" in text_lower and "plant" not in text_lower and "battery" not in text_lower:
-            violation_types.append("violence")
-
-        is_safe = len(violation_types) == 0
-
-        return {
-            "is_safe": is_safe,
-            "confidence": 0.85 if not is_safe else 0.95,
-            "violation_types": violation_types,
-            "matched_terms": found_violations,
-        }
+        """Delegate to the product content-safety validator."""
+        return ContentSafetyValidator().check_content(text)
 
 
 class TestViolenceHarmfulContentFiltering:
@@ -218,66 +180,8 @@ class TestViolenceHarmfulContentFiltering:
                 assert result["is_acceptable"] is True
 
     def _check_for_violence(self, text: str) -> Dict[str, Any]:
-        """Mock violence checker."""
-        violent_words = {
-            "destroy",
-            "attack",
-            "fighting",
-            "hurt",
-            "harm",
-            "pain",
-            "punished",
-            "kill",
-            "gun",
-            "knife",
-            "weapon",
-        }
-
-        motivational_words = {"tackle", "conquer", "beat", "master", "shoot for", "fire up"}
-
-        text_lower = text.lower()
-
-        # Check for violent language
-        found_violent = [word for word in violent_words if word in text_lower]
-        contains_violent = len(found_violent) > 0
-
-        # Check for motivational context
-        has_motivational = any(word in text_lower for word in motivational_words)
-
-        # Determine severity
-        high_severity_words = {"hurt yourself", "harm yourself", "punished", "pain"}
-        is_high_severity = any(word in text_lower for word in high_severity_words)
-
-        if is_high_severity:
-            severity = "critical" if "yourself" in text_lower else "high"
-            is_acceptable = False
-            requires_intervention = True
-        elif contains_violent and not has_motivational:
-            severity = "medium"
-            is_acceptable = False
-            requires_intervention = False
-        elif contains_violent and has_motivational:
-            severity = "low"
-            is_acceptable = True
-            requires_intervention = False
-        else:
-            severity = "none"
-            is_acceptable = True
-            requires_intervention = False
-
-        # Determine context type
-        context_type = "educational"
-        if any(word in text_lower for word in ["shoot for", "fire up"]):
-            context_type = "metaphor"
-
-        return {
-            "contains_violent_language": contains_violent,
-            "severity": severity,
-            "is_acceptable": is_acceptable,
-            "requires_intervention": requires_intervention,
-            "context_type": context_type,
-            "flagged_terms": found_violent,
-        }
+        """Delegate to the product content-safety validator."""
+        return ContentSafetyValidator().check_violence(text)
 
 
 class TestAgeAppropriateLanguage:
@@ -381,71 +285,8 @@ class TestAgeAppropriateLanguage:
             assert result["culturally_appropriate"] == should_pass
 
     def _check_age_appropriateness(self, text: str, age: int) -> Dict[str, Any]:
-        """Mock age appropriateness checker."""
-        words = text.split()
-        avg_word_length = sum(len(word) for word in words) / max(len(words), 1)
-        sentence_count = text.count(".") + text.count("!") + text.count("?")
-        avg_sentence_length = len(words) / max(sentence_count, 1)
-
-        # Complex vocabulary
-        complex_words = {
-            "logarithmic",
-            "derivative",
-            "chloroplasts",
-            "quadratic",
-            "protagonist",
-            "postmodern",
-            "narrative",
-            "comprehensive",
-            "theoretical",
-            "frameworks",
-            "methodology",
-            "analytical",
-            "calculus",
-            "differential",
-            "quantum",
-            "mechanics",
-            "mitochondria",
-        }
-
-        has_complex_vocab = any(word.lower() in complex_words for word in words)
-
-        # Age-based thresholds
-        if age <= 7:
-            max_word_length = 5.0
-            max_sentence_length = 12
-        elif age <= 9:
-            max_word_length = 6.0
-            max_sentence_length = 15
-        elif age <= 11:
-            max_word_length = 7.0
-            max_sentence_length = 18
-        else:
-            max_word_length = 8.0
-            max_sentence_length = 20
-
-        # Check appropriateness
-        vocab_appropriate = avg_word_length <= max_word_length and not has_complex_vocab
-        length_appropriate = avg_sentence_length <= max_sentence_length
-        is_appropriate = vocab_appropriate and length_appropriate
-
-        # Calculate reading level (rough estimate)
-        reading_level = int(avg_word_length + avg_sentence_length / 5)
-
-        # Cultural sensitivity check
-        insensitive_phrases = ["only smart kids", "good families succeed"]
-        culturally_appropriate = not any(phrase in text.lower() for phrase in insensitive_phrases)
-
-        return {
-            "is_appropriate": is_appropriate and culturally_appropriate,
-            "average_word_length": avg_word_length,
-            "average_sentence_length": avg_sentence_length,
-            "has_complex_vocabulary": has_complex_vocab,
-            "reading_level": reading_level,
-            "culturally_appropriate": culturally_appropriate,
-            "vocabulary_appropriate": vocab_appropriate,
-            "length_appropriate": length_appropriate,
-        }
+        """Delegate to the product age-appropriateness validator."""
+        return AgeAppropriatenessValidator().check_language(text, age)
 
 
 class TestEducationalContentValidation:
@@ -543,111 +384,5 @@ class TestEducationalContentValidation:
             assert result["educational_score"] < 0.7
 
     def _validate_educational_content(self, text: str, subject: str = None) -> Dict[str, Any]:
-        """Mock educational content validator."""
-        text_lower = text.lower()
-
-        # Educational indicators
-        educational_keywords = {
-            "learn",
-            "practice",
-            "understand",
-            "explore",
-            "discover",
-            "think",
-            "observe",
-            "explain",
-            "solve",
-            "question",
-        }
-
-        # Non-educational indicators
-        commercial_keywords = {
-            "buy",
-            "subscribe",
-            "click",
-            "prize",
-            "win",
-            "offer",
-            "premium",
-            "unlock",
-            "limited time",
-        }
-
-        # Misinformation patterns
-        misinformation_patterns = [
-            "don't need",
-            "is flat",
-            "just made up",
-            "waste of time",
-            "according to science",  # when followed by false statement
-        ]
-
-        # Socratic method indicators
-        socratic_indicators = {
-            "what do you think",
-            "can you explain",
-            "how might you",
-            "what patterns",
-            "why do you",
-            "what if",
-        }
-
-        # Direct answer patterns
-        direct_answer_patterns = [
-            "the answer is",
-            "just write",
-            "the solution is",
-            "here's the answer",
-        ]
-
-        # Calculate scores
-        edu_keywords_found = sum(1 for kw in educational_keywords if kw in text_lower)
-        commercial_found = sum(1 for kw in commercial_keywords if kw in text_lower)
-        has_misinformation = any(pattern in text_lower for pattern in misinformation_patterns)
-        uses_socratic = any(indicator in text_lower for indicator in socratic_indicators)
-        gives_direct_answer = any(pattern in text_lower for pattern in direct_answer_patterns)
-
-        # Question-based learning
-        has_questions = "?" in text
-
-        # Educational score calculation
-        educational_score = 0.5
-        if edu_keywords_found > 0:
-            educational_score += 0.2
-        if has_questions and uses_socratic:
-            educational_score += 0.3
-        if commercial_found > 0:
-            educational_score -= 0.4
-        if has_misinformation:
-            educational_score -= 0.5
-        if gives_direct_answer:
-            educational_score -= 0.3
-
-        educational_score = max(0.0, min(1.0, educational_score))
-
-        # Curriculum alignment (if subject provided)
-        curriculum_aligned = False
-        if subject:
-            subject_keywords = {
-                "math": ["add", "subtract", "multiply", "numbers", "solve"],
-                "science": ["plants", "grow", "observe", "experiment"],
-                "reading": ["read", "comprehension", "story", "practice"],
-                "social_studies": ["culture", "history", "explore", "community"],
-            }
-            if subject in subject_keywords:
-                curriculum_aligned = any(kw in text_lower for kw in subject_keywords[subject])
-
-        is_educational = (
-            educational_score >= 0.6 and not has_misinformation and commercial_found == 0
-        )
-
-        return {
-            "is_educational": is_educational,
-            "educational_score": educational_score,
-            "contains_misinformation": has_misinformation,
-            "contains_advertising": commercial_found > 0,
-            "curriculum_aligned": curriculum_aligned,
-            "uses_socratic_method": uses_socratic,
-            "gives_direct_answer": gives_direct_answer,
-            "has_questions": has_questions,
-        }
+        """Delegate to the product educational-content validator."""
+        return EducationalContentValidator().validate(text, subject)

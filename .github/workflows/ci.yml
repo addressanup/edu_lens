@@ -144,13 +144,6 @@ jobs:
       # handwriting_engine) are excluded from the gate: red pending backlog #7
       # (audio/TTS dependency + behavior work). They run in the advisory
       # audio-tests job below.
-      #
-      # The -k exclusion drops 6 known baseline failures (verified 2026-08-22):
-      # - test_tutor_inference: model-default + response-classifier drift vs
-      #   code defaults (AI-correctness work, tracked with backlog #2)
-      # - test_data_handler::test_days_until_expiration: off-by-one in
-      #   retention-day math (privacy behavior bug, backlog #2)
-      # Remove each exclusion when its fix lands.
       - name: Run unit tests with coverage
         run: >
           pytest tests/unit -v -m unit
@@ -158,7 +151,6 @@ jobs:
           --ignore=tests/unit/test_wake_word.py
           --ignore=tests/unit/test_speech_recognizer.py
           --ignore=tests/unit/test_handwriting_engine.py
-          -k "not test_basic_initialization and not test_response_validation_failure and not test_assess_understanding_levels and not detect_response_type and not test_create_tutor_engine and not test_days_until_expiration"
           --cov --cov-report=xml --cov-report=html --cov-report=term-missing
           --cov-fail-under=${{ env.COVERAGE_THRESHOLD }}
         env:
@@ -316,10 +308,6 @@ jobs:
   safety-tests:
     name: Safety and Content Moderation Tests
     runs-on: ubuntu-latest
-    # ADVISORY ONLY (not a merge gate): ~27 known behavioral failures in the
-    # child-safety filters (content safety, age-appropriateness) = backlog #2 in
-    # docs/engineering/current-project-state.md. Restore gating when that lands.
-    continue-on-error: true
 
     steps:
       - name: Checkout code
@@ -433,11 +421,11 @@ jobs:
   ci-success:
     name: CI Success
     runs-on: ubuntu-latest
-    # Gating: lint, typecheck, unit-tests, build.
+    # Gating: lint, typecheck, unit-tests, safety-tests, build.
     # Advisory (known behavioral debt, tracked in
     # docs/engineering/current-project-state.md backlog #2/#7):
-    # safety-tests, integration-tests, audio-tests, performance-tests.
-    needs: [lint, typecheck, unit-tests, build]
+    # integration-tests, audio-tests, performance-tests.
+    needs: [lint, typecheck, unit-tests, safety-tests, build]
     if: always()
 
     steps:

@@ -123,13 +123,21 @@ class RetentionPolicy:
         return datetime.utcnow() > expiration_date
 
     def days_until_expiration(self, data_timestamp: datetime) -> int:
-        """Calculate days remaining until data expires."""
+        """Calculate days remaining until data expires.
+
+        Rounds UP (ceiling): any fraction of a day remaining counts as a full
+        day, so retention reporting is conservative for child data and
+        deletion is never computed as due later than it actually is.
+        """
         if self.max_retention_days == 0:
             return 0
 
         expiration_date = data_timestamp + timedelta(days=self.max_retention_days)
         remaining = expiration_date - datetime.utcnow()
-        return max(0, remaining.days)
+        if remaining.total_seconds() <= 0:
+            return 0
+        # Ceiling division on seconds.
+        return int(-(-remaining.total_seconds() // 86400))
 
 
 @dataclass

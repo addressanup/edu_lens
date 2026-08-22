@@ -19,6 +19,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from src.ai.safety.content_safety import InteractionToneAnalyzer, SessionSafetyPolicy
+
 
 class TestInteractionPatterns:
     """Test safe interaction patterns with children."""
@@ -110,74 +112,12 @@ class TestInteractionPatterns:
             assert result["promotes_growth_mindset"] is True
 
     def _analyze_interaction_tone(self, text: str) -> Dict[str, Any]:
-        """Mock interaction tone analyzer."""
-        text_lower = text.lower()
-
-        # Friendly indicators
-        friendly_words = ["great", "good", "nice", "let's", "together", "can you"]
-        is_friendly = any(word in text_lower for word in friendly_words)
-
-        # Supportive indicators
-        supportive_phrases = ["good start", "working hard", "step by step"]
-        is_supportive = any(phrase in text_lower for phrase in supportive_phrases)
-
-        # Demanding indicators
-        demanding_words = ["must", "immediately", "have to", "hurry up"]
-        is_demanding = any(word in text_lower for word in demanding_words)
-
-        # Time pressure indicators
-        time_pressure_words = ["quick", "faster", "time runs out", "seconds left"]
-        creates_time_pressure = any(word in text_lower for word in time_pressure_words)
-
-        # Patience indicators
-        patience_phrases = ["take your time", "it's okay", "no rush", "at their own pace"]
-        shows_patience = any(phrase in text_lower for phrase in patience_phrases)
-
-        # Encouragement indicators
-        encouraging_words = ["can", "together", "try again", "work through"]
-        is_encouraging = any(word in text_lower for word in encouraging_words)
-
-        # Growth mindset indicators
-        growth_phrases = ["learning", "growing", "mistakes help", "you haven't", "yet", "practice"]
-        promotes_growth_mindset = any(phrase in text_lower for phrase in growth_phrases)
-
-        tone = "friendly" if is_friendly else "neutral"
-        if is_demanding:
-            tone = "demanding"
-
-        is_safe_for_children = (
-            not is_demanding and not creates_time_pressure and (is_friendly or is_supportive)
-        )
-
-        return {
-            "tone": tone,
-            "is_friendly": is_friendly,
-            "is_supportive": is_supportive,
-            "is_demanding": is_demanding,
-            "creates_time_pressure": creates_time_pressure,
-            "shows_patience": shows_patience,
-            "is_encouraging": is_encouraging,
-            "promotes_growth_mindset": promotes_growth_mindset,
-            "is_safe_for_children": is_safe_for_children,
-        }
+        """Delegate to the product interaction-tone analyzer."""
+        return InteractionToneAnalyzer().analyze(text)
 
     def _get_break_suggestion(self, session_duration_minutes: int) -> Dict[str, Any]:
-        """Mock break suggestion generator."""
-        # Suggest break after 30 minutes
-        should_suggest = session_duration_minutes >= 30
-
-        if should_suggest:
-            return {
-                "suggest_break": True,
-                "message": "You've been working hard! How about taking a short rest?",
-                "duration_minutes": session_duration_minutes,
-            }
-
-        return {
-            "suggest_break": False,
-            "message": None,
-            "duration_minutes": session_duration_minutes,
-        }
+        """Delegate to the product session-safety policy."""
+        return SessionSafetyPolicy().break_suggestion(session_duration_minutes)
 
 
 class TestSessionLimitsEnforcement:
@@ -335,15 +275,8 @@ class TestSessionLimitsEnforcement:
         return usage["total_minutes"] < max_daily_minutes
 
     def _check_break_requirement(self, user_id: str, session_duration: int) -> Dict[str, Any]:
-        """Mock break requirement checker."""
-        # Require break after 45 minutes
-        break_required = session_duration >= 45
-
-        return {
-            "break_required": break_required,
-            "minimum_break_minutes": 10 if break_required else 0,
-            "session_duration": session_duration,
-        }
+        """Delegate to the product session-safety policy."""
+        return SessionSafetyPolicy().check_break_requirement(session_duration)
 
     def _check_session_limit_with_override(
         self, current_duration: int, default_limit: int, parent_id: str, has_override: bool
@@ -366,27 +299,8 @@ class TestSessionLimitsEnforcement:
         }
 
     def _check_bedtime_restriction(self, time_str: str, age: int) -> Dict[str, Any]:
-        """Mock bedtime restriction checker."""
-        hour = int(time_str.split(":")[0])
-
-        # Age-based bedtime restrictions
-        if age <= 7:
-            bedtime_hour = 21  # 9 PM
-        elif age <= 9:
-            bedtime_hour = 22  # 10 PM
-        elif age <= 11:
-            bedtime_hour = 22  # 10 PM
-        else:
-            bedtime_hour = 23  # 11 PM
-
-        allow_session = hour < bedtime_hour
-
-        return {
-            "allow_session": allow_session,
-            "current_hour": hour,
-            "bedtime_hour": bedtime_hour,
-            "reason": None if allow_session else "Past bedtime",
-        }
+        """Delegate to the product session-safety policy."""
+        return SessionSafetyPolicy().check_bedtime_restriction(time_str, age)
 
 
 class TestParentalControlEffectiveness:

@@ -113,15 +113,10 @@ class TestDataLeakagePrevention:
         assert self._temp_data_exists(temp_data_id) is False
 
     def _create_log_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Mock log entry creator with PII masking."""
-        # Remove PII from logs
-        safe_data = {
-            "student_id": data.get("student_id", "UNKNOWN"),
-            "age": data.get("age"),
-            "timestamp": datetime.now().isoformat(),
-        }
+        """Delegate to the product PII-safe log entry builder."""
+        from src.ai.safety.content_safety import create_safe_log_entry
 
-        return {"message": f"Student activity recorded", "data": safe_data, "level": "INFO"}
+        return create_safe_log_entry(data)
 
     def _sanitize_error_message(self, error: Dict[str, Any]) -> Dict[str, Any]:
         """Mock error message sanitizer."""

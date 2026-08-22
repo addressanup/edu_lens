@@ -152,7 +152,7 @@ Notes:
 ## 7. Ranked continuation backlog
 
 1. **Land the live-tutoring vertical on main** (S) — DONE 2026-08-22 (`75413e0`…`b9ff96e`); E2E smoke verified with real DeepSeek round-trip.
-2. **Child-safety filters pass their own suites** (M) — content, age-appropriateness, response validation.
+2. **Child-safety filters pass their own suites** (M) — DONE 2026-08-22. Discovery: the safety suites were self-mocking (helpers inside test files contradicted their own assertions; never touched product code). Fix: built real validators in `src/ai/safety/content_safety.py` (content, violence/self-harm, age-appropriateness, response safety, PII-request prevention, tone, session policy, stack-trace sanitization, PII-safe logging) and rewired test helpers to delegate. Also fixed: retention-days ceiling (`src/privacy/data_handler.py`), config-driven model default + validation retry + understanding bands + answer-check detection (`src/ai/tutor_inference.py`), generic-encouragement-word bug (`src/ai/response_validator.py`). tests/safety 129/129; unit exclusions removed; safety-tests restored as a CI gate. Remaining advisory debt: integration (24), audio (#7).
 3. **Parent sees live-session activity** (L) — bridge `/ws/live` into parent endpoints + app monitor screen.
 4. **Persist live session summaries** (M) — DB records for parent review of past sessions.
 5. **API authentication (keys/JWT) for all non-demo endpoints** (L) — prerequisite for any shared deployment.

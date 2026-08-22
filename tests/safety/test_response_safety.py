@@ -17,6 +17,8 @@ from typing import Any, Dict, List
 
 import pytest
 
+from src.ai.safety.content_safety import AgeAppropriatenessValidator, ResponseSafetyValidator
+
 
 class TestHarmfulSuggestionsPrevention:
     """Test that AI responses don't contain harmful suggestions."""
@@ -99,89 +101,8 @@ class TestHarmfulSuggestionsPrevention:
             assert "encourages_rule_breaking" in result["safety_violations"]
 
     def _check_response_safety(self, response: str, age: int) -> Dict[str, Any]:
-        """Mock response safety checker."""
-        response_lower = response.lower()
-        safety_violations = []
-        warnings = []
-        severity = "none"
-
-        # Dangerous activities
-        dangerous_keywords = [
-            "chemicals",
-            "electrical outlet",
-            "matches",
-            "fire",
-            "climb",
-            "roof",
-            "mixing",
-        ]
-        if any(kw in response_lower for kw in dangerous_keywords):
-            safety_violations.append("dangerous_activity")
-            severity = "critical"
-
-        # Requires supervision
-        supervision_keywords = [
-            "alone",
-            "by yourself",
-            "without help",
-            "stove",
-            "go outside",
-            "take apart",
-        ]
-        if any(kw in response_lower for kw in supervision_keywords):
-            if age < 10:
-                warnings.append("requires_supervision")
-                if "stove" in response_lower or "alone" in response_lower:
-                    safety_violations.append("dangerous_activity")
-                    severity = "high"
-
-        # Psychological harm
-        harm_keywords = [
-            "worthless",
-            "punish yourself",
-            "not smart enough",
-            "give up",
-            "you'll never",
-        ]
-        if any(kw in response_lower for kw in harm_keywords):
-            safety_violations.append("psychological_harm")
-            severity = "critical"
-
-        # Rule breaking
-        rule_breaking_keywords = [
-            "stay up past",
-            "skip",
-            "don't tell",
-            "cheat",
-            "look up the answer",
-        ]
-        if any(kw in response_lower for kw in rule_breaking_keywords):
-            safety_violations.append("encourages_rule_breaking")
-            severity = "high" if severity == "none" else severity
-
-        # Supervision mentions are good
-        has_supervision_mention = any(
-            phrase in response_lower
-            for phrase in [
-                "with adult supervision",
-                "ask a parent",
-                "ask an adult",
-                "with help from",
-                "have a grown-up",
-            ]
-        )
-
-        is_safe = len(safety_violations) == 0
-        requires_intervention = "psychological_harm" in safety_violations
-
-        return {
-            "is_safe": is_safe,
-            "safety_violations": safety_violations,
-            "warnings": warnings,
-            "severity": severity,
-            "requires_intervention": requires_intervention,
-            "has_supervision_mention": has_supervision_mention,
-        }
+        """Delegate to the product response-safety validator."""
+        return ResponseSafetyValidator().check_response(response, age)
 
 
 class TestPersonalInformationPrevention:
@@ -299,61 +220,8 @@ class TestPersonalInformationPrevention:
             assert "requests_personal_media" in result["pii_violations"]
 
     def _check_for_pii_requests(self, response: str) -> Dict[str, Any]:
-        """Mock PII request checker."""
-        response_lower = response.lower()
-        pii_violations = []
-
-        # Name requests
-        name_patterns = ["what's your", "your full name", "tell me your name", "you call"]
-        if any(pattern in response_lower for pattern in name_patterns) and "name" in response_lower:
-            # Exception for homework context
-            if not ("write" in response_lower and "top" in response_lower):
-                pii_violations.append("requests_name")
-
-        # Location requests
-        location_patterns = [
-            "where do you live",
-            "your address",
-            "what school",
-            "what city",
-            "home address",
-        ]
-        if any(pattern in response_lower for pattern in location_patterns):
-            pii_violations.append("requests_location")
-
-        # Contact info requests
-        contact_patterns = ["phone number", "email", "contact you", "parent's phone"]
-        if any(pattern in response_lower for pattern in contact_patterns):
-            pii_violations.append("requests_contact_info")
-
-        # Family information
-        family_patterns = ["who do you live", "parents do", "siblings", "parents home"]
-        if any(pattern in response_lower for pattern in family_patterns):
-            pii_violations.append("requests_family_info")
-
-        # Schedule information
-        schedule_patterns = ["what time", "when are your parents", "home alone", "daily routine"]
-        if any(pattern in response_lower for pattern in schedule_patterns):
-            if any(risk in response_lower for risk in ["home", "alone", "parents"]):
-                pii_violations.append("requests_schedule")
-
-        # Photo/media requests
-        media_patterns = [
-            "picture of yourself",
-            "show me your face",
-            "photo of yourself",
-            "what you look like",
-        ]
-        if any(pattern in response_lower for pattern in media_patterns):
-            pii_violations.append("requests_personal_media")
-
-        is_safe = len(pii_violations) == 0
-
-        return {
-            "is_safe": is_safe,
-            "pii_violations": pii_violations,
-            "severity": "high" if len(pii_violations) > 0 else "none",
-        }
+        """Delegate to the product response-safety validator."""
+        return ResponseSafetyValidator().check_pii_request(response)
 
 
 class TestAgeAppropriateResponses:
@@ -444,97 +312,8 @@ class TestAgeAppropriateResponses:
                 assert result["is_condescending"] is True
 
     def _check_age_appropriate_response(self, response: str, age: int) -> Dict[str, Any]:
-        """Mock age-appropriate response checker."""
-        words = response.split()
-        avg_word_length = sum(len(word) for word in words) / max(len(words), 1)
-
-        # Complex vocabulary for detection
-        complex_words = {
-            "computational",
-            "satisfactorily",
-            "multiplicative",
-            "inverse",
-            "coefficient",
-            "derivative",
-            "epistemological",
-            "frameworks",
-            "deconstruct",
-            "paradigm",
-            "proficiency",
-            "parameters",
-            "theoretical",
-            "metacognitive",
-            "utilize",
-        }
-
-        # Enthusiastic/encouraging words
-        enthusiasm_words = {
-            "wow",
-            "amazing",
-            "great",
-            "awesome",
-            "excellent",
-            "fantastic",
-            "wonderful",
-            "nice",
-            "good",
-        }
-
-        # Supportive phrases
-        supportive_phrases = [
-            "okay to make mistakes",
-            "take your time",
-            "you're doing",
-            "keep trying",
-            "break this into",
-            "let's",
-        ]
-
-        # Condescending indicators
-        condescending_phrases = [
-            "even a baby",
-            "why don't you understand",
-            "everyone else",
-            "should be obvious",
-        ]
-
-        response_lower = response.lower()
-        has_complex_vocab = any(word.lower() in complex_words for word in words)
-        enthusiasm_count = sum(1 for word in enthusiasm_words if word in response_lower)
-        is_supportive = any(phrase in response_lower for phrase in supportive_phrases)
-        is_condescending = any(phrase in response_lower for phrase in condescending_phrases)
-
-        # Age-based thresholds
-        if age <= 7:
-            max_word_length = 5.5
-        elif age <= 9:
-            max_word_length = 6.5
-        elif age <= 11:
-            max_word_length = 7.5
-        else:
-            max_word_length = 8.5
-
-        # Calculate scores
-        vocabulary_appropriate = avg_word_length <= max_word_length and not has_complex_vocab
-        enthusiasm_score = min(1.0, enthusiasm_count * 0.3)
-
-        # Younger kids need more enthusiasm
-        if age < 8:
-            enthusiasm_appropriate = enthusiasm_count >= 1
-        else:
-            enthusiasm_appropriate = True  # Less critical for older kids
-
-        is_appropriate = vocabulary_appropriate and enthusiasm_appropriate and not is_condescending
-
-        return {
-            "is_appropriate": is_appropriate,
-            "average_word_length": avg_word_length,
-            "has_complex_vocabulary": has_complex_vocab,
-            "enthusiasm_score": enthusiasm_score,
-            "is_supportive": is_supportive,
-            "is_condescending": is_condescending,
-            "vocabulary_appropriate": vocabulary_appropriate,
-        }
+        """Delegate to the product age-appropriateness validator."""
+        return AgeAppropriatenessValidator().check_response(response, age)
 
 
 class TestEducationalAccuracy:
