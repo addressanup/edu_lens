@@ -192,6 +192,8 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    # Guard against service-wait hangs (a missing redis-cli once looped 50+ min).
+    timeout-minutes: 20
     if: github.event_name == 'push' || github.event.pull_request.draft == false
 
     services:
@@ -232,7 +234,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libsndfile1 ffmpeg postgresql-client
+          sudo apt-get install -y libsndfile1 ffmpeg postgresql-client redis-tools
 
       - name: Install Python dependencies
         run: |
@@ -241,18 +243,18 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Wait for services
+        timeout-minutes: 2
         run: |
-          # Wait for PostgreSQL
-          until pg_isready -h localhost -p 5432 -U test_user; do
-            echo "Waiting for PostgreSQL..."
-            sleep 2
+          # Bounded wait: an unbounded `until` loop hung a runner for 50+ minutes
+          # when redis-cli was missing (command-not-found loops forever).
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -p 5432 -U test_user && \
+            redis-cli -h localhost ping | grep -q PONG && break
+            echo "Waiting for services ($i/30)..."
+            sleep 4
           done
-
-          # Wait for Redis
-          until redis-cli -h localhost ping; do
-            echo "Waiting for Redis..."
-            sleep 2
-          done
+          pg_isready -h localhost -p 5432 -U test_user
+          redis-cli -h localhost ping
 
       - name: Run database migrations
         run: |
@@ -313,6 +315,7 @@ jobs:
         with:
           name: benchmark-results
           path: benchmark.json
+          if-no-files-found: ignore
 
   # ============================================================================
   # Safety Tests
