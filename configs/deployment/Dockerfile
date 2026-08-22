@@ -45,7 +45,8 @@ COPY src/ /app/src/
 COPY configs/ /app/configs/
 COPY models/ /app/models/
 COPY web/ /app/web/
-COPY .env /app/.env
+# NOTE: no .env is baked into the image (gitignored + secrets must come from the
+# runtime environment: docker run -e, compose env_file, or orchestrator secrets).
 
 # Create non-root user for security
 RUN useradd -m -u 1000 edulens && \
@@ -64,5 +65,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Run application
-CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run application (--ws websockets: explicit selection needed for recent
+# uvicorn/websockets combos where auto-detection misses the asyncio implementation)
+CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--ws", "websockets"]
