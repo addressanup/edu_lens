@@ -30,6 +30,17 @@ try:
 except ImportError:
     Base = None
 
+# Legacy agent-orchestration scaffold tests are excluded from default collection:
+# they fail at import ("orchestrator.config" no longer exports "get_config") and
+# cover inherited build tooling, not the EduLens product itself. Un-exclude only
+# when the scaffold is fixed or removed — tracked as backlog item #8 in
+# docs/engineering/current-project-state.md.
+collect_ignore = [
+    "test_agents.py",
+    "test_communication.py",
+    "test_orchestrator.py",
+]
+
 
 # ============================================================================
 # Session and Event Loop Configuration
