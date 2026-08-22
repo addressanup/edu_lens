@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "EduLens Student",
+    "slug": "edulens-student",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#4F46E5",
+      "resizeMode": "contain"
+    },
+    "android": {
+      "package": "ai.edulens.student",
+      "permissions": [
+        "CAMERA",
+        "INTERNET"
+      ],
+      "usesCleartextTraffic": true
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "EduLens uses the camera to see your homework and help you learn."
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}
