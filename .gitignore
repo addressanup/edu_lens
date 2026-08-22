@@ -101,3 +101,7 @@ config.local.yaml
 data/user_profiles/
 data/learning_sessions/
 node_modules/
+
+# Expo (student app build/cache artifacts)
+mobile/.expo/
+.expo/
