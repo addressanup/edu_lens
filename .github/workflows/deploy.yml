@@ -33,21 +33,29 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsndfile1 ffmpeg
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install -r requirements-dev.txt
           pip install pytest pytest-cov pytest-asyncio
 
-      - name: Run unit tests
-        run: pytest tests/unit -v --cov=src --cov-report=xml
-
-      - name: Run integration tests
-        run: pytest tests/integration -v
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage.xml
+      # Fast pre-build gate only; ci.yml is the authoritative quality gate.
+      # Integration tests need the Postgres/Redis services that ci.yml provisions,
+      # so they are not duplicated here. Audio-dependent suites excluded pending
+      # backlog #7 (see docs/engineering/current-project-state.md).
+      - name: Run unit and API tests
+        run: >
+          pytest tests/unit tests/api -q
+          --ignore=tests/unit/test_tts_engine.py
+          --ignore=tests/unit/test_wake_word.py
+          --ignore=tests/unit/test_speech_recognizer.py
+          --ignore=tests/unit/test_handwriting_engine.py
+          --no-cov
 
   build:
     name: Build Docker Image

@@ -154,7 +154,9 @@ jsonschema>=4.20.0              # JSON schema validation
 pydantic>=2.5.0                 # Data validation (already in main requirements)
 
 # HTTP testing
-httpretty>=1.1.7                # HTTP request mocking
+# httpretty removed: unused in tests and its pin (>=1.1.7) does not exist on PyPI
+# (latest is 1.1.4), which broke pip resolution in CI. `responses` and
+# `aioresponses` above cover HTTP mocking needs.
 
 # Environment management
 python-dotenv>=1.0.0            # Load .env files (already in main requirements)
