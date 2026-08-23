@@ -848,6 +848,7 @@ class HandwritingRecognizer:
                 "per_character": [],
                 "high_confidence_ratio": 0.0,
                 "low_confidence_count": 0,
+                "total_characters": 0,
             }
 
         per_word = []

@@ -210,12 +210,14 @@ class LatencyMonitor:
         Returns:
             Dictionary of stage -> latency (ms)
         """
-        if session_id not in self._active_sessions:
-            return {}
+        checkpoints = self._active_sessions.get(session_id)
 
-        checkpoints = self._active_sessions[session_id]
-        if len(checkpoints) < 2:
-            return {}
+        # Unknown or barely-started session: fall back to completed-session
+        # history. A state transition may have ended the session (end_timer)
+        # before the caller inspected the breakdown — e.g. returning to IDLE
+        # right after playing a response.
+        if not checkpoints or len(checkpoints) < 2:
+            return self._breakdown_from_history(session_id)
 
         breakdown = {}
         for i in range(1, len(checkpoints)):
@@ -228,6 +230,13 @@ class LatencyMonitor:
             breakdown[stage_name] = latency
 
         return breakdown
+
+    def _breakdown_from_history(self, session_id: str) -> Dict[str, float]:
+        """Get the breakdown of the most recent completed session with this id."""
+        for metrics in reversed(self._history):
+            if metrics.session_id == session_id and metrics.stage_latencies:
+                return dict(metrics.stage_latencies)
+        return {}
 
     def end_timer(self, session_id: str) -> LatencyMetrics:
         """

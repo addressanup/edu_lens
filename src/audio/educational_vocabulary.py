@@ -298,6 +298,7 @@ SCIENCE_VOCABULARY = {
         "non-living",
         "alive",
         "life",
+        "photosynthesis",
         "organism",
         "organisms",
         "plant",

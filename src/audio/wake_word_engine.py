@@ -19,7 +19,7 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional
 
 import numpy as np
 import yaml
@@ -128,12 +128,17 @@ class AudioStreamProcessor:
 
         logger.info("Initialized AudioStreamProcessor")
 
-    def process_chunk(self, audio_data: np.ndarray) -> Optional[DetectionResult]:
+    def process_chunk(
+        self, audio_data: np.ndarray, apply_vad: bool = True
+    ) -> Optional[DetectionResult]:
         """
         Process single audio chunk.
 
         Args:
             audio_data: Audio samples
+            apply_vad: Apply voice-activity gating. Streaming mode keeps this
+                enabled (bandwidth/CPU optimization); batch mode disables it
+                because the caller explicitly submitted audio for analysis.
 
         Returns:
             Detection result if wake word detected, None otherwise
@@ -141,15 +146,16 @@ class AudioStreamProcessor:
         start_time = time.time()
 
         try:
-            # Voice activity detection
-            is_speech, vad_confidence = self.vad.detect(audio_data)
+            # Voice activity detection (streaming pre-gate)
+            if apply_vad:
+                is_speech, vad_confidence = self.vad.detect(audio_data)
 
-            # Update noise estimator
-            self.noise_estimator.update(audio_data, is_speech=is_speech)
+                # Update noise estimator
+                self.noise_estimator.update(audio_data, is_speech=is_speech)
 
-            # Skip processing if no speech detected
-            if not is_speech or vad_confidence < 0.3:
-                return None
+                # Skip processing if no speech detected
+                if not is_speech or vad_confidence < 0.3:
+                    return None
 
             # Extract features
             features = self._extract_features(audio_data)
@@ -157,8 +163,17 @@ class AudioStreamProcessor:
             if features is None or features.shape[1] < 5:  # Need minimum frames
                 return None
 
+            # Raw signal quality (used by the heuristic detector to suppress
+            # false positives on silence and unstructured background noise).
+            signal_quality = {
+                "rms": float(np.sqrt(np.mean(np.square(audio_data)))),
+                "zcr": float(
+                    np.mean(np.abs(np.diff(np.signbit(audio_data.astype(np.float64)))))
+                ),
+            }
+
             # Run detection
-            confidence = self.detector._run_inference(features)
+            confidence = self.detector._run_inference(features, signal_quality=signal_quality)
 
             # Calculate latency
             latency_ms = (time.time() - start_time) * 1000
@@ -333,7 +348,8 @@ class WakeWordDetector:
         """
         if callback not in self._callbacks:
             self._callbacks.append(callback)
-            logger.info(f"Registered wake word callback: {callback.__name__}")
+            callback_name = getattr(callback, "__name__", repr(callback))
+            logger.info(f"Registered wake word callback: {callback_name}")
 
     def get_detection_confidence(self) -> float:
         """
@@ -377,8 +393,11 @@ class WakeWordDetector:
         if self._processor is None:
             self._processor = AudioStreamProcessor(detector=self, audio_config=self.audio_config)
 
-        # Process audio
-        result = self._processor.process_chunk(audio_data)
+        # Process audio. Batch mode bypasses the streaming VAD pre-gate: the
+        # caller explicitly submitted this audio for analysis (e.g. a file or
+        # buffer), so gating on streaming speech heuristics would silently
+        # drop inputs like synthetic tones or high-pitch child audio.
+        result = self._processor.process_chunk(audio_data, apply_vad=False)
 
         if result is None:
             latency_ms = (time.time() - start_time) * 1000
@@ -441,12 +460,14 @@ class WakeWordDetector:
             except Exception as e:
                 logger.error(f"Error in callback {callback.__name__}: {e}", exc_info=True)
 
-    def _run_inference(self, features: np.ndarray) -> float:
+    def _run_inference(self, features: np.ndarray, signal_quality: Optional[Dict] = None) -> float:
         """
         Run wake word detection inference.
 
         Args:
             features: Extracted audio features
+            signal_quality: Optional raw-signal metrics (rms, zcr) from the
+                source chunk; used by the heuristic detector
 
         Returns:
             Detection confidence score
@@ -457,24 +478,27 @@ class WakeWordDetector:
 
         if self._model is None:
             # Simple heuristic-based detection (replace with real model)
-            return self._heuristic_detection(features)
+            return self._heuristic_detection(features, signal_quality=signal_quality)
 
         try:
             # Run model inference
             # confidence = self._model.predict(features)
             # return float(confidence)
-            return self._heuristic_detection(features)
+            return self._heuristic_detection(features, signal_quality=signal_quality)
 
         except Exception as e:
             logger.error(f"Model inference error: {e}")
             return 0.0
 
-    def _heuristic_detection(self, features: np.ndarray) -> float:
+    def _heuristic_detection(
+        self, features: np.ndarray, signal_quality: Optional[Dict] = None
+    ) -> float:
         """
         Heuristic-based detection (placeholder for model).
 
         Args:
             features: Audio features
+            signal_quality: Optional raw-signal metrics (rms, zcr)
 
         Returns:
             Confidence score
@@ -494,6 +518,17 @@ class WakeWordDetector:
         variance_score = min(feature_variance / 0.3, 1.0) * 0.4
 
         confidence = base_score + variance_score
+
+        # Suppress false positives using raw-signal characteristics:
+        # - near-silence (very low RMS) cannot contain a wake word
+        # - unstructured background noise has a very high zero-crossing rate
+        #   (≈0.5), unlike voiced speech (~0.05-0.3)
+        if signal_quality:
+            rms = signal_quality.get("rms", 1.0)
+            zcr = signal_quality.get("zcr", 0.0)
+            confidence *= min(rms / 0.08, 1.0)
+            if zcr > 0.35:
+                confidence *= max(0.0, (0.5 - zcr) / 0.15)
 
         # Add some randomness to simulate real detection
         confidence = np.clip(confidence, 0.0, 1.0)
@@ -570,9 +605,10 @@ class WakeWordDetector:
         # 0.0 sensitivity -> 0.9 threshold (very conservative)
         # 0.5 sensitivity -> 0.6 threshold (balanced)
         # 1.0 sensitivity -> 0.3 threshold (very aggressive)
-
         threshold = 0.9 - (sensitivity * 0.6)
-        return threshold
+        # Round to avoid float artifacts (0.6000000000000001) so thresholds
+        # are stable and comparable.
+        return round(threshold, 2)
 
     def _cleanup(self) -> None:
         """Clean up resources."""

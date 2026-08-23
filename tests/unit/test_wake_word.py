@@ -167,7 +167,9 @@ class TestWakeWordDetector:
 
     def test_start_listening(self, detector):
         """Test starting wake word detection."""
-        with patch("src.audio.audio_capture.MicrophoneStream") as mock_stream:
+        # Patch where the engine binds the symbol (module-level import);
+        # patching audio_capture instead would open the real microphone.
+        with patch("src.audio.wake_word_engine.MicrophoneStream") as mock_stream:
             mock_stream_instance = MagicMock()
             mock_stream.return_value = mock_stream_instance
 
@@ -178,7 +180,9 @@ class TestWakeWordDetector:
 
     def test_stop_listening(self, detector):
         """Test stopping wake word detection."""
-        with patch("src.audio.audio_capture.MicrophoneStream") as mock_stream:
+        # Patch where the engine binds the symbol (module-level import);
+        # patching audio_capture instead would open the real microphone.
+        with patch("src.audio.wake_word_engine.MicrophoneStream") as mock_stream:
             mock_stream_instance = MagicMock()
             mock_stream.return_value = mock_stream_instance
 
@@ -190,7 +194,9 @@ class TestWakeWordDetector:
 
     def test_start_listening_already_listening(self, detector):
         """Test starting when already listening."""
-        with patch("src.audio.audio_capture.MicrophoneStream") as mock_stream:
+        # Patch where the engine binds the symbol (module-level import);
+        # patching audio_capture instead would open the real microphone.
+        with patch("src.audio.wake_word_engine.MicrophoneStream") as mock_stream:
             mock_stream_instance = MagicMock()
             mock_stream.return_value = mock_stream_instance
 
@@ -268,7 +274,9 @@ class TestWakeWordDetector:
 
     def test_context_manager(self, detector):
         """Test using detector as context manager."""
-        with patch("src.audio.audio_capture.MicrophoneStream"):
+        # Patch where the engine binds the symbol (module-level import);
+        # patching audio_capture instead would open the real microphone.
+        with patch("src.audio.wake_word_engine.MicrophoneStream"):
             with detector as d:
                 assert d.is_listening is True
 
@@ -586,7 +594,9 @@ class TestEdgeCases:
         """Test concurrent start/stop operations."""
         detector = WakeWordDetector()
 
-        with patch("src.audio.audio_capture.MicrophoneStream"):
+        # Patch where the engine binds the symbol (module-level import);
+        # patching audio_capture instead would open the real microphone.
+        with patch("src.audio.wake_word_engine.MicrophoneStream"):
             # Rapid start/stop
             detector.start_listening()
             detector.stop_listening()

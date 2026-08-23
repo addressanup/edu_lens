@@ -46,16 +46,9 @@ jobs:
 
       # Fast pre-build gate only; ci.yml is the authoritative quality gate.
       # Integration tests need the Postgres/Redis services that ci.yml provisions,
-      # so they are not duplicated here. Audio-dependent suites excluded pending
-      # backlog #7 (see docs/engineering/current-project-state.md).
+      # so they are not duplicated here.
       - name: Run unit and API tests
-        run: >
-          pytest tests/unit tests/api -q
-          --ignore=tests/unit/test_tts_engine.py
-          --ignore=tests/unit/test_wake_word.py
-          --ignore=tests/unit/test_speech_recognizer.py
-          --ignore=tests/unit/test_handwriting_engine.py
-          --no-cov
+        run: pytest tests/unit tests/api -q --no-cov
 
   build:
     name: Build Docker Image

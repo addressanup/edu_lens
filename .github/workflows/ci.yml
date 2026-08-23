@@ -132,25 +132,18 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libsndfile1 ffmpeg
+          sudo apt-get install -y libsndfile1 ffmpeg portaudio19-dev espeak
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+          pip install -r requirements_audio.txt
 
-      # Audio-dependent suites (tts_engine, wake_word, speech_recognizer,
-      # handwriting_engine) are excluded from the gate: red pending backlog #7
-      # (audio/TTS dependency + behavior work). They run in the advisory
-      # audio-tests job below.
       - name: Run unit tests with coverage
         run: >
           pytest tests/unit -v -m unit
-          --ignore=tests/unit/test_tts_engine.py
-          --ignore=tests/unit/test_wake_word.py
-          --ignore=tests/unit/test_speech_recognizer.py
-          --ignore=tests/unit/test_handwriting_engine.py
           --cov --cov-report=xml --cov-report=html --cov-report=term-missing
           --cov-fail-under=${{ env.COVERAGE_THRESHOLD }}
         env:
@@ -347,9 +340,6 @@ jobs:
   audio-tests:
     name: Audio Processing Tests
     runs-on: ubuntu-latest
-    # ADVISORY ONLY (not in ci-success needs): audio/TTS suites are red pending
-    # backlog #7 (optional dependency + behavior work).
-    continue-on-error: true
 
     steps:
       - name: Checkout code
@@ -421,11 +411,11 @@ jobs:
   ci-success:
     name: CI Success
     runs-on: ubuntu-latest
-    # Gating: lint, typecheck, unit-tests, safety-tests, build.
+    # Gating: lint, typecheck, unit-tests, safety-tests, audio-tests, build.
     # Advisory (known behavioral debt, tracked in
-    # docs/engineering/current-project-state.md backlog #2/#7):
-    # integration-tests, audio-tests, performance-tests.
-    needs: [lint, typecheck, unit-tests, safety-tests, build]
+    # docs/engineering/current-project-state.md backlog #2):
+    # integration-tests. performance-tests is informational.
+    needs: [lint, typecheck, unit-tests, safety-tests, audio-tests, build]
     if: always()
 
     steps:

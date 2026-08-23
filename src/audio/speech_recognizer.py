@@ -225,6 +225,14 @@ class SpeechRecognizer:
 
             # Ensure audio is in correct format
             if isinstance(audio, np.ndarray):
+                if audio.size == 0:
+                    logger.info("Empty audio input; returning empty transcription")
+                    return TranscriptionResult(
+                        text="",
+                        confidence=0.0,
+                        language=language or self.config.language,
+                    )
+
                 if audio.dtype != np.float32:
                     audio = audio.astype(np.float32)
 

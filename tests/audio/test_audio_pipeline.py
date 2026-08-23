@@ -55,11 +55,23 @@ async def pipeline(pipeline_config):
     """Create audio pipeline for testing."""
     pipeline = AudioPipeline(pipeline_config)
 
-    # Mock components to avoid requiring actual models
-    with patch("src.audio.audio_pipeline.AsyncWakeWordDetector"):
-        with patch("src.audio.audio_pipeline.SpeechRecognizer"):
-            with patch("src.audio.audio_pipeline.TTSEngine"):
-                with patch("src.audio.audio_pipeline.MicrophoneStream"):
+    # Mock components to avoid requiring actual models. The detector/ASR/TTS
+    # interfaces are async (AsyncMock instances); MicrophoneStream is sync
+    # (MagicMock instance).
+    with patch(
+        "src.audio.audio_pipeline.AsyncWakeWordDetector",
+        MagicMock(return_value=AsyncMock()),
+    ):
+        with patch(
+            "src.audio.audio_pipeline.SpeechRecognizer", MagicMock(return_value=AsyncMock())
+        ):
+            with patch(
+                "src.audio.audio_pipeline.TTSEngine", MagicMock(return_value=AsyncMock())
+            ):
+                with patch(
+                    "src.audio.audio_pipeline.MicrophoneStream",
+                    MagicMock(return_value=MagicMock()),
+                ):
                     await pipeline.initialize()
                     yield pipeline
 
@@ -133,9 +145,16 @@ class TestPipelineInitialization:
     @pytest.mark.asyncio
     async def test_create_pipeline_helper(self):
         """Test create_pipeline helper function."""
-        with patch("src.audio.audio_pipeline.AsyncWakeWordDetector"):
-            with patch("src.audio.audio_pipeline.SpeechRecognizer"):
-                with patch("src.audio.audio_pipeline.TTSEngine"):
+        with patch(
+            "src.audio.audio_pipeline.AsyncWakeWordDetector",
+            MagicMock(return_value=AsyncMock()),
+        ):
+            with patch(
+                "src.audio.audio_pipeline.SpeechRecognizer", MagicMock(return_value=AsyncMock())
+            ):
+                with patch(
+                    "src.audio.audio_pipeline.TTSEngine", MagicMock(return_value=AsyncMock())
+                ):
                     pipeline = await create_pipeline()
 
                     assert isinstance(pipeline, AudioPipeline)
@@ -330,7 +349,8 @@ class TestTTSIntegration:
     async def test_tts_latency_tracking(self, pipeline, mock_audio_output):
         """Test TTS latency tracking."""
         pipeline._current_session_id = "test_session"
-        pipeline._latency_monitor.start_timer(pipeline._current_session_id)
+        session_id = pipeline._current_session_id  # play_response clears it
+        pipeline._latency_monitor.start_timer(session_id)
 
         # Mock TTS
         pipeline._tts_engine.synthesize = AsyncMock(return_value=mock_audio_output)
@@ -338,8 +358,8 @@ class TestTTSIntegration:
 
         await pipeline.play_response("Test response")
 
-        # Should have recorded TTS checkpoints
-        breakdown = pipeline._latency_monitor.get_breakdown(pipeline._current_session_id)
+        # Should have recorded TTS checkpoints (session moved to history on IDLE)
+        breakdown = pipeline._latency_monitor.get_breakdown(session_id)
 
         # Should have latency data
         assert len(breakdown) > 0
