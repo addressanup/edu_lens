@@ -384,6 +384,11 @@ init: install-dev db-upgrade ## Initialize project for development
 verify: format-check lint typecheck test ## Verify code quality and tests
 	@echo "✓ All verification checks passed!"
 
+test-gate: ## Run the merge-gate suite locally (mirrors the former CI gates)
+	@echo "Running gate suite: unit + api + ai + safety + audio..."
+	pytest tests/unit tests/api tests/ai tests/safety tests/audio -q --no-cov
+	@echo "✓ Gate suite passed"
+
 ci: verify ## Run CI checks locally
 	@echo "✓ CI checks completed successfully!"
 

@@ -88,12 +88,11 @@ EduLens, committed in the same repo. Its own tests are broken
 ### 3.5 Delivery and operations
 
 - `Makefile` — canonical command surface (install, test, lint, typecheck, db, docker).
-- `.github/workflows/ci.yml` — lint/typecheck/unit matrix/integration (Postgres+Redis
-  services)/safety/audio/build. UNCOMMITTED.
-- `.github/workflows/deploy.yml` — on push to `main` builds a Docker image and pushes
-  to GHCR; staging/production deploy jobs are `echo` placeholders. UNCOMMITTED.
-- **No CI currently runs anywhere** (workflows untracked). No production deployment
-  exists; no observability stack, backups, or on-call. Production state: none found.
+- **CI/CD**: none active. GitHub Actions workflows were added, hardened, then
+  REMOVED on owner decision (paid minutes for private repo) — recoverable at
+  commit `66e6f27`. Canonical quality gate is local: `make test-gate`.
+- **No remote CI runs; no production deployment exists**; deploy workflow was
+  placeholder-only and is gone with the rest of `.github/`.
 
 ## 4. Engineering baseline (2026-08-22, Python 3.12.13 in `.venv`)
 
@@ -133,7 +132,7 @@ Notes:
 | OCR/handwriting accuracy vs spec targets (95%/85%) | FAILING accuracy tests | `tests/vision/test_ocr_accuracy.py` etc. |
 | Parent companion app (`app/`) | UI_ONLY — no auth backend; default API base `http://localhost:3000/api` mismatches backend port 8000 | `app/src/services/api.ts:13` |
 | Authentication / authorization | NOT_IMPLEMENTED anywhere; `verify_parent_access` trusts caller-supplied `parent_id`; CORS `allow_origins=["*"]` | `main.py:1038`, `main.py:256–262` |
-| Deployment | STUB_OR_PLACEHOLDER (echo steps) | `deploy.yml:105–123` |
+| Deployment | NOT_PRESENT — deploy workflow removed with CI (was echo stubs); image build verified working once via Actions before removal | git history `66e6f27` |
 | Wake word / STT | IMPLEMENTED, tests failing | `tests/audio`, `tests/unit/test_wake_word.py` |
 | Hardware glasses runtime (`src/runtime`, `device_runtime`) | UNKNOWN — no evidence of real hardware target | — |
 
@@ -145,7 +144,7 @@ Notes:
 | P1 | No authentication/authorization on any endpoint incl. child camera frames; CORS `*` | `main.py:256–262`, `:1038` | Required before any shared/hosted operation | No (local dev only today) |
 | P1 | Child-safety layer fails its own tests (~27 failures) | `tests/safety/*` | Fix before any parent-facing release | No |
 | P2 | Dual session systems (observe vs live) diverging | `main.py` vs `live_ws.py` | Bridge or consolidate during parent-monitoring work | No |
-| P2 | CI debt: 80% coverage gate will fail (real % unknown); deprecated `upload-artifact@v3`; first push to `main` publishes image to GHCR | `ci.yml:12,170–178`, `deploy.yml` | Decide GHCR policy; fix gate in backlog #6 | No |
+| P2 | No remote CI: quality gate is local-only (`make test-gate`); relies on developer discipline | owner decision 2026-08-22 (Actions billing) | Run `make test-gate` before every push; revisit if repo goes public (free Actions) | No — closed by decision |
 | P2 | Scaffold/product entanglement breaks test collection and pollutes coverage scope | 3 broken test files; `pyproject.toml` coverage sources | Triage in slice #1; longer-term quarantine (#8) | Yes (acceptance criterion) |
 | P2 | `mobile/.expo/` untracked and NOT gitignored — risk of committing build artifacts | `git status`; `.gitignore` | Add ignore line before staging `mobile/` | Yes |
 
@@ -156,7 +155,7 @@ Notes:
 3. **Parent sees live-session activity** (L) — bridge `/ws/live` into parent endpoints + app monitor screen.
 4. **Persist live session summaries** (M) — DB records for parent review of past sessions.
 5. **API authentication (keys/JWT) for all non-demo endpoints** (L) — prerequisite for any shared deployment.
-6. **CI activation hygiene** (S) — DONE 2026-08-22 (`a20ddda`…`52a3845`). Gates: lint, typecheck, unit×{3.11,3.12}, build — green. Advisory (known behavioral debt): safety (~27 failures, #2), integration (21 failures, #2/#7), audio, performance. Artifact uploads removed (org storage quota exhausted). Coverage floor = 5% over `src/` — raise as fixes land.
+6. **CI activation hygiene** (S) — CLOSED 2026-08-22 by owner decision: GitHub Actions removed because the account would incur paid minutes (private repo). Workflows recoverable from git history at `66e6f27` (note: Actions is free if the repo is ever made public). **The canonical quality gate is now local: `make test-gate`** (unit + api + ai + safety + audio, 615 tests). Gates as of closure: lint, typecheck, unit×{3.11,3.12}, safety, audio — all green locally; integration (24 failures) and performance remained advisory when CI was disabled.
 7. **Audio/TTS path runnable and tested locally** (S) — DONE 2026-08-22. Installed optional audio deps locally (pyttsx3, edge-tts, gtts; `requirements_audio.txt` already covers CI). Product fixes: wake-word threshold float rounding, safe callback logging (Mock callbacks), batch-mode VAD bypass with raw-signal quality gating in the heuristic detector (silence/noise FP suppression), empty-audio guard in `speech_recognizer.transcribe`, `total_characters` in empty handwriting confidence report, `photosynthesis` added to science vocabulary, latency-monitor history fallback for breakdown after session end. Test fixes: correct MicrophoneStream patch target (was opening the real microphone), AsyncMock class mocks for async pipeline components, session-id captured before `play_response` clears it. All 4 unit files un-excluded from gates; **audio-tests job promoted to merge gate**. tests/audio + wake-word units: 226/226; full tree 615/615.
 8. **Quarantine legacy orchestration scaffold; correct README** (S).
 9. **Parent-app ↔ backend contract alignment** (M) — base URL/port, endpoint map.
@@ -174,7 +173,6 @@ Specification: `docs/engineering/next-delivery-slice.md`.
 1. Is the hardware/glasses runtime (`src/runtime`, `src/security` pairing) a real
    near-term target or aspirational? Affects backlog priorities.
 2. Is any hosted/shared deployment intended soon? (Determines urgency of auth, P1 #2.)
-3. Should pushing to `main` publish Docker images to GHCR (current `deploy.yml`
-   behavior once workflows land), or should that job be disabled?
+3. ~~Should pushing to `main` publish Docker images to GHCR?~~ RESOLVED: CI/deploy removed by owner decision (billing). Revisit only if Actions is re-enabled (free on public repos).
 4. Are the failing safety/security suites regression drift or never-green
    aspirations? (Git history cannot answer — single initial commit.)
