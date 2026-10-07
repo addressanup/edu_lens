@@ -1,223 +1,96 @@
-# Claude Agents Orchestration System
+# EduLens
 
-A multi-agent AI orchestration platform for end-to-end software project delivery. This system coordinates specialized AI agents to handle the complete software development lifecycle - from concept design through deployment.
+**An AI learning companion for everyone.**
 
-## Overview
+EduLens helps people understand what they are working on through camera-aware guidance, questions, and spoken explanations. Point a camera at learning material, ask a question, and work through the next step with an AI tutor.
 
-The Claude Agents Orchestration System uses a phased approach where specialized agents collaborate through a central orchestrator:
+The product vision covers independent study, everyday curiosity, and developing new skills. Guidance should adapt to a person's knowledge, goals, and preferred pace, without assuming a particular age or educational stage.
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                    CLAUDE AGENTS ORCHESTRATOR                       │
-├─────────────────────────────────────────────────────────────────────┤
-│  Phase 1    Phase 2    Phase 3    Phase 4    Phase 5    Phase 6    │
-│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐      │
-│  │Concept│→│ MCP  │→│Infra │→│ Code │→│  QA  │→│Deploy│      │
-│  │Design │  │ Data │  │Setup │  │ Gen  │  │ Test │  │ Ship │      │
-│  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘      │
-│      ↓         ↓         ↓         ↓         ↓         ↓          │
-│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐      │
-│  │Gate 1│  │Gate 2│  │Gate 3│  │Gate 4│  │Gate 5│  │Output│      │
-│  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+## What is in this repository
 
-## Quick Start
+EduLens is an alpha-stage project. The current implementation includes:
 
-> **For detailed step-by-step instructions, see [WORKFLOW.md](./WORKFLOW.md)**
+- **Live camera tutoring:** a mobile client streams frames over WebSocket; the backend uses visual context to answer questions and offer hints.
+- **Audio-first guidance:** the mobile client can read tutoring responses aloud.
+- **Text and image questions:** a FastAPI backend exposes tutoring endpoints and a browser demo.
+- **Learning components:** modules for OCR, handwriting recognition, subject reasoning, personalization, and progress tracking.
+- **Configurable AI providers:** integrations for DeepSeek, OpenAI, Anthropic, Google, Azure OpenAI, and Ollama. Capabilities depend on the selected provider and model.
 
-### 1. Clone and Setup
+The general-audience positioning is the product direction. Some existing interfaces, prompts, and data models still reflect earlier audience assumptions; their migration is separate from this documentation update. This repository does not yet establish complete support for every subject or learning level.
+
+## How it works
+
+1. Start a learning session in the mobile app or browser demo.
+2. Share a question or camera view of the material you are exploring.
+3. The backend sends the relevant question and visual context to the configured AI service.
+4. EduLens returns guidance; the mobile client can speak the response.
+
+Live camera frames are held in backend memory for the session and cleared when it ends. Frames sent to an external AI provider are also subject to that provider's data handling. Smart glasses are a longer-term direction; the current mobile client uses a phone camera.
+
+## Local setup
+
+Use Python 3.11 or later. The mobile client also requires Node.js, npm, and an Expo-compatible device or emulator.
 
 ```bash
-git clone https://github.com/your-org/claude-agents-orchestration.git
-cd claude-agents-orchestration
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+git clone https://github.com/addressanup/edu_lens.git
+cd edu_lens
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-### 2. Configure Environment
-
-```bash
 cp .env.example .env
-# Edit .env with your configuration
 ```
 
-### 3. Start Infrastructure
+Edit `.env` to select `LLM_PROVIDER` and set that provider's API key. The example defaults to DeepSeek. Camera tutoring requires a vision-capable model supported by your provider; check the configuration before starting a live session. Optional audio and security dependencies are listed in `requirements_audio.txt` and `requirements_security.txt`.
+
+Start the backend:
 
 ```bash
-docker-compose up -d
+python -m uvicorn src.api.main:app --host 127.0.0.1 --port 8000
 ```
 
-### 4. Initialize Database
+- Browser demo: <http://127.0.0.1:8000/demo>
+- API documentation: <http://127.0.0.1:8000/docs>
+- Health endpoint: <http://127.0.0.1:8000/health>
+
+To run the mobile client:
 
 ```bash
-alembic upgrade head
+cd mobile
+npm install
+npm start
 ```
 
-### 5. Run the Orchestrator
+For a phone on a trusted local Wi-Fi network, start the backend with `--host 0.0.0.0` and set the app's server address to `http://<your-computer-LAN-IP>:8000`. Authentication is not yet implemented across the API, so this setup is for local development, not a public deployment.
+
+## Repository map
+
+| Path | Purpose |
+| --- | --- |
+| `src/api/` | REST API, WebSocket connections, and live tutoring sessions |
+| `src/ai/` | AI providers, tutoring, reasoning, personalization, and safety |
+| `src/vision/` | OCR, handwriting, and visual processing |
+| `src/audio/` | Speech recognition, speech synthesis, and audio processing |
+| `src/observation/` | Scene analysis and intervention logic |
+| `mobile/` | Expo mobile camera-tutoring client |
+| `app/` | Earlier companion application |
+| `web/` | Browser demo |
+| `configs/` | Subsystem configuration |
+| `tests/` | Automated tests |
+| `docs/` | Technical documentation and engineering history |
+
+The root `agents/`, `orchestrator/`, `core/`, `templates/`, and `cli.py` belong to the development orchestration scaffold retained in the repository. The EduLens application code lives under `src/`; the scaffold is not the product.
+
+## Development checks
+
+Install development dependencies, then run the local gate:
 
 ```bash
-# Interactive mode
-python cli.py run --project "My New Project"
-
-# With specific configuration
-python cli.py run --project "My New Project" --config ./my-config.yaml
+pip install -r requirements-dev.txt
+make test-gate
 ```
 
-## Project Structure
+The gate covers unit, API, AI, safety, and audio suites. Additional integration and performance suites live under `tests/`. GitHub Actions workflows are currently absent; run checks locally before shipping changes. This README does not claim a fresh passing test run.
 
-```
-claude-agents-orchestration/
-├── orchestrator/           # Core orchestration engine
-│   ├── orchestrator.py     # Main orchestrator class (520+ lines)
-│   ├── config.py           # Configuration management
-│   ├── logger.py           # 5-level logging system
-│   └── state_manager.py    # State persistence with SQLAlchemy
-├── core/                   # Core systems
-│   ├── message_broker.py   # Priority-based message queuing
-│   ├── communication_protocol.py  # Inter-agent messaging
-│   ├── validation_gates.py # 5 validation gates with scoring
-│   ├── error_recovery.py   # 3-level error recovery
-│   └── context_budget.py   # Token budget management
-├── agents/                 # Specialized AI agents
-│   ├── base_agent.py       # Abstract base class
-│   ├── concept_designer.py # Requirements & architecture
-│   ├── mcp_engineer.py     # MCP data integration
-│   ├── integration_engineer.py  # Infrastructure setup
-│   ├── backend_engineer.py # Server-side code
-│   ├── frontend_engineer.py # UI components
-│   ├── security_engineer.py # Security scanning
-│   ├── qa_engineer.py      # Testing & validation
-│   └── devops_engineer.py  # Deployment & CI/CD
-├── skills/                 # Agent capability templates
-├── database/               # Data persistence layer
-│   ├── models.py           # SQLAlchemy models
-│   ├── schema.sql          # PostgreSQL schema
-│   └── migrations/         # Alembic migrations
-├── utils/                  # Utility modules
-├── templates/              # Project templates
-└── tests/                  # Test suite
-```
+## Product direction
 
-## Key Features
-
-### Multi-Agent Architecture
-- **8 Specialized Agents**: Each agent has deep expertise in their domain
-- **Skills Templates**: Markdown-based capability definitions (v1.0.0)
-- **CLI Invocation**: Uses Claude Code CLI for agent execution
-
-### Validation Gates
-- **5-Stage Validation**: Each phase has quality gates
-- **Confidence Scoring**: Automatic pass (>70%), review (50-70%), halt (<50%)
-- **Issue Tracking**: Detailed remediation suggestions
-
-### Error Recovery
-- **Level 1**: Agent retry (3 attempts, 10 min timeout)
-- **Level 2**: Phase rollback (2 attempts, 30 min timeout)
-- **Level 3**: Full rollback with human intervention
-
-### Context Budget Management
-- **200k Token Allocation**: Distributed across processing phases
-- **Progressive Summarization**: Maintains context efficiency
-- **Real-time Tracking**: Monitor token usage per agent
-
-### Logging & Compliance
-- **5-Level Logging**: Event, Decision, Trace, Error, Audit
-- **7-Year Retention**: Compliance-ready audit logs
-- **Structured Output**: JSON-formatted for analysis
-
-## Technology Stack
-
-| Component | Technology |
-|-----------|------------|
-| Runtime | Python 3.11+ |
-| AI Engine | Claude Code CLI |
-| Database | PostgreSQL 15+ |
-| Cache/Queue | Redis 7+ |
-| ORM | SQLAlchemy 2.0 |
-| Migrations | Alembic |
-| CLI | Click |
-| Async | asyncio, aiohttp |
-| Logging | Loguru |
-| Testing | pytest, pytest-asyncio |
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ENVIRONMENT` | Runtime environment | `local` |
-| `LOG_LEVEL` | Logging verbosity | `DEBUG` |
-| `CONTEXT_BUDGET` | Total token budget | `200000` |
-| `MAX_RETRIES` | Agent retry attempts | `3` |
-| `VALIDATION_STRICTNESS` | Gate strictness | `LOW` |
-| `STATE_STORE` | Database connection | `sqlite:///:memory:` |
-| `REDIS_URL` | Redis connection | `redis://localhost:6379` |
-| `MCP_TIMEOUT` | MCP operation timeout | `60` |
-
-### Validation Strictness Levels
-
-- **LOW**: 50% threshold for pass
-- **MEDIUM**: 60% threshold for pass
-- **HIGH**: 70% threshold for pass
-- **STRICT**: 80% threshold for pass
-
-## Agent Capabilities
-
-| Agent | Primary Responsibility |
-|-------|----------------------|
-| Concept Designer | Requirements analysis, architecture decisions |
-| MCP Engineer | External data integration via MCP servers |
-| Integration Engineer | Infrastructure provisioning (Terraform, CI/CD) |
-| Backend Engineer | API design, database integration |
-| Frontend Engineer | UI components, state management |
-| Security Engineer | SAST scanning, OWASP validation |
-| QA Engineer | Test generation, coverage analysis |
-| DevOps Engineer | Deployment, monitoring, disaster recovery |
-
-## Contributing
-
-### Development Setup
-
-```bash
-# Install development dependencies
-pip install -r requirements.txt
-pip install -e ".[dev]"
-
-# Run tests
-pytest tests/ -v
-
-# Code formatting
-black .
-isort .
-
-# Linting
-flake8 .
-```
-
-### Code Style
-
-- Follow PEP 8 guidelines
-- Use type hints throughout
-- Write comprehensive docstrings (Google style)
-- Maintain >80% test coverage
-
-### Pull Request Process
-
-1. Fork the repository
-2. Create a feature branch
-3. Write tests for new functionality
-4. Ensure all tests pass
-5. Submit PR with clear description
-
-## License
-
-MIT License - See LICENSE file for details.
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/your-org/claude-agents-orchestration/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/claude-agents-orchestration/discussions)
-- **Documentation**: [Wiki](https://github.com/your-org/claude-agents-orchestration/wiki)
+See [the product overview](concept_note.md) for the intended audience, experience, and development priorities. Historical specifications and engineering reports describe earlier milestones and may not reflect the current product direction.
